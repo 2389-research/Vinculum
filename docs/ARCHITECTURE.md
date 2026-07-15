@@ -16,10 +16,10 @@ layout stage builds and unit-tests on Linux with no display.
 
 | | `VinculumLayout` | `VinculumRender` |
 | --- | --- | --- |
-| Depends on | Foundation only | VinculumLayout + CoreText/CoreGraphics/AppKit/UIKit |
-| Platforms | macOS, iOS, visionOS, tvOS, **Linux** | Apple only |
-| Owns | parsing, macros, **all typesetting geometry**, the MATH-table constants | measuring, drawing, the bundled font, the theme, the MATH-table delimiter provider, the cached attachment |
-| Output | a `MathScene` (positioned primitives) | pixels / an `NSTextAttachment` |
+| Depends on | Foundation only | VinculumLayout + CoreText/CoreGraphics/AppKit/UIKit on Apple; Silica/Cairo/FreeType on Linux (behind the `LinuxRaster` trait) |
+| Platforms | macOS, iOS, visionOS, tvOS, **Linux** | Apple (CoreText), and **Linux** raster (Silica/Cairo/FreeType) |
+| Owns | parsing, macros, **all typesetting geometry**, the MATH-table constants | measuring, drawing, the bundled fonts, the theme, the MATH-table providers, the cached attachment (Apple) / PNG (Linux) |
+| Output | a `MathScene` (positioned primitives) | pixels / an `NSTextAttachment` (Apple) · a PNG (Linux) · SVG (any platform) |
 
 `VinculumLayout` never imports CoreGraphics or CoreText. It uses only
 Foundation geometry types (`CGPoint`, `CGRect`, `CGFloat`), which exist on
