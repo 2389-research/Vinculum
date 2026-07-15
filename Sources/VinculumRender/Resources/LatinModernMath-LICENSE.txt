@@ -1,0 +1,16 @@
+Latin Modern Math
+=================
+
+VinculumRender bundles the font "Latin Modern Math" (latinmodern-math.otf)
+to typeset mathematics with an OpenType MATH table.
+
+  Authors:  Bogusław Jackowski, Piotr Strzelczyk, Piotr Pianowski
+            (GUST e-foundry), based on Computer Modern by Donald E. Knuth.
+  License:  GUST Font License (GFL) — a free license, functionally
+            equivalent to the LaTeX Project Public License (LPPL), which
+            permits use, redistribution, and bundling.
+  Source:   https://www.gust.org.pl/projects/e-foundry/lm-math
+            CTAN: https://ctan.org/pkg/lm-math
+
+The full GUST Font License text is distributed with the font on CTAN and
+must accompany this file in released builds.

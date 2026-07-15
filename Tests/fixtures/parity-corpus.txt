@@ -1,0 +1,20 @@
+quadratic|x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}
+euler|e^{i\pi} + 1 = 0
+sum|\sum_{i=1}^{n} i^2 = \frac{n(n+1)(2n+1)}{6}
+nested-scripts|x^{y^{z^{w}}} + a_{i_{j}}
+integral|\int_{-\infty}^{\infty} e^{-x^2}\,dx = \sqrt{\pi}
+cfrac|\cfrac{1}{1+\cfrac{1}{1+\cfrac{1}{x}}}
+matrix|\begin{pmatrix} a & b \\ c & d \end{pmatrix}
+cases|f(x) = \begin{cases} x^2 & x \ge 0 \\ -x & x < 0 \end{cases}
+delimiters|\left( \frac{a}{b} \right) \left[ \sum_i x_i \right] \left\{ x \right\}
+accents|\hat{x} + \vec{v} + \bar{y} + \widehat{ABC} + \overline{AB}
+binom|\binom{n}{k} = \frac{n!}{k!(n-k)!}
+arrows|A \xrightarrow{f} B \xhookrightarrow{g} C \xrightleftharpoons{k} D
+overbrace|\overbrace{a+b+c}^{\text{sum}} + \underbrace{1+\cdots+n}_{n}
+boxed|\boxed{E = mc^2} + \cancel{x}
+color|\color{red}{a} + \color{blue}{b} = \color{green}{c}
+alphabets|\mathbb{R} \subset \mathbb{C}, \mathcal{L}, \mathfrak{g}
+bigops|\bigcup_{i} A_i \quad \prod_{k=1}^{n} k \quad \oint_C
+maxwell|\nabla \times \vec{B} = \mu_0 \vec{J}
+stirling|{n \brace k} = \frac{1}{k!}\sum_{j=0}^k (-1)^{k-j}\binom{k}{j}(k-j)^n
+limits|\lim_{x \to 0} \frac{\sin x}{x} = 1
