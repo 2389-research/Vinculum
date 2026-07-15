@@ -1,0 +1,17 @@
+.build/
+.swiftpm/
+DerivedData/
+*.xcodeproj
+.DS_Store
+.claude/
+
+# QEMU/swiftc crash dumps from Docker cross-builds
+*.core
+core
+
+# Local Linux render artifacts
+silica-*.png
+parity-linux/
+
+# Trait-on lockfile would re-pull Cairo even for default builds — ignore it.
+Package.resolved

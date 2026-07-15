@@ -1,0 +1,175 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  # VinculumLayout is platform-free (Foundation only) — this proves it builds
+  # and its geometry tests pass headless on Linux, with no CoreText/AppKit.
+  # VinculumRender's sources are AppKit/UIKit-guarded, so they compile to an
+  # empty module here.
+  linux:
+    name: VinculumLayout + Silica (Linux)
+    runs-on: ubuntu-latest
+    container: swift:6.2
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      # VinculumRender's Linux backend links Silica (Cairo/FontConfig/FreeType);
+      # its C libraries must be present for SwiftPM to build the Cairo modules.
+      - name: Install Silica system deps
+        run: |
+          apt-get update
+          apt-get install -y pkg-config libcairo2-dev libfreetype6-dev libfontconfig1-dev fonts-dejavu
+      - name: Swift version
+        run: swift --version
+      # Default (no-trait): the Silica raster backend is behind LinuxRaster
+      # (default OFF), so a plain build is Silica-free — parsing + layout only.
+      - name: Build (default, Silica-free)
+        run: swift build
+      # LinuxRaster ON: build + test the Silica/Cairo/FreeType render backend,
+      # including the render smoke tests.
+      - name: Build + test (LinuxRaster)
+        run: |
+          swift build --traits LinuxRaster
+          swift test --traits LinuxRaster
+
+  test:
+    name: swift test (macOS)
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      # The package requires Swift 6.2+ (Xcode 26+). Pick the newest Xcode
+      # the runner has, whatever its major version.
+      - name: Select newest Xcode
+        run: sudo xcode-select -s "$(find /Applications -maxdepth 1 -name 'Xcode_*.app' -print | sort -V | tail -n 1)"
+      - name: Swift version
+        run: swift --version
+      - name: Build
+        run: swift build
+      - name: Test
+        run: swift test
+
+      # The UIKit render branch has no test host, but it must always COMPILE
+      # — Quoin shipped an iOS-only build break (an AppKit-only .toolTip)
+      # precisely because nothing exercised this branch.
+      - name: Build for iOS Simulator
+        run: |
+          set -o pipefail
+          # Log to a file so compile DIAGNOSTICS survive failure — a bare
+          # `tail` once ate the error text and left only the failed commands.
+          if ! xcodebuild -scheme VinculumRender \
+            -destination 'generic/platform=iOS Simulator' build > ios-build.log 2>&1; then
+            grep -E "error:" ios-build.log | sort -u | head -40
+            tail -20 ios-build.log
+            exit 1
+          fi
+          tail -5 ios-build.log
+
+      # RUN tests on an iOS simulator — the compile-only step above can't
+      # catch runtime issues (MainActor isolation, template-image drawing on
+      # dark canvases). Scoped to the UIKit-relevant suites for speed.
+      - name: Test on iOS Simulator
+        run: |
+          set -o pipefail
+          # Ask xcodebuild itself which iPhone simulators it can target —
+          # simctl can list devices whose runtime xcodebuild won't accept.
+          # Defensive: empty greps must not kill the step (bash -e), and an
+          # empty result falls back to the runner image's standard device.
+          SIM=$(xcodebuild -showdestinations -scheme Vinculum-Package 2>&1 \
+            | grep -E 'platform:iOS Simulator.*name:iPhone' \
+            | sed -E 's/.*name:(iPhone [^}]*)\}/\1/' | sed 's/ *$//' \
+            | sort -u | tail -1 || true)
+          if [ -z "$SIM" ]; then SIM="iPhone 16"; fi
+          echo "using simulator: $SIM"
+          if ! xcodebuild test -scheme Vinculum-Package \
+            -destination "platform=iOS Simulator,name=$SIM" \
+            -only-testing:VinculumRenderTests/VinculumLabelTests \
+            -only-testing:VinculumRenderTests/MathFontConstantsTests \
+            > ios-test.log 2>&1; then
+            grep -E "error:|failed" ios-test.log | sort -u | head -40
+            tail -20 ios-test.log
+            exit 1
+          fi
+          grep -E "Executed .* test" ios-test.log | tail -3
+
+      # Regenerate the example images (labeled gallery posters + the stress
+      # corpus pages) so docs/website always show the CURRENT rendering. Only
+      # on main pushes; advisory (never blocks). Published below to a branch.
+      - name: Generate gallery images
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        run: |
+          mkdir -p /tmp/vinc-gallery
+          VINCULUM_GALLERY_DIR=/tmp/vinc-gallery \
+            swift test --filter GalleryGenerator/testGenerateGallery || true
+          VINCULUM_STRESS_DIR=/tmp/vinc-gallery \
+            swift test --filter MathStressGallery/testGenerateStressPages || true
+          # Comprehensive command charts: every symbol by atom class + structural examples.
+          VINCULUM_GALLERY_DIR=/tmp/vinc-gallery \
+            swift test --filter CommandGalleryGenerator/testGenerateCommandGallery || true
+          # Font specimens: 07 overview, 08 glyph grid, 09 alphabets.
+          VINCULUM_GALLERY_DIR=/tmp/vinc-gallery \
+            swift test --filter FontShowcaseGenerator || true
+          # Architecture-doc figures: spacing table, delimiter chain, styles, fallback.
+          VINCULUM_GALLERY_DIR=/tmp/vinc-gallery \
+            swift test --filter ArchitectureGalleryGenerator || true
+          # Algorithm-doc figures: one poster per Appendix G rule cluster.
+          VINCULUM_GALLERY_DIR=/tmp/vinc-gallery \
+            swift test --filter AlgorithmGalleryGenerator || true
+          ls -la /tmp/vinc-gallery || true
+
+      - name: Upload gallery
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: gallery
+          path: /tmp/vinc-gallery/*.png
+          if-no-files-found: ignore
+
+  # Publish the regenerated example images to the `gallery` branch (force-push,
+  # loop-free: `gallery` isn't in the push trigger). Docs/website reference them
+  # by raw URL, e.g.
+  #   https://raw.githubusercontent.com/2389-research/Vinculum/gallery/01-core.png
+  publish-gallery:
+    name: publish gallery branch
+    runs-on: ubuntu-latest
+    needs: test
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    permissions:
+      contents: write
+    steps:
+      - name: Download gallery
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: gallery
+          path: /tmp/vinc-gallery
+      - name: Publish gallery branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! ls /tmp/vinc-gallery/*.png >/dev/null 2>&1; then
+            echo "no gallery images to publish"; exit 0
+          fi
+          dir=$(mktemp -d); cd "$dir"
+          git init -q -b gallery
+          cp /tmp/vinc-gallery/*.png .
+          {
+            echo "# Vinculum gallery"
+            echo
+            echo "Auto-generated from \`$GITHUB_SHA\` — do not edit; this branch is force-pushed by CI."
+            echo
+            for f in $(ls *.png | sort); do echo "### $f"; echo; echo "![$f]($f)"; echo; done
+          } > README.md
+          git add .
+          git -c user.name="vinculum-ci" -c user.email="ci@vinculum.invalid" \
+            commit -q -m "Gallery from $GITHUB_SHA"
+          git push -q --force \
+            "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gallery
