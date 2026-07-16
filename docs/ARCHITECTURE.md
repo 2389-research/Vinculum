@@ -490,12 +490,12 @@ vertical rules, and `\hline`/`\cline` horizontal rules for `array`.
 ## How to add a new command
 
 Adding a construct touches a small, well-defined set of places. The single most
-important thing to know: **a new `MathNode` case must be added to FOUR
+important thing to know: **a new `MathNode` case must be added to SEVEN
 exhaustive `switch`es over `MathNode`**, and the compiler forces every one of
 them (none has a `default:` for the node cases). Miss one and the build fails —
 which is the point.
 
-### The four exhaustive switches (for a new `MathNode` case)
+### The seven exhaustive switches (for a new `MathNode` case)
 
 1. **`MathLayoutEngine.box(for:size:display:)`** (`MathLayoutEngine.swift`) —
    the node → `MathBox` dispatch. Add a case that builds geometry (usually
@@ -509,6 +509,15 @@ which is the point.
 4. **`MathParser.unsupportedCommands`** (`MathDiagnostics.swift`) — recurse the
    same way so the fallback card can name any unsupported command *inside* the
    new node.
+5. **`MathNode.children`** (`MathNode.swift`) — the structural accessor every
+   generic tree walk uses (hit-testing, diagnostics, the tests' traversal).
+   Return the node's child subtrees.
+6. **`MathNode.toLaTeX()`** (`MathNodeLaTeX.swift`) — round-trip serialization.
+   Emit the source form so `toLaTeX()` stays render-equivalent — a first-class,
+   header-documented feature.
+7. **`MathSpeech.speak(_:)`** (`MathSpeech.swift`) — the ClearSpeak spoken-math
+   description, so VoiceOver reads the new construct instead of announcing
+   "image".
 
 (If your case is a new `MathElement` rather than a `MathNode`, note
 `MathElement.color` and `MathElement.translated(by:)` in `MathScene.swift` are

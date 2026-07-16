@@ -20,6 +20,17 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+      # Catch doc drift: CONTRIBUTING.md's stated swift-tools-version must match
+      # Package.swift, so a contributor can't be misled onto the wrong toolchain
+      # (this drifted to 6.0 vs 6.2 unnoticed — #31).
+      - name: Docs metadata consistency (CONTRIBUTING vs Package.swift)
+        run: |
+          pkg=$(grep -oE 'swift-tools-version: *[0-9]+\.[0-9]+' Package.swift | head -1 | grep -oE '[0-9]+\.[0-9]+')
+          doc=$(grep -oE 'swift-tools-version: *[0-9]+\.[0-9]+' CONTRIBUTING.md | head -1 | grep -oE '[0-9]+\.[0-9]+')
+          echo "Package.swift=$pkg  CONTRIBUTING.md=$doc"
+          if [ -z "$pkg" ] || [ "$pkg" != "$doc" ]; then
+            echo "::error::CONTRIBUTING.md swift-tools-version ($doc) != Package.swift ($pkg)"; exit 1
+          fi
       # VinculumRender's Linux backend links Silica (Cairo/FontConfig/FreeType);
       # its C libraries must be present for SwiftPM to build the Cairo modules.
       - name: Install Silica system deps
