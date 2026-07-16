@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased
+
+Documentation, tooling, and brand — **no library changes** (`Sources/` is
+byte-identical to 1.4.1, so nothing to update for consumers).
+
+- **Performance profiling.** New `MathProfileTests` phase profiler (gated on
+  `VINCULUM_PROFILE`) decomposes the cold render, and [docs/PERFORMANCE.md](docs/PERFORMANCE.md)
+  documents it from real release-build measurements. Findings: ~77% of a cold
+  render is CoreText (glyph measurement + rasterization); rasterization is
+  *deferred* on macOS (lazy `NSImage`) but eager on iOS. Corrected the README's
+  historical figures — they were debug-build and the "cold" number was mislabeled
+  (it excluded the deferred paint).
+- **Brand assets.** `assets/` — the mark, Apple/Linux icon sets, and palette.
+  The site and README now lead with the dogfooded `\sqrt{\mathrm{Vinculum}}`
+  wordmark, typeset by the engine itself.
+- **Website.** GitHub Pages site rebuilt: modular type scale, accessibility
+  (focus rings, rem sizing), a Vinculum-vs-pdfTeX fidelity comparison, an
+  LLM-output section, and the performance summary — all reproducible from
+  committed generators (`scripts/compare-tex.sh`, `ComparisonGenerator`).
+
 ## 1.4.1 — 2026-07-15
 
 **The Silica dependency is now opt-in — default consumers are Silica-free.**
