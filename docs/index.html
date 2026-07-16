@@ -73,8 +73,8 @@
     border-bottom: 1px solid var(--line);
   }
   .navbar { display: flex; align-items: center; justify-content: space-between; height: 60px; }
-  .brand { font-weight: 700; font-size: var(--fs-md); letter-spacing: var(--ls-snug); color: var(--ink); }
-  .brand .bar { color: var(--blue); font-weight: 400; padding: 0 0.1em; }
+  .brand { display: inline-flex; align-items: center; }
+  .brand-word { height: 34px; width: auto; display: block; }
   .nav-links { display: flex; gap: 22px; align-items: center; font-size: var(--fs-xs); }
   .nav-links a { color: var(--muted); }
   .nav-links a:hover { color: var(--ink); text-decoration: none; }
@@ -175,7 +175,12 @@
 
 <header class="top">
   <div class="wrap navbar">
-    <span class="brand">Vinculum<span class="bar"> ⁄ </span></span>
+    <span class="brand">
+      <picture>
+        <source srcset="assets/wordmark-dark.png" media="(prefers-color-scheme: dark)">
+        <img class="brand-word" src="assets/wordmark-light.png" alt="Vinculum" width="96" height="34">
+      </picture>
+    </span>
     <nav class="nav-links">
       <a href="#features">Features</a>
       <a href="#fidelity">Fidelity</a>
