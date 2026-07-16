@@ -73,7 +73,14 @@ Full detail: [CHANGELOG.md](../CHANGELOG.md).
 
 ## Open lanes
 
-Short and well-scoped. In rough priority:
+Short and well-scoped. In rough priority.
+
+> **Now issue-tracked.** A July-2026 multi-expert code review turned these lanes
+> (and finer-grained quality/correctness/hygiene items) into **47 triaged GitHub
+> issues** across six milestones (P0–P5). The sequenced execution order — safety
+> nets first, correctness before enhancement, breaking changes batched — is in
+> [docs/ISSUE_REMEDIATION_PLAN.md](ISSUE_REMEDIATION_PLAN.md). The lanes below are
+> the high-level summary; the milestones are the working board.
 
 ### 1. Linux render parity (the active work)
 The Linux path currently wires only the *base* services — a FreeType measurer

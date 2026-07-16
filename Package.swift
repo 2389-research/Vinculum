@@ -28,8 +28,10 @@ import PackageDescription
 //   .package(url: "…/Vinculum", from: "1.4.1", traits: ["LinuxRaster"])
 //
 // or build/test with `--traits LinuxRaster`. (`Package.resolved` is
-// git-ignored: a committed trait-on lockfile would re-pull Cairo even for
-// default builds.)
+// git-ignored: a committed trait-on lockfile at the root would re-pull Cairo
+// even for default builds. For reproducible CI the trait-on graph is pinned
+// out-of-tree in `ci/Package.resolved.linux`, restored only by the Linux CI
+// job — see .github/workflows/ci.yml.)
 let package = Package(
     name: "Vinculum",
     platforms: [.macOS(.v14), .iOS(.v17), .visionOS(.v1), .tvOS(.v17)],

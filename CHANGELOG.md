@@ -2,16 +2,43 @@
 
 ## Unreleased
 
-Documentation, tooling, and brand — **no library changes** (`Sources/` is
-byte-identical to 1.4.1, so nothing to update for consumers).
+Correctness fixes, reproducible Linux CI, and doc/tooling/brand work. The parser
+fixes touch `Sources/`, so the next tag is a real release (not a docs-only bump).
 
+### Fixed
+- **Parser: a stateful switch no longer swallows `\end`.** A stateful switch
+  (`\bf`, `\color{…}`, `\displaystyle`, …) as the last token of an environment
+  cell scanned through the environment's own `\end`, absorbing the terminator
+  and any trailing content (silently lost). (#2)
+- **Parser: double sub/superscript degrades visibly.** `a_b_c` / `x^2^3`
+  (TeX's "Double subscript" error) silently dropped the earlier atom and
+  rendered `a_c`; it now degrades to a visible, source-locatable `.unsupported`
+  instead of losing content. (#9)
+
+### CI & tooling
+- **Reproducible Linux backend builds.** The `LinuxRaster` CI job resolved
+  Silica/Cairo `branch:master` against upstream HEAD every run; it now restores
+  a committed, CI-scoped lockfile (`ci/Package.resolved.linux`) so the whole
+  Silica/Cairo/FreeType graph is pinned. Default consumers stay Silica-free —
+  the root `Package.resolved` remains git-ignored. (#32)
+- **Doc-drift guard.** CI now fails if `CONTRIBUTING.md`'s stated
+  `swift-tools-version` diverges from `Package.swift`. (#31)
+- **Expert-review issue tracker.** A multi-expert review filed 47 triaged,
+  labeled issues (#1–#47) across six milestones (P0–P5), with a sequenced
+  [remediation plan](docs/ISSUE_REMEDIATION_PLAN.md).
 - **Performance profiling.** New `MathProfileTests` phase profiler (gated on
   `VINCULUM_PROFILE`) decomposes the cold render, and [docs/PERFORMANCE.md](docs/PERFORMANCE.md)
   documents it from real release-build measurements. Findings: ~77% of a cold
   render is CoreText (glyph measurement + rasterization); rasterization is
   *deferred* on macOS (lazy `NSImage`) but eager on iOS. Corrected the README's
-  historical figures — they were debug-build and the "cold" number was mislabeled
-  (it excluded the deferred paint).
+  historical figures — they were debug-build and the "cold" number was mislabeled.
+
+### Docs & brand
+- **ARCHITECTURE:** the "add a new command" checklist now lists all seven
+  exhaustive `MathNode` switches (was four — it omitted `children`, `toLaTeX()`,
+  and `MathSpeech.speak`). (#47)
+- **CONTRIBUTING:** corrected drifted release/toolchain metadata (0.24.0 →
+  1.4.1, `swift-tools-version` 6.0 → 6.2). (#31)
 - **Brand assets.** `assets/` — the mark, Apple/Linux icon sets, and palette.
   The site and README now lead with the dogfooded `\sqrt{\mathrm{Vinculum}}`
   wordmark, typeset by the engine itself.
