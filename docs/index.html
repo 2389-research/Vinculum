@@ -140,14 +140,15 @@
   pre .c { color: var(--muted); }
   .code-label { font-size: var(--fs-2xs); color: var(--muted); margin: 0 0 8px; font-weight: 600; }
 
-  /* Gallery */
-  .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
-  .gallery figure { margin: 0; }
+  /* Gallery — masonry columns so varied-height posters pack without row gaps */
+  .gallery { columns: 2; column-gap: 16px; }
+  @media (max-width: 620px) { .gallery { columns: 1; } }
+  .gallery figure { break-inside: avoid; margin: 0 0 16px; }
   .gallery img {
     width: 100%; height: auto; border: 1px solid var(--line); border-radius: 10px;
     background: #fff; padding: 8px;
   }
-  .gallery figcaption { font-size: var(--fs-2xs); color: var(--muted); margin-top: 6px; }
+  .gallery figcaption { font-size: var(--fs-2xs); color: var(--muted); margin: 6px 0 0; }
 
   /* Platforms */
   .platforms { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
