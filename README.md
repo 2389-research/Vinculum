@@ -1,3 +1,12 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/2389-research/Vinculum/main/docs/assets/wordmark-dark.png">
+    <img alt="Vinculum" src="https://raw.githubusercontent.com/2389-research/Vinculum/main/docs/assets/wordmark-light.png" height="76">
+  </picture>
+</p>
+
+<p align="center"><em>The wordmark above is <code>\sqrt{\mathrm{Vinculum}}</code>, typeset by Vinculum itself.</em></p>
+
 # Vinculum
 
 **Native LaTeX math typesetting for Apple platforms. Real glyph shapes, TeX
