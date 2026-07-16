@@ -676,7 +676,10 @@ public enum MathParser {
     private static func endsStatefulScope(_ token: Token) -> Bool {
         switch token {
         case .groupClose, .character("&"): return true
-        case .command(let n): return n == "right" || n == "middle" || n == "\\"
+        // `\end` closes the environment body; a stateful switch that is the last
+        // token of a cell must stop here, or its scan runs through `\end{env}`
+        // and swallows the environment terminator and everything after it (#2).
+        case .command(let n): return n == "right" || n == "middle" || n == "\\" || n == "end"
         default: return false
         }
     }

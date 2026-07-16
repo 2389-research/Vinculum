@@ -364,6 +364,24 @@ final class MathParserTests: XCTestCase {
         XCTAssertTrue(MathParser.isFullySupported(node))
     }
 
+    func testStatefulSwitchAtCellEndDoesNotSwallowEnd() {
+        // A stateful \bf as the last token of the last cell must not run its scan
+        // through the environment's own \end and absorb it + trailing content (#2).
+        let node = MathParser.parse("\\begin{pmatrix} a & b \\\\ c & \\bf d \\end{pmatrix} z")
+        guard case .row(let children) = node,
+              let matrix = children.first(where: { if case .matrix = $0 { return true }; return false }),
+              case .matrix(let rows, let left, let right, _) = matrix else {
+            return XCTFail("expected a pmatrix followed by trailing z, got \(node)")
+        }
+        XCTAssertEqual(left, "(")
+        XCTAssertEqual(right, ")")
+        XCTAssertEqual(rows.count, 2)
+        XCTAssertEqual(rows[1].count, 2, "last row keeps both cells; \\end was not fused into it")
+        XCTAssertTrue(children.contains { if case .symbol(let s, _, _) = $0 { return s == "z" }; return false },
+                      "the trailing z survived past the environment")
+        XCTAssertTrue(MathParser.isFullySupported(node))
+    }
+
     func testAlignedatSkipsColumnCountArgument() {
         // The `{3}` after alignedat must not leak into the first cell.
         let node = MathParser.parse("\\begin{alignedat}{3} a &= b \\end{alignedat}")
