@@ -36,6 +36,13 @@ jobs:
       # including the render smoke tests.
       - name: Build + test (LinuxRaster)
         run: |
+          # Restore the pinned Silica/Cairo/transitive graph so this — the only
+          # check that builds the raster backend — is reproducible instead of
+          # resolving branch:master against upstream HEAD every run (#32). CI-only:
+          # the root Package.resolved stays git-ignored, so default consumers keep
+          # a Silica-free graph. To bump: `swift package update --traits LinuxRaster`
+          # then `cp Package.resolved ci/Package.resolved.linux`.
+          cp ci/Package.resolved.linux Package.resolved
           swift build --traits LinuxRaster
           swift test --traits LinuxRaster
 
