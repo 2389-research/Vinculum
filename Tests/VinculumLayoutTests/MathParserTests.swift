@@ -64,6 +64,51 @@ final class MathParserTests: XCTestCase {
         XCTAssertEqual(sup.first, .symbol("\u{2032}", .ordinary, style: .roman))
     }
 
+    /// First `.unsupported` source anywhere in the tree, via the canonical
+    /// `MathNode.children` traversal (robust to structural nesting).
+    private func firstUnsupported(_ n: MathNode) -> String? {
+        if case .unsupported(let s) = n { return s }
+        for c in n.children { if let s = firstUnsupported(c) { return s } }
+        return nil
+    }
+
+    func testDoubleSameDirectionScriptDegradesToSourceNotSilentDrop() {
+        // a_b_c is a TeX "Double subscript" error; we must not silently drop b
+        // and render a_c — it degrades to a visible unsupported source (#9).
+        let node = MathParser.parse("a_b_c")
+        XCTAssertFalse(MathParser.isFullySupported(node), "double subscript must be flagged, not silently accepted")
+        // Single-atom pieces reconstruct un-braced, matching user spelling.
+        XCTAssertEqual(firstUnsupported(node), "a_b_c", "both scripts survive; source matches user spelling")
+    }
+
+    func testDoubleScriptDiagnosticIsRangeLocatable() {
+        // Because the source is reconstructed close to user spelling, the
+        // diagnostic can range-highlight it instead of yielding a nil range.
+        let issues = MathParser.diagnostics(for: "a_b_c")
+        XCTAssertFalse(issues.isEmpty, "double subscript produces a diagnostic")
+        XCTAssertNotNil(issues.first?.range, "the offending snippet is locatable in the source")
+    }
+
+    func testDoubleScriptOnGroupedBaseKeepsBaseBraced() {
+        // {a+b}_c_d must keep the grouped base braced, not degrade to
+        // "a+b_c_d" which would misread b as the base.
+        let node = MathParser.parse("{a+b}_c_d")
+        XCTAssertFalse(MathParser.isFullySupported(node))
+        let src = firstUnsupported(node)
+        XCTAssertNotNil(src)
+        XCTAssertTrue(src?.hasPrefix("{a+b}") == true, "grouped base stays braced, got: \(src ?? "nil")")
+    }
+
+    func testSingleSubAndSuperscriptStillParse() {
+        // The fix must not disturb the normal one-each case.
+        guard case .scripts(let base, .some(let sub), .some(let sup)) = MathParser.parse("a_b^c") else {
+            return XCTFail("expected scripts with both sub and sup")
+        }
+        XCTAssertEqual(base, .symbol("a", .ordinary, style: .italic))
+        XCTAssertEqual(sub, .symbol("b", .ordinary, style: .italic))
+        XCTAssertEqual(sup, .symbol("c", .ordinary, style: .italic))
+    }
+
     func testDfracForcesDisplayStyle() {
         // \dfrac wraps its fraction in a display-forcing style node.
         guard case .mathStyle(let base, let style) = MathParser.parse("\\dfrac{a}{b}") else {

@@ -212,10 +212,32 @@ public enum MathParser {
 
         var sub: MathNode?
         var sup: MathNode?
+        var scripts: [(isSup: Bool, atom: MathNode)] = []
         while let mark = tokens.first, mark == .superscriptMark || mark == .subscriptMark {
             tokens.removeFirst()
             let script = parseAtom(&tokens) ?? .row([])
-            if mark == .superscriptMark { sup = script } else { sub = script }
+            let isSup = (mark == .superscriptMark)
+            if isSup { sup = script } else { sub = script }
+            scripts.append((isSup, script))
+        }
+        // A repeated same-direction script (a_b_c, x^2^3) is a TeX "Double
+        // subscript/superscript" error. Rather than silently clobbering the
+        // earlier atom — dropping content with no diagnostic, against the
+        // degrade-never-vanish contract — reconstruct the source and surface the
+        // whole scripted atom as unsupported so nothing is lost silently (#9).
+        let supCount = scripts.filter(\.isSup).count
+        if supCount > 1 || scripts.count - supCount > 1 {
+            // Reconstruct close to user spelling: brace only composite (multi-atom)
+            // pieces, so a_b_c → "a_b_c" (locatable by diagnostics(for:)'s
+            // range(of:)), while a grouped base/script like {a+b}_c keeps its
+            // braces and isn't misread as a bare base.
+            func serial(_ n: MathNode) -> String {
+                if case .row(let c) = n, c.count != 1 { return "{\(n.toLaTeX())}" }
+                return n.toLaTeX()
+            }
+            var src = serial(node) + String(repeating: "'", count: primes)
+            for s in scripts { src += (s.isSup ? "^" : "_") + serial(s.atom) }
+            return .unsupported(src)
         }
         if primes > 0 {
             let primeGlyphs = MathNode.symbol(String(repeating: "\u{2032}", count: primes), .ordinary, style: .roman)
