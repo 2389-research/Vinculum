@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <title>Vinculum — native LaTeX math typesetting</title>
-<meta name="description" content="Native LaTeX math typesetting for Apple platforms and Linux. Real glyph shapes and TeX metrics from the font's OpenType MATH table — no MathJax, no WebView, zero dependencies.">
+<meta name="description" content="Native LaTeX math typesetting for Apple platforms and Linux. Real glyph shapes and TeX metrics from the font's OpenType MATH table — no MathJax, no WebView, no third-party Swift dependencies.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='14'>➗</text></svg>">
 <style>
   :root {
@@ -90,6 +90,7 @@
   h1 { font-size: var(--fs-h1); line-height: var(--lh-tight); letter-spacing: var(--ls-tight); margin: 0 0 24px; text-wrap: balance; }
   .lede { font-size: var(--fs-lede); line-height: 1.45; color: var(--muted); max-width: var(--measure); margin: 0 0 28px; }
   .cta { display: flex; flex-wrap: wrap; gap: 12px; }
+  .fit { font-size: var(--fs-xs); color: var(--muted); max-width: var(--measure); margin: 20px 0 0; }
   .btn {
     display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: var(--fs-sm);
     padding: 11px 20px; border-radius: 10px; border: 1px solid transparent;
@@ -120,6 +121,15 @@
   .card h3 { margin: 0 0 6px; font-size: var(--fs-md); line-height: 1.25; text-wrap: balance; }
   .card p { margin: 0; color: var(--muted); font-size: var(--fs-xs); }
   .card .ic { color: var(--blue); font-size: 20px; line-height: 1; margin-bottom: 10px; }
+
+  /* Comparison figure */
+  .compare { text-align: center; }
+  .compare figure { margin: 0; }
+  .compare img {
+    max-width: 500px; width: 100%; height: auto; border: 1px solid var(--line);
+    border-radius: var(--radius); background: #fff; padding: 16px;
+  }
+  .compare figcaption { font-size: var(--fs-2xs); color: var(--muted); margin-top: 12px; }
 
   /* Code */
   pre {
@@ -167,6 +177,7 @@
     <span class="brand">Vinculum<span class="bar"> ⁄ </span></span>
     <nav class="nav-links">
       <a href="#features">Features</a>
+      <a href="#fidelity">Fidelity</a>
       <a href="#start">Quick start</a>
       <a href="#docs">Docs</a>
       <a class="gh" href="https://github.com/2389-research/Vinculum">GitHub ↗</a>
@@ -182,16 +193,33 @@
       <p class="lede">
         Real glyph shapes and TeX metrics read straight from the font’s OpenType
         <b>MATH</b>&nbsp;table — following Knuth’s Appendix&nbsp;G. No MathJax, no KaTeX,
-        no WebView, zero third-party dependencies.
+        no WebView, and no third-party Swift dependencies.
       </p>
       <div class="cta">
         <a class="btn btn-primary" href="https://github.com/2389-research/Vinculum">View on GitHub</a>
         <a class="btn btn-ghost" href="#start">Get started</a>
       </div>
+      <p class="fit">
+        A Swift package for Apple platforms &amp; Linux. Not shipping Swift? Render to
+        self-contained SVG or PNG and serve the output from any backend.
+      </p>
       <div class="hero-art">
         <img src="https://raw.githubusercontent.com/2389-research/Vinculum/gallery/04-equations.png"
              alt="Rendered equations: quadratic formula, Euler's identity, Schrödinger equation, Bayes' theorem, Maxwell's equations, the Riemann zeta function"
              loading="lazy">
+      </div>
+    </div>
+  </section>
+
+  <section id="platforms">
+    <div class="wrap">
+      <h2>Runs where you do</h2>
+      <p class="section-sub">The layout engine is platform-free, so the same typesetting drives every target.</p>
+      <div class="platforms">
+        <div class="card"><div class="ic"></div><h3>Apple platforms</h3>
+          <p>macOS · iOS · visionOS · tvOS. Draws with OS-provided CoreText/CoreGraphics — nothing else linked — into a baseline-aligned <code>NSTextAttachment</code>, SwiftUI <code>MathView</code>, or <code>VinculumLabel</code>.</p></div>
+        <div class="card"><div class="ic">🐧</div><h3>Linux &amp; server-side</h3>
+          <p>Native PNGs via Silica/Cairo + FreeType, behind the opt-in <code>LinuxRaster</code> trait — or self-contained SVG, which needs neither. Default builds stay dependency-free. <a href="https://github.com/2389-research/Vinculum/blob/main/docs/LINUX.md">LINUX.md ↗</a></p></div>
       </div>
     </div>
   </section>
@@ -216,6 +244,53 @@
           <p>Every equation carries a ClearSpeak-style description, so VoiceOver reads the mathematics aloud instead of announcing “image”.</p></div>
         <div class="card"><div class="ic">↺</div><h3>Round-trip &amp; hit-testing</h3>
           <p><code>MathNode.toLaTeX()</code>, source-ranged parse diagnostics, and an opt-in hit-test substrate mapping points back to the subtree that drew them.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="fidelity">
+    <div class="wrap">
+      <h2>The same equation, two engines</h2>
+      <p class="section-sub">
+        The claim is TeX-grade output — so here it is beside real <code>pdfTeX</code>.
+        The identical LaTeX through both: Vinculum in Latin&nbsp;Modern, pdfTeX in
+        Computer&nbsp;Modern (the same lineage). Judge the fidelity yourself.
+      </p>
+      <div class="compare">
+        <figure>
+          <img src="assets/vs-tex.png"
+               alt="Three equations — the quadratic formula, a sum-of-squares identity, and a partial derivative with a continued fraction — each rendered by pdfTeX and by Vinculum, appearing essentially identical"
+               loading="lazy">
+          <figcaption>Regenerated by <code>scripts/compare-tex.sh</code> — the same source through both engines, nothing retouched.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Show, don’t tell</h2>
+      <p class="section-sub">Every image below is regenerated from the live engine on each push — always current, never hand-made.</p>
+      <div class="gallery">
+        <figure><img src="https://raw.githubusercontent.com/2389-research/Vinculum/gallery/01-core.png" alt="Fractions, roots, scripts and operators" loading="lazy"><figcaption>Fractions · roots · scripts · operators</figcaption></figure>
+        <figure><img src="https://raw.githubusercontent.com/2389-research/Vinculum/gallery/02-structures.png" alt="Delimiters, matrices, cases, aligned environments" loading="lazy"><figcaption>Delimiters · matrices · environments</figcaption></figure>
+        <figure><img src="https://raw.githubusercontent.com/2389-research/Vinculum/gallery/03-notation.png" alt="Accents, binomials, braces, arrows, alphabets, color" loading="lazy"><figcaption>Accents · braces · arrows · color</figcaption></figure>
+        <figure><img src="https://raw.githubusercontent.com/2389-research/Vinculum/gallery/07-fonts.png" alt="The same equation in each of the five bundled fonts" loading="lazy"><figcaption>One engine, five fonts</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section id="llm">
+    <div class="wrap">
+      <h2>Built for LLM output</h2>
+      <p class="section-sub">Models emit prose with math mixed in — and, mid-stream, sometimes half-finished LaTeX. Vinculum takes the whole string and does the right thing.</p>
+      <div class="grid">
+        <div class="card"><div class="ic">$…$</div><h3>All four delimiters</h3>
+          <p>One call renders a whole response — inline <code>$…$</code> and <code>\(…\)</code>, display <code>$$…$$</code> and <code>\[…\]</code> — as native typeset math set inline with the prose.</p></div>
+        <div class="card"><div class="ic">⚠</div><h3>Never a broken render</h3>
+          <p>Malformed or half-streamed LaTeX a model hallucinates degrades to its visible source — a labeled fallback, never a mangled glyph and never a crash.</p></div>
+        <div class="card"><div class="ic">🔊</div><h3>Spoken, not “image”</h3>
+          <p>Every rendered equation carries a ClearSpeak-style description, so assistive tech reads the math aloud instead of announcing “image”.</p></div>
       </div>
     </div>
   </section>
@@ -247,31 +322,6 @@ textView.textStorage?.setAttributedString(
     </div>
   </section>
 
-  <section>
-    <div class="wrap">
-      <h2>Show, don’t tell</h2>
-      <p class="section-sub">Every image below is regenerated from the live engine on each push — always current, never hand-made.</p>
-      <div class="gallery">
-        <figure><img src="https://raw.githubusercontent.com/2389-research/Vinculum/gallery/01-core.png" alt="Fractions, roots, scripts and operators" loading="lazy"><figcaption>Fractions · roots · scripts · operators</figcaption></figure>
-        <figure><img src="https://raw.githubusercontent.com/2389-research/Vinculum/gallery/02-structures.png" alt="Delimiters, matrices, cases, aligned environments" loading="lazy"><figcaption>Delimiters · matrices · environments</figcaption></figure>
-        <figure><img src="https://raw.githubusercontent.com/2389-research/Vinculum/gallery/03-notation.png" alt="Accents, binomials, braces, arrows, alphabets, color" loading="lazy"><figcaption>Accents · braces · arrows · color</figcaption></figure>
-        <figure><img src="https://raw.githubusercontent.com/2389-research/Vinculum/gallery/07-fonts.png" alt="The same equation in each of the five bundled fonts" loading="lazy"><figcaption>One engine, five fonts</figcaption></figure>
-      </div>
-    </div>
-  </section>
-
-  <section>
-    <div class="wrap">
-      <h2>Runs where you do</h2>
-      <div class="platforms">
-        <div class="card"><div class="ic"></div><h3>Apple platforms</h3>
-          <p>macOS · iOS · visionOS · tvOS. Draws with CoreText/CoreGraphics into a baseline-aligned <code>NSTextAttachment</code>, SwiftUI <code>MathView</code>, or <code>VinculumLabel</code>.</p></div>
-        <div class="card"><div class="ic">🐧</div><h3>Linux &amp; server-side</h3>
-          <p>Native PNGs via Silica/Cairo + FreeType (the <code>LinuxRaster</code> trait), or self-contained SVG anywhere — the layout engine is platform-free. <a href="https://github.com/2389-research/Vinculum/blob/main/docs/LINUX.md">LINUX.md ↗</a></p></div>
-      </div>
-    </div>
-  </section>
-
   <section id="docs">
     <div class="wrap">
       <h2>Documentation</h2>
@@ -289,11 +339,23 @@ textView.textStorage?.setAttributedString(
       </div>
     </div>
   </section>
+
+  <section id="why">
+    <div class="wrap">
+      <h2>Why “Vinculum”?</h2>
+      <p class="section-sub">
+        A <i>vinculum</i> is the bar itself — the line over a fraction, a root, or a
+        repeating decimal. The one mark every math renderer has to get right, and the
+        thing this library is named for. The <span style="color:var(--blue)">⁄</span> in
+        the wordmark is that bar.
+      </p>
+    </div>
+  </section>
 </main>
 
 <footer>
   <div class="wrap">
-    <div>Vinculum — MIT-licensed. <span class="kbd">from:&nbsp;"1.4.1"</span></div>
+    <div>Vinculum — MIT-licensed, built by 2389&nbsp;Research. <span class="kbd">from:&nbsp;"1.4.1"</span></div>
     <div><a href="https://github.com/2389-research/Vinculum">GitHub</a> · <a href="https://github.com/2389-research/Vinculum/blob/main/CHANGELOG.md">Changelog</a> · <a href="https://github.com/2389-research/Vinculum/blob/main/LICENSE">License</a></div>
   </div>
 </footer>
