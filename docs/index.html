@@ -284,6 +284,27 @@
     </div>
   </section>
 
+  <section id="performance">
+    <div class="wrap">
+      <h2>Fast, and we measured it</h2>
+      <p class="section-sub">No WebView, no JavaScript engine — a cold render is a parse, a dozen CoreText calls, and a draw. We profiled it phase by phase; the full breakdown and methodology are in the report.</p>
+      <div class="grid">
+        <div class="card"><div class="ic">⚡</div><h3>~0.5&nbsp;µs warm</h3>
+          <p>A previously-seen equation is an <code>NSCache</code> hit keyed by content, theme, size, and font — re-rendering costs essentially nothing.</p></div>
+        <div class="card"><div class="ic">❄️</div><h3>~0.2&nbsp;ms cold</h3>
+          <p>First sight of an equation: parse → layout → scene. The first on-screen paint adds ~0.23&nbsp;ms, then the OS caches the bitmap.</p></div>
+        <div class="card"><div class="ic">🐧</div><h3>~8&nbsp;µs headless</h3>
+          <p>Pure-Swift layout with no CoreText and no raster — the Linux and SVG geometry path.</p></div>
+        <div class="card"><div class="ic">📊</div><h3>~77% is CoreText</h3>
+          <p>Measuring and drawing glyphs — the work any native renderer does. Vinculum's own parse + geometry is under a fifth of the cold path.</p></div>
+      </div>
+      <p style="color:var(--muted);font-size:var(--fs-xs);margin:18px 0 0;max-width:var(--measure)">
+        Release medians on Apple silicon. Full phase-by-phase breakdown, the deferred-rasterization finding, and debug-vs-release in
+        <a href="https://github.com/2389-research/Vinculum/blob/main/docs/PERFORMANCE.md">PERFORMANCE.md ↗</a>.
+      </p>
+    </div>
+  </section>
+
   <section id="llm">
     <div class="wrap">
       <h2>Built for LLM output</h2>
@@ -339,6 +360,7 @@ textView.textStorage?.setAttributedString(
         <a class="doc" href="https://github.com/2389-research/Vinculum/blob/main/docs/FONTS.md"><b>Fonts</b><span>The five faces, compared; bring-your-own</span></a>
         <a class="doc" href="https://github.com/2389-research/Vinculum/blob/main/docs/INTEGRATION.md"><b>Integration</b><span>Attachments, documents, views, SVG, threading, caching</span></a>
         <a class="doc" href="https://github.com/2389-research/Vinculum/blob/main/docs/LINUX.md"><b>Linux</b><span>The Silica/Cairo/FreeType raster backend</span></a>
+        <a class="doc" href="https://github.com/2389-research/Vinculum/blob/main/docs/PERFORMANCE.md"><b>Performance</b><span>Phase-by-phase profile — where every microsecond goes</span></a>
         <a class="doc" href="https://github.com/2389-research/Vinculum/blob/main/docs/ROADMAP.md"><b>Roadmap</b><span>Where it’s been, and the open lanes ahead</span></a>
       </div>
     </div>

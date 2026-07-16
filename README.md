@@ -454,22 +454,29 @@ per-subtree during layout. That's the whole surface — see
 
 ## Performance
 
-Measured on Apple silicon (M-series, debug build, medians — the
-`MathPerformanceTests` suite re-measures on every run and enforces loose
-ceilings):
+Release-build medians on Apple silicon (M-series), Latin Modern — from the
+`MathProfileTests` phase profiler and the `MathPerformanceTests` ceilings, both
+re-run on demand. **Full breakdown, methodology, and the deferred-rasterization
+finding in [docs/PERFORMANCE.md](docs/PERFORMANCE.md).**
 
 | Path | Time |
 | --- | --- |
-| Cold render (parse → layout → rasterize, quadratic formula) | **~0.3 ms** |
-| Warm render (cache hit) | **~0.7 µs** |
-| Headless layout only (the Linux path) | **~40 µs** |
+| Warm render (cache hit) | **~0.5 µs** |
+| Cold cache-fill (parse → layout → scene; pixels deferred) | **~0.2 ms** |
+| Cold + first paint (rasterization included) | **~0.44 ms** |
+| Headless layout only (pure Swift — the Linux / SVG path) | **~8 µs** |
+
+Where a cold render goes: **~60% rasterizing glyphs, ~25% layout** (two-thirds
+of which is CoreText text measurement), **~9% parse, ~5%** the spoken-math
+description. So **~77% of a cold render is CoreText/CoreGraphics** measuring and
+drawing glyphs — the work any native renderer does; Vinculum's own parse +
+geometry is under a fifth. On macOS the pixel rasterization is *deferred* to
+first paint (lazy `NSImage`); on iOS it's paid eagerly at cache-fill.
 
 - **Renders are cached** by content + theme + size + font (`NSCache`,
   bounded by count and pixel-byte cost). A `nil` (unsupported) result is
   cached as a negative entry, so a live editor doesn't re-parse known-bad
   LaTeX every keystroke.
-- Layout is allocation-light struct geometry with no WebView spin-up — the
-  cost is one CoreText line measurement per glyph run plus arithmetic.
 - The parser is bounded twice: a linear pre-scan caps brace/environment
   nesting and a runtime depth counter caps brace-free command recursion —
   adversarial input degrades to fallback instead of overflowing any stack,
