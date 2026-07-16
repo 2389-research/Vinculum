@@ -64,20 +64,39 @@ final class MathParserTests: XCTestCase {
         XCTAssertEqual(sup.first, .symbol("\u{2032}", .ordinary, style: .roman))
     }
 
+    /// First `.unsupported` source anywhere in the tree, via the canonical
+    /// `MathNode.children` traversal (robust to structural nesting).
+    private func firstUnsupported(_ n: MathNode) -> String? {
+        if case .unsupported(let s) = n { return s }
+        for c in n.children { if let s = firstUnsupported(c) { return s } }
+        return nil
+    }
+
     func testDoubleSameDirectionScriptDegradesToSourceNotSilentDrop() {
         // a_b_c is a TeX "Double subscript" error; we must not silently drop b
         // and render a_c — it degrades to a visible unsupported source (#9).
-        func firstUnsupported(_ n: MathNode) -> String? {
-            if case .unsupported(let s) = n { return s }
-            if case .row(let ch) = n { for c in ch { if let s = firstUnsupported(c) { return s } } }
-            return nil
-        }
         let node = MathParser.parse("a_b_c")
         XCTAssertFalse(MathParser.isFullySupported(node), "double subscript must be flagged, not silently accepted")
-        guard let src = firstUnsupported(node) else {
-            return XCTFail("expected an unsupported degrade, got \(node)")
-        }
-        XCTAssertTrue(src.contains("b") && src.contains("c"), "both scripts survive in the source: \(src)")
+        // Single-atom pieces reconstruct un-braced, matching user spelling.
+        XCTAssertEqual(firstUnsupported(node), "a_b_c", "both scripts survive; source matches user spelling")
+    }
+
+    func testDoubleScriptDiagnosticIsRangeLocatable() {
+        // Because the source is reconstructed close to user spelling, the
+        // diagnostic can range-highlight it instead of yielding a nil range.
+        let issues = MathParser.diagnostics(for: "a_b_c")
+        XCTAssertFalse(issues.isEmpty, "double subscript produces a diagnostic")
+        XCTAssertNotNil(issues.first?.range, "the offending snippet is locatable in the source")
+    }
+
+    func testDoubleScriptOnGroupedBaseKeepsBaseBraced() {
+        // {a+b}_c_d must keep the grouped base braced, not degrade to
+        // "a+b_c_d" which would misread b as the base.
+        let node = MathParser.parse("{a+b}_c_d")
+        XCTAssertFalse(MathParser.isFullySupported(node))
+        let src = firstUnsupported(node)
+        XCTAssertNotNil(src)
+        XCTAssertTrue(src?.hasPrefix("{a+b}") == true, "grouped base stays braced, got: \(src ?? "nil")")
     }
 
     func testSingleSubAndSuperscriptStillParse() {

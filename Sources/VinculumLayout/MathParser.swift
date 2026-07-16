@@ -227,8 +227,16 @@ public enum MathParser {
         // whole scripted atom as unsupported so nothing is lost silently (#9).
         let supCount = scripts.filter(\.isSup).count
         if supCount > 1 || scripts.count - supCount > 1 {
-            var src = node.toLaTeX() + String(repeating: "'", count: primes)
-            for s in scripts { src += (s.isSup ? "^{" : "_{") + s.atom.toLaTeX() + "}" }
+            // Reconstruct close to user spelling: brace only composite (multi-atom)
+            // pieces, so a_b_c → "a_b_c" (locatable by diagnostics(for:)'s
+            // range(of:)), while a grouped base/script like {a+b}_c keeps its
+            // braces and isn't misread as a bare base.
+            func serial(_ n: MathNode) -> String {
+                if case .row(let c) = n, c.count != 1 { return "{\(n.toLaTeX())}" }
+                return n.toLaTeX()
+            }
+            var src = serial(node) + String(repeating: "'", count: primes)
+            for s in scripts { src += (s.isSup ? "^" : "_") + serial(s.atom) }
             return .unsupported(src)
         }
         if primes > 0 {
