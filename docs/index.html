@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
 <title>Vinculum — native LaTeX math typesetting</title>
 <meta name="description" content="Native LaTeX math typesetting for Apple platforms and Linux. Real glyph shapes and TeX metrics from the font's OpenType MATH table — no MathJax, no WebView, zero dependencies.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='14'>➗</text></svg>">
@@ -12,6 +13,25 @@
     --ink: #1a1d24; --muted: #5b6472; --line: #e6e9ef;
     --bg: #ffffff; --card: #f7f9fc; --code-bg: #f4f6fa;
     --radius: 12px; --maxw: 960px;
+
+    color-scheme: light dark;
+    accent-color: var(--blue);
+
+    /* Type scale — rem-based (respects user font-size), near-duplicates removed */
+    --fs-2xs: 0.8125rem;  /* 13px — eyebrow, captions, kbd, code-label, doc span */
+    --fs-xs:  0.875rem;   /* 14px — nav, card body, footer, meta */
+    --fs-sm:  0.9375rem;  /* 15px — buttons */
+    --fs-base:1rem;       /* 16px — body */
+    --fs-md:  1.125rem;   /* 18px — brand, card h3, doc title */
+    --fs-code:0.875rem;   /* 14px — code blocks */
+    --fs-lede:clamp(1.0625rem, 0.95rem + 0.9vw, 1.25rem);  /* 17 → 20 */
+    --fs-h2:  clamp(1.5rem, 1.25rem + 1.2vw, 1.875rem);    /* 24 → 30 */
+    --fs-h1:  clamp(2rem, 1.3rem + 3.6vw, 3.25rem);        /* 32 → 52 */
+
+    /* Line-height + tracking + measure tokens */
+    --lh-tight: 1.1; --lh-heading: 1.2; --lh-body: 1.6; --lh-code: 1.5;
+    --ls-tight: -0.02em; --ls-snug: -0.01em; --ls-wide: 0.08em;
+    --measure: 38rem;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -21,16 +41,29 @@
     }
   }
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
+  html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+  @media (prefers-reduced-motion: reduce) { html, * { scroll-behavior: auto; } }
   body {
     margin: 0; background: var(--bg); color: var(--ink);
-    font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    -webkit-font-smoothing: antialiased;
+    font: var(--fs-base)/var(--lh-body) -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "kern" 1, "liga" 1;
+    text-wrap: pretty;
+  }
+  @media (prefers-color-scheme: dark) {
+    body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
   }
   a { color: var(--blue); text-decoration: none; }
   a:hover { text-decoration: underline; }
+  ::selection { background: color-mix(in srgb, var(--blue) 22%, transparent); color: var(--ink); }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 4px; }
   .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
   code, pre { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  /* Inline code chip (not code inside <pre>) */
+  :not(pre) > code {
+    font-size: 0.92em; background: var(--code-bg); border: 1px solid var(--line);
+    border-radius: 5px; padding: 0.1em 0.35em; font-variant-ligatures: none;
+  }
 
   /* Header */
   header.top {
@@ -40,9 +73,9 @@
     border-bottom: 1px solid var(--line);
   }
   .navbar { display: flex; align-items: center; justify-content: space-between; height: 60px; }
-  .brand { font-weight: 700; font-size: 18px; letter-spacing: -0.01em; color: var(--ink); }
-  .brand .bar { color: var(--blue); }
-  .nav-links { display: flex; gap: 22px; align-items: center; font-size: 14.5px; }
+  .brand { font-weight: 700; font-size: var(--fs-md); letter-spacing: var(--ls-snug); color: var(--ink); }
+  .brand .bar { color: var(--blue); font-weight: 400; padding: 0 0.1em; }
+  .nav-links { display: flex; gap: 22px; align-items: center; font-size: var(--fs-xs); }
   .nav-links a { color: var(--muted); }
   .nav-links a:hover { color: var(--ink); text-decoration: none; }
   .nav-links .gh { color: var(--ink); font-weight: 600; }
@@ -50,15 +83,15 @@
   /* Hero */
   .hero { padding: 76px 0 40px; }
   .eyebrow {
-    display: inline-block; font-size: 13px; font-weight: 600; letter-spacing: 0.04em;
+    display: inline-block; font-size: var(--fs-2xs); font-weight: 600; letter-spacing: var(--ls-wide);
     text-transform: uppercase; color: var(--blue);
     background: var(--blue-wash); padding: 5px 12px; border-radius: 999px; margin-bottom: 20px;
   }
-  h1 { font-size: clamp(32px, 5vw, 52px); line-height: 1.08; letter-spacing: -0.02em; margin: 0 0 18px; }
-  .lede { font-size: clamp(17px, 2.2vw, 20px); color: var(--muted); max-width: 640px; margin: 0 0 28px; }
+  h1 { font-size: var(--fs-h1); line-height: var(--lh-tight); letter-spacing: var(--ls-tight); margin: 0 0 24px; text-wrap: balance; }
+  .lede { font-size: var(--fs-lede); line-height: 1.45; color: var(--muted); max-width: var(--measure); margin: 0 0 28px; }
   .cta { display: flex; flex-wrap: wrap; gap: 12px; }
   .btn {
-    display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 15px;
+    display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: var(--fs-sm);
     padding: 11px 20px; border-radius: 10px; border: 1px solid transparent;
   }
   .btn:hover { text-decoration: none; }
@@ -74,9 +107,9 @@
   }
 
   /* Sections */
-  section { padding: 52px 0; border-top: 1px solid var(--line); }
-  h2 { font-size: 26px; letter-spacing: -0.01em; margin: 0 0 8px; }
-  .section-sub { color: var(--muted); margin: 0 0 28px; max-width: 620px; }
+  section { padding: 56px 0; border-top: 1px solid var(--line); }
+  h2 { font-size: var(--fs-h2); line-height: var(--lh-heading); letter-spacing: var(--ls-snug); margin: 0 0 8px; text-wrap: balance; }
+  .section-sub { color: var(--muted); margin: 0 0 28px; max-width: var(--measure); }
 
   /* Feature grid */
   .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
@@ -84,17 +117,18 @@
     background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
     padding: 20px 20px 18px;
   }
-  .card h3 { margin: 0 0 6px; font-size: 16px; }
-  .card p { margin: 0; color: var(--muted); font-size: 14.5px; }
+  .card h3 { margin: 0 0 6px; font-size: var(--fs-md); line-height: 1.25; text-wrap: balance; }
+  .card p { margin: 0; color: var(--muted); font-size: var(--fs-xs); }
   .card .ic { color: var(--blue); font-size: 20px; line-height: 1; margin-bottom: 10px; }
 
   /* Code */
   pre {
     background: var(--code-bg); border: 1px solid var(--line); border-radius: var(--radius);
-    padding: 18px 20px; overflow-x: auto; font-size: 13.5px; line-height: 1.6; margin: 0 0 16px;
+    padding: 18px 20px; overflow-x: auto; font-size: var(--fs-code); line-height: var(--lh-code); margin: 0 0 16px;
+    tab-size: 4; font-variant-ligatures: none; font-variant-numeric: tabular-nums;
   }
   pre .c { color: var(--muted); }
-  .code-label { font-size: 13px; color: var(--muted); margin: 0 0 8px; font-weight: 600; }
+  .code-label { font-size: var(--fs-2xs); color: var(--muted); margin: 0 0 8px; font-weight: 600; }
 
   /* Gallery */
   .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
@@ -103,7 +137,7 @@
     width: 100%; height: auto; border: 1px solid var(--line); border-radius: 10px;
     background: #fff; padding: 8px;
   }
-  .gallery figcaption { font-size: 13px; color: var(--muted); margin-top: 6px; }
+  .gallery figcaption { font-size: var(--fs-2xs); color: var(--muted); margin-top: 6px; }
 
   /* Platforms */
   .platforms { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -116,13 +150,14 @@
     background: var(--card); color: var(--ink);
   }
   .doc:hover { border-color: var(--blue); text-decoration: none; }
-  .doc b { display: block; font-size: 15px; margin-bottom: 2px; }
-  .doc span { font-size: 13.5px; color: var(--muted); }
+  .doc b { display: block; font-size: var(--fs-md); line-height: 1.25; margin-bottom: 2px; }
+  .doc span { font-size: var(--fs-2xs); color: var(--muted); }
 
-  footer { border-top: 1px solid var(--line); padding: 32px 0 48px; color: var(--muted); font-size: 14px; }
+  footer { border-top: 1px solid var(--line); padding: 32px 0 48px; color: var(--muted); font-size: var(--fs-xs); }
   footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; }
   .kbd { font-family: ui-monospace, monospace; background: var(--code-bg); border: 1px solid var(--line);
-         border-radius: 6px; padding: 1px 6px; font-size: 13px; color: var(--ink); }
+         border-radius: 6px; padding: 1px 6px; font-size: var(--fs-2xs); color: var(--ink);
+         font-variant-numeric: tabular-nums; font-variant-ligatures: none; }
 </style>
 </head>
 <body>
@@ -145,8 +180,8 @@
       <span class="eyebrow">Swift · Apple &amp; Linux</span>
       <h1>Native LaTeX math typesetting.</h1>
       <p class="lede">
-        Real glyph shapes and TeX metrics read straight from the font's OpenType
-        <b>MATH</b> table — following Knuth's Appendix G. No MathJax, no KaTeX,
+        Real glyph shapes and TeX metrics read straight from the font’s OpenType
+        <b>MATH</b>&nbsp;table — following Knuth’s Appendix&nbsp;G. No MathJax, no KaTeX,
         no WebView, zero third-party dependencies.
       </p>
       <div class="cta">
@@ -172,11 +207,11 @@
         <div class="card"><div class="ic">∑</div><h3>Full MATH table</h3>
           <p>All 56 <code>MathConstants</code>, per-glyph italic corrections and accent attachment, cut-in kerning, the display/text/script/scriptscript style lattice.</p></div>
         <div class="card"><div class="ic">x²</div><h3>Optical scripts (ssty)</h3>
-          <p>Superscripts and deep indices use the font's purpose-redrawn heavier variants, so shrunk glyphs keep the base text's weight instead of thinning out.</p></div>
+          <p>Superscripts and deep indices use the font’s purpose-redrawn heavier variants, so shrunk glyphs keep the base text’s weight instead of thinning out.</p></div>
         <div class="card"><div class="ic">√</div><h3>Variants &amp; assembly</h3>
           <p>Tall fences and radicals step through size-variant ladders, then glyph assembly from end caps and extenders — constant stroke weight, like TeX.</p></div>
         <div class="card"><div class="ic">𝔸</div><h3>Five bundled fonts</h3>
-          <p>Latin Modern, TeX Gyre Termes &amp; Pagella, STIX Two, and the sans Fira Math — or bring any OpenType MATH font with <code>MathFont(url:)</code>.</p></div>
+          <p>Latin&nbsp;Modern, TeX&nbsp;Gyre Termes &amp; Pagella, STIX&nbsp;Two, and the sans Fira&nbsp;Math — or bring any OpenType MATH font with <code>MathFont(url:)</code>.</p></div>
         <div class="card"><div class="ic">🔊</div><h3>Spoken math</h3>
           <p>Every equation carries a ClearSpeak-style description, so VoiceOver reads the mathematics aloud instead of announcing “image”.</p></div>
         <div class="card"><div class="ic">↺</div><h3>Round-trip &amp; hit-testing</h3>
@@ -205,7 +240,7 @@ textView.textStorage?.setAttributedString(
     latex: <span style="color:var(--blue)">#"x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}"#</span>,
     display: true, mathTheme: .light, baseSize: 15)</pre>
 
-      <p style="color:var(--muted);font-size:14.5px;margin:0">
+      <p style="color:var(--muted);font-size:var(--fs-xs);margin:0;max-width:var(--measure)">
         Unsupported input degrades to visible source — never a broken half-render.
         See <a href="https://github.com/2389-research/Vinculum/blob/main/docs/INTEGRATION.md">INTEGRATION.md</a> for views, SVG, threading, and caching.
       </p>
@@ -244,13 +279,13 @@ textView.textStorage?.setAttributedString(
       <div class="docs">
         <a class="doc" href="https://github.com/2389-research/Vinculum#readme"><b>README</b><span>Overview, quick start, the full picture</span></a>
         <a class="doc" href="https://github.com/2389-research/Vinculum/blob/main/docs/ARCHITECTURE.md"><b>Architecture</b><span>The layout / render split, the scene IR, the seams — and the “why”</span></a>
-        <a class="doc" href="https://github.com/2389-research/Vinculum/blob/main/docs/ALGORITHM.md"><b>Algorithm</b><span>Rule-by-rule TeX Appendix G audit, one figure per rule</span></a>
+        <a class="doc" href="https://github.com/2389-research/Vinculum/blob/main/docs/ALGORITHM.md"><b>Algorithm</b><span>Rule-by-rule TeX Appendix&nbsp;G audit, one figure per rule</span></a>
         <a class="doc" href="https://github.com/2389-research/Vinculum/blob/main/docs/COMMANDS.md"><b>Commands</b><span>Every supported command, with specimen charts</span></a>
         <a class="doc" href="https://github.com/2389-research/Vinculum/blob/main/docs/COVERAGE.md"><b>Coverage</b><span>Feature-by-feature support matrix</span></a>
         <a class="doc" href="https://github.com/2389-research/Vinculum/blob/main/docs/FONTS.md"><b>Fonts</b><span>The five faces, compared; bring-your-own</span></a>
         <a class="doc" href="https://github.com/2389-research/Vinculum/blob/main/docs/INTEGRATION.md"><b>Integration</b><span>Attachments, documents, views, SVG, threading, caching</span></a>
         <a class="doc" href="https://github.com/2389-research/Vinculum/blob/main/docs/LINUX.md"><b>Linux</b><span>The Silica/Cairo/FreeType raster backend</span></a>
-        <a class="doc" href="https://github.com/2389-research/Vinculum/blob/main/docs/ROADMAP.md"><b>Roadmap</b><span>Where it's been, and the open lanes ahead</span></a>
+        <a class="doc" href="https://github.com/2389-research/Vinculum/blob/main/docs/ROADMAP.md"><b>Roadmap</b><span>Where it’s been, and the open lanes ahead</span></a>
       </div>
     </div>
   </section>
@@ -258,7 +293,7 @@ textView.textStorage?.setAttributedString(
 
 <footer>
   <div class="wrap">
-    <div>Vinculum — MIT-licensed. <span class="kbd">from: "1.4.1"</span></div>
+    <div>Vinculum — MIT-licensed. <span class="kbd">from:&nbsp;"1.4.1"</span></div>
     <div><a href="https://github.com/2389-research/Vinculum">GitHub</a> · <a href="https://github.com/2389-research/Vinculum/blob/main/CHANGELOG.md">Changelog</a> · <a href="https://github.com/2389-research/Vinculum/blob/main/LICENSE">License</a></div>
   </div>
 </footer>
