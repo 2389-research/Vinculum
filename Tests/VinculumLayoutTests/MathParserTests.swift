@@ -64,6 +64,32 @@ final class MathParserTests: XCTestCase {
         XCTAssertEqual(sup.first, .symbol("\u{2032}", .ordinary, style: .roman))
     }
 
+    func testDoubleSameDirectionScriptDegradesToSourceNotSilentDrop() {
+        // a_b_c is a TeX "Double subscript" error; we must not silently drop b
+        // and render a_c — it degrades to a visible unsupported source (#9).
+        func firstUnsupported(_ n: MathNode) -> String? {
+            if case .unsupported(let s) = n { return s }
+            if case .row(let ch) = n { for c in ch { if let s = firstUnsupported(c) { return s } } }
+            return nil
+        }
+        let node = MathParser.parse("a_b_c")
+        XCTAssertFalse(MathParser.isFullySupported(node), "double subscript must be flagged, not silently accepted")
+        guard let src = firstUnsupported(node) else {
+            return XCTFail("expected an unsupported degrade, got \(node)")
+        }
+        XCTAssertTrue(src.contains("b") && src.contains("c"), "both scripts survive in the source: \(src)")
+    }
+
+    func testSingleSubAndSuperscriptStillParse() {
+        // The fix must not disturb the normal one-each case.
+        guard case .scripts(let base, .some(let sub), .some(let sup)) = MathParser.parse("a_b^c") else {
+            return XCTFail("expected scripts with both sub and sup")
+        }
+        XCTAssertEqual(base, .symbol("a", .ordinary, style: .italic))
+        XCTAssertEqual(sub, .symbol("b", .ordinary, style: .italic))
+        XCTAssertEqual(sup, .symbol("c", .ordinary, style: .italic))
+    }
+
     func testDfracForcesDisplayStyle() {
         // \dfrac wraps its fraction in a display-forcing style node.
         guard case .mathStyle(let base, let style) = MathParser.parse("\\dfrac{a}{b}") else {

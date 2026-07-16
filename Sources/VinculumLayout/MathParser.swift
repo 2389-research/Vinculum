@@ -212,10 +212,24 @@ public enum MathParser {
 
         var sub: MathNode?
         var sup: MathNode?
+        var scripts: [(isSup: Bool, atom: MathNode)] = []
         while let mark = tokens.first, mark == .superscriptMark || mark == .subscriptMark {
             tokens.removeFirst()
             let script = parseAtom(&tokens) ?? .row([])
-            if mark == .superscriptMark { sup = script } else { sub = script }
+            let isSup = (mark == .superscriptMark)
+            if isSup { sup = script } else { sub = script }
+            scripts.append((isSup, script))
+        }
+        // A repeated same-direction script (a_b_c, x^2^3) is a TeX "Double
+        // subscript/superscript" error. Rather than silently clobbering the
+        // earlier atom — dropping content with no diagnostic, against the
+        // degrade-never-vanish contract — reconstruct the source and surface the
+        // whole scripted atom as unsupported so nothing is lost silently (#9).
+        let supCount = scripts.filter(\.isSup).count
+        if supCount > 1 || scripts.count - supCount > 1 {
+            var src = node.toLaTeX() + String(repeating: "'", count: primes)
+            for s in scripts { src += (s.isSup ? "^{" : "_{") + s.atom.toLaTeX() + "}" }
+            return .unsupported(src)
         }
         if primes > 0 {
             let primeGlyphs = MathNode.symbol(String(repeating: "\u{2032}", count: primes), .ordinary, style: .roman)
