@@ -22,14 +22,31 @@ public enum MathParser {
     /// leaves; the parse itself never fails.
     public static func parse(_ latex: String) -> MathNode {
         // Linear pre-scan bounds recursion before it starts: parse recursion
-        // depth ≤ max brace nesting + \begin count.
-        var depth = 0, maxDepth = 0
-        for ch in latex {
+        // depth ≤ max brace nesting + \begin count. It also rejects UNBALANCED
+        // braces, which is a correctness gate and not just a bound (#8): every
+        // `readBraceName` caller scans to its closing brace, so a single missing
+        // `}` let one reader swallow the entire rest of the stream as a name —
+        // `\textcolor{red a+b` yielded colour "reda+b" with an EMPTY body, and
+        // reported isFullySupported == true, so the host's fallback never fired
+        // and `a+b` simply vanished. Catching imbalance HERE fixes every reader
+        // at once, including any added later.
+        //
+        // Escape-aware: a backslash consumes the next character, so the literal
+        // delimiters `\{` / `\}` don't count (`\left\{ x \right\}` stays valid)
+        // and `\\{` still counts its brace.
+        var depth = 0, maxDepth = 0, balanced = true
+        var chars = latex.makeIterator()
+        while let ch = chars.next() {
+            if ch == "\\" { _ = chars.next(); continue }
             if ch == "{" { depth += 1; maxDepth = max(maxDepth, depth) }
-            if ch == "}" { depth = max(0, depth - 1) }
+            if ch == "}" {
+                if depth == 0 { balanced = false }   // a `}` with nothing open
+                depth = max(0, depth - 1)
+            }
         }
+        if depth != 0 { balanced = false }           // a `{` never closed
         let begins = latex.components(separatedBy: "\\begin").count - 1
-        guard maxDepth <= maxNestingDepth, begins <= maxNestingDepth else {
+        guard balanced, maxDepth <= maxNestingDepth, begins <= maxNestingDepth else {
             return .unsupported(latex)
         }
 
@@ -300,6 +317,7 @@ public enum MathParser {
 
         case "cfrac":
             var align: CfracAlign = .center        // amsmath default is centered
+            if hasUnterminatedBracket(tokens) { return .unsupported("\\" + name) }
             if tokens.first == .character("[") {
                 tokens.removeFirst()
                 var s = ""
@@ -344,6 +362,7 @@ public enum MathParser {
         case "sqrt":
             // Optional degree: \sqrt[3]{x}
             var degree: MathNode?
+            if hasUnterminatedBracket(tokens) { return .unsupported("\\" + name) }
             if tokens.first == .character("[") {
                 tokens.removeFirst()
                 var nodes: [MathNode] = []
@@ -505,6 +524,7 @@ public enum MathParser {
             // \xrightarrow[under]{over} — optional [under], then {over}. Each
             // variant draws its own head/shaft (hook, harpoon, mapsto, double).
             var under: MathNode?
+            if hasUnterminatedBracket(tokens) { return .unsupported("\\" + name) }
             if tokens.first == .character("[") {
                 tokens.removeFirst()
                 var nodes: [MathNode] = []
@@ -540,6 +560,7 @@ public enum MathParser {
         case "boxed", "fbox":
             return .decorated(base: parseAtom(&tokens) ?? .row([]), decoration: .boxed)
         case "rule":
+            if hasUnterminatedBracket(tokens) { return .unsupported("\\" + name) }
             if tokens.first == .character("[") {                 // optional [raise] — skip
                 while let t = tokens.first, t != .character("]") { tokens.removeFirst() }
                 if tokens.first == .character("]") { tokens.removeFirst() }
@@ -641,6 +662,7 @@ public enum MathParser {
         case "mathstrut":
             return .decorated(base: .symbol("(", .opening, style: .roman), decoration: .vphantom)
         case "smash":
+            if hasUnterminatedBracket(tokens) { return .unsupported("\\" + name) }
             if tokens.first == .character("[") {   // \smash[t]/[b] — treat as plain smash
                 while let t = tokens.first, t != .character("]") { tokens.removeFirst() }
                 if tokens.first == .character("]") { tokens.removeFirst() }
@@ -686,6 +708,25 @@ public enum MathParser {
     private static func parseAtomWithScripts(_ tokens: inout ArraySlice<Token>) -> MathNode? {
         guard let node = parseAtom(&tokens) else { return nil }
         return attachScriptsAndPrimes(node, &tokens)
+    }
+
+    /// True when an optional `[…]` argument opens here but is never closed
+    /// before end-of-stream.
+    ///
+    /// Each `[…]` reader scans to its `]` with an unbounded loop, so an
+    /// unterminated bracket let it swallow the whole rest of the formula as the
+    /// optional argument: `\sqrt[3{x} + y` gave degree `3x+y` and an EMPTY
+    /// radicand, yet reported `isFullySupported == true` — so the host's
+    /// fallback never fired and the body silently vanished (#8).
+    ///
+    /// Callers degrade to a visible `.unsupported` leaf instead. Because this
+    /// only PEEKS — consuming nothing — the tokens after the `[` still parse as
+    /// ordinary content, so the input degrades loudly without losing any of it.
+    ///
+    /// Brace imbalance is caught up front in `parse`; brackets can't be, since
+    /// unbalanced `[` is legitimate math (`[0,1)`), so it's checked per reader.
+    private static func hasUnterminatedBracket(_ tokens: ArraySlice<Token>) -> Bool {
+        tokens.first == .character("[") && !tokens.contains(.character("]"))
     }
 
     /// Reads a brace-delimited literal name like `{pmatrix}` or `{3}`.
@@ -755,7 +796,11 @@ public enum MathParser {
         // Starred matrix variants (`pmatrix*[r]`, `matrix*[l]`, …) carry an
         // optional column-alignment bracket. Consume it (it used to leak into
         // the first cell) and apply it uniformly via the array alignment path.
-        if starred, tokens.first == .character("[") {
+        // Only when the bracket is actually closed: an unterminated `[` would
+        // otherwise drain the rest of the stream — `\end` included — leaving no
+        // rows, so the entire environment silently disappeared. Left unconsumed
+        // it degrades visibly as a stray `[` in the first cell instead (#8).
+        if starred, !hasUnterminatedBracket(tokens), tokens.first == .character("[") {
             tokens.removeFirst()
             var spec = ""
             while let t = tokens.first, t != .character("]") {
