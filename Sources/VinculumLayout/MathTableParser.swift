@@ -367,6 +367,16 @@ package enum MathTableParser {
                     guard let vg = u16(b, c + 4 + 4 * k), let adv = u16(b, c + 6 + 4 * k) else { break }
                     vars.append(.init(glyphID: UInt16(vg), advance: CGFloat(adv) / em))
                 }
+                // Reject the structure on a short read, like every other parser
+                // here (valueMap, assembly, staircase, kernInfo, coverage all
+                // discard the whole record). This loop alone used to `break` and
+                // then keep the PARTIAL ladder, so a truncated font silently gave
+                // a glyph a short size ladder — missing exactly its largest
+                // variants, since records are ordered smallest-first. The result
+                // is a \left( that quietly stops growing at some size and gets
+                // scaled instead: degraded typography, no error, nothing red (#36).
+                // A well-formed font always satisfies this.
+                guard vars.count == vCount else { continue }
                 out[glyph] = MathVariantsData.Construction(
                     variants: vars,
                     assembly: asmOff > 0 ? assembly(at: c + asmOff) : nil)
