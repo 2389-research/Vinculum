@@ -157,18 +157,22 @@ public enum MathImageRenderer {
             }
         }
         if isTemplate { image = image.withRenderingMode(.alwaysTemplate) }
-        // UIImage's accessibility setters are MainActor-isolated and this
-        // builder is deliberately nonisolated (hosts pre-render off-main),
-        // so stamp only when already on main — still pre-publication, so
-        // the cached image is never mutated after it's shared. The speech
-        // always travels on RenderedMath/VinculumLabel/MathView regardless.
-        if Thread.isMainThread {
-            let stamped = image
-            MainActor.assumeIsolated {
-                stamped.isAccessibilityElement = true
-                stamped.accessibilityLabel = speech
-            }
-        }
+        // Pre-publication accessibility stamp (see Entry invariant), mirroring
+        // the AppKit branch above.
+        //
+        // This was previously gated behind `Thread.isMainThread` + a
+        // `MainActor.assumeIsolated`, on the premise that UIImage's accessibility
+        // setters are MainActor-isolated and would trap off-main. They are not:
+        // UIImage is not a UIView, and these come from the NSObject accessibility
+        // category with no actor isolation — a nonisolated builder may set them
+        // directly, verified off-main on a simulator. So the guard defended
+        // against a trap that cannot happen, and charged real accessibility for
+        // it: this builder is deliberately nonisolated because hosts pre-render
+        // off-main, and an equation whose FIRST render landed off-main was cached
+        // unstamped. Entries are immutable, so every later main-thread host reused
+        // that unlabeled bitmap and VoiceOver read "image" forever (#6).
+        image.isAccessibilityElement = true
+        image.accessibilityLabel = speech
         // UIGraphicsImageRenderer's default format uses the screen scale, so the
         // buffer really is `scale`× per axis. Ask the image rather than assume.
         let pixelScale = image.scale
