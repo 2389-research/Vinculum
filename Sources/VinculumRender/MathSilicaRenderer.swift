@@ -45,7 +45,6 @@ public enum MathSilicaRenderer {
                                  baseSize: CGFloat = 24, display: Bool = false) -> Data? {
         guard let (_, font) = loadFont(resource: resource) else { return nil }
 
-        let upm = Int(font.unitsPerEm)
         let constants = mathConstants(for: font) ?? .latinModern
 
         let measure: MathTextMeasurer = { text, size, _ in
