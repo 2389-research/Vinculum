@@ -14,7 +14,8 @@ extension MathLayoutEngine {
     /// (so nesting doesn't shrink) with the denominator aligned; the numerator
     /// is always centered.
     func cfracBox(_ num: MathNode, _ den: MathNode, align: CfracAlign, size: CGFloat) -> MathBox {
-        var numEngine = self; numEngine.cramped = false
+        // num_style preserves the enclosing cramped bit; denom_style forces it.
+        var numEngine = self                      // inherits self.cramped (#10)
         var denEngine = self; denEngine.cramped = true
         let topBox = numEngine.box(for: num, size: size, style: .display)    // full size + display
         let bottomBox = denEngine.box(for: den, size: size, style: .display)
@@ -57,7 +58,8 @@ extension MathLayoutEngine {
         // — so an exponent in the denominator rides lower than in the numerator.
         // The part scale moves the forced-style anchor with it (a
         // \displaystyle inside returns to the PART's full size).
-        var numEngine = self; numEngine.cramped = false; numEngine.styleAnchorSize = partSize
+        // num_style preserves the enclosing cramped bit; denom_style forces it (#10).
+        var numEngine = self; numEngine.styleAnchorSize = partSize
         var denEngine = self; denEngine.cramped = true; denEngine.styleAnchorSize = partSize
         let topBox = numEngine.box(for: top, size: partSize, style: style.fractionStyle)
         let bottomBox = denEngine.box(for: bottom, size: partSize, style: style.fractionStyle)

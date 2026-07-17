@@ -132,4 +132,53 @@ final class MathScriptTypographyTests: XCTestCase {
         // Same-width limits: centers differ by exactly δ (upper +δ/2, lower −δ/2).
         XCTAssertEqual((upper?.x ?? 0) - (lower?.x ?? 0), 2, accuracy: 0.001)
     }
+
+    // MARK: - Cramped inheritance (TeX sup_style / num_style)
+
+    /// Low-ink glyphs so Rule 18a's *nominal* shift governs the raise.
+    ///
+    /// This matters: with the standard mock's 0.7-em ink, the ink floor
+    /// `max(supRaise, inkAscent − 0.25·scriptSize)` ≈ 0.525·size dominates BOTH
+    /// shift constants (0.363 / 0.289), so cramped and uncramped land on the
+    /// identical clamped value and the assertion below could never fail.
+    private static let lowInkMeasurer: MathTextMeasurer = { text, size, _ in
+        GlyphMetrics(width: CGFloat(text.count) * size, ascent: size * 0.75, descent: size * 0.25,
+                     inkAscent: size * 0.1, inkDescent: -size * 0.05)
+    }
+
+    /// How far the inner exponent rides above its own base — the `z` above the
+    /// `y` in `x^{y^z}`. Absolute positions differ between expressions, so this
+    /// relative rise is what isolates the superscript shift under test.
+    private func innerExponentRise(_ latex: String) -> CGFloat? {
+        let engine = MathLayoutEngine(measure: Self.lowInkMeasurer, baseSize: 10)
+        let scene = engine.layout(MathParser.parse(latex), display: true)
+        var yOrigin: CGFloat?, zOrigin: CGFloat?
+        for e in scene.elements {
+            guard case let .glyphs(text, _, _, origin, _) = e else { continue }
+            if text == "\u{1D466}" { yOrigin = origin.y }   // math italic y
+            if text == "\u{1D467}" { zOrigin = origin.y }   // math italic z
+        }
+        guard let yOrigin, let zOrigin else { return nil }
+        return zOrigin - yOrigin
+    }
+
+    func testSuperscriptInheritsEnclosingCrampedBit() throws {
+        // TeX's sup_style PRESERVES the enclosing cramped bit (only sub_style and
+        // denom_style force it). A radicand is cramped, so the exponent nested
+        // inside \sqrt{x^{y^z}} must take superscriptShiftUpCramped and ride
+        // LOWER than the same exponent at top level (#10).
+        let uncramped = try XCTUnwrap(innerExponentRise(#"x^{y^z}"#))
+        let cramped = try XCTUnwrap(innerExponentRise(#"\sqrt{x^{y^z}}"#))
+        XCTAssertLessThan(cramped, uncramped,
+                          "an exponent nested inside a cramped radicand must use the cramped shift")
+    }
+
+    func testNumeratorInheritsEnclosingCrampedBit() throws {
+        // num_style preserves the bit too, so a scripted numerator inside a
+        // cramped context is itself cramped (#10).
+        let uncramped = try XCTUnwrap(innerExponentRise(#"\frac{x^{y^z}}{d}"#))
+        let cramped = try XCTUnwrap(innerExponentRise(#"\sqrt{\frac{x^{y^z}}{d}}"#))
+        XCTAssertLessThan(cramped, uncramped,
+                          "a numerator inside a cramped context must itself be laid out cramped")
+    }
 }
