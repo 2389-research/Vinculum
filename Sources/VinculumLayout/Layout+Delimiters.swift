@@ -129,6 +129,21 @@ extension MathLayoutEngine {
         var cellEngine = self
         cellEngine.styleAnchorSize = size
 
+        // TeX FIXES each environment's cell style — it is not inherited from the
+        // surrounding context, which is why no ambient MathStyle is threaded in
+        // here: it would be the wrong input. The cell style is a function of the
+        // environment alone.
+        //
+        //   aligned/align/gather/split → display  (amsmath sets \displaystyle)
+        //   matrix/array/cases         → text     (regardless of surroundings)
+        //
+        // This was hardcoded to .text for every environment, so a \sum or \int
+        // inside an `aligned` block came out text-size with side-set limits where
+        // real amsmath stacks display-size limits (#21). Note the matrix family
+        // staying .text is CORRECT, not a second bug to fix: promoting those to
+        // display — or making any of these inherit — would be TeX-incorrect.
+        let cellStyle: MathStyle = style == .aligned ? .display : .text
+
         let columns = rows.map(\.count).max() ?? 0
         var cellBoxes: [[MathBox]] = []
         var colWidth = [CGFloat](repeating: 0, count: columns)
@@ -137,7 +152,7 @@ extension MathLayoutEngine {
         for (r, row) in rows.enumerated() {
             var boxes: [MathBox] = []
             for (c, cell) in row.enumerated() {
-                let b = cellEngine.box(for: cell, size: size, style: .text)
+                let b = cellEngine.box(for: cell, size: size, style: cellStyle)
                 boxes.append(b)
                 colWidth[c] = max(colWidth[c], b.width)
                 rowAscent[r] = max(rowAscent[r], b.ascent)
