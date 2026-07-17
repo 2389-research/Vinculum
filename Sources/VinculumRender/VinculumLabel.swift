@@ -99,18 +99,33 @@ public final class VinculumLabel: PlatformView {
         renderedFlag = result != nil
         imageView.setImage(result?.image, ink: mathTheme.ink)
         imageSize = result?.image.size ?? .zero
-        // VoiceOver reads the equation itself.
-        let speech = result?.spokenDescription ?? latex
+        // The visible outcome — and the ONLY thing that may be exposed to
+        // VoiceOver. Derived once so the accessibility gate and the visual gate
+        // cannot drift apart.
+        let showsErrorCard = !renderedFlag && displayErrorInline && !latex.isEmpty
+
+        // VoiceOver reads the equation itself — but only when there IS something
+        // to read. Rendering nothing and still exposing an element labelled with
+        // the raw LaTeX put VoiceOver on an invisible, zero-size node spelling out
+        // "backslash n o t a command": exactly the half-render the type's contract
+        // forbids, leaking through the accessibility tree. The SwiftUI sibling
+        // MathView already gates this correctly; the label diverged (#7).
+        // Bound, not optional-chained: rendered math is ALWAYS exposed, and that
+        // half of the invariant is the dangerous one — silencing real math is a
+        // worse bug than the one above.
+        let speech: String? = if let result { result.spokenDescription }
+                              else if showsErrorCard { latex }
+                              else { nil }
         #if canImport(AppKit)
-        setAccessibilityElement(true)
+        setAccessibilityElement(speech != nil)
         setAccessibilityRole(.staticText)
         setAccessibilityLabel(speech)
         #else
-        isAccessibilityElement = true
+        isAccessibilityElement = speech != nil
         accessibilityTraits = .staticText
         accessibilityLabel = speech
         #endif
-        errorLabel.isHidden = renderedFlag || !displayErrorInline || latex.isEmpty
+        errorLabel.isHidden = !showsErrorCard
         if !errorLabel.isHidden { errorLabel.setErrorText(latex, size: baseSize) }
         relayout()
         invalidateIntrinsicContentSize()

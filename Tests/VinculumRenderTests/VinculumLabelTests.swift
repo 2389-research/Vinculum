@@ -45,6 +45,53 @@ final class VinculumLabelTests: XCTestCase {
                              "opt-in inline error shows the source")
     }
 
+    // MARK: - Accessibility follows the visible outcome (#7)
+
+    /// `isAccessibilityElement` / `accessibilityLabel` across AppKit + UIKit.
+    private func a11y(_ label: VinculumLabel) -> (element: Bool, text: String?) {
+        #if canImport(AppKit)
+        return (label.isAccessibilityElement(), label.accessibilityLabel())
+        #else
+        return (label.isAccessibilityElement, label.accessibilityLabel)
+        #endif
+    }
+
+    func testSilentUnsupportedExposesNoAccessibilityElement() {
+        // The silent-by-default contract has to hold in the ACCESSIBILITY tree too:
+        // the view draws nothing and reports zero size, so VoiceOver must not land
+        // on an invisible node and spell out "backslash n o t a command".
+        let label = VinculumLabel(frame: .zero)
+        label.latex = #"\notacommand{x}"#
+        XCTAssertFalse(label.isRendered)
+        XCTAssertEqual(label.intrinsicContentSize, .zero)
+        let (element, text) = a11y(label)
+        XCTAssertFalse(element, "nothing is drawn — nothing may be exposed")
+        XCTAssertNil(text, "the raw LaTeX source must not leak to VoiceOver")
+    }
+
+    func testInlineErrorCardIsReadableWhenVisible() {
+        // The mirror case: when the source card IS shown, reading it is correct.
+        let label = VinculumLabel(frame: .zero)
+        label.displayErrorInline = true
+        label.latex = #"\notacommand{x}"#
+        // Reading isRendered flushes the coalesced refresh — the accessibility
+        // state is only meaningful once refresh() has actually run.
+        XCTAssertFalse(label.isRendered)
+        let (element, text) = a11y(label)
+        XCTAssertTrue(element, "a visible source card must be reachable")
+        XCTAssertEqual(text, #"\notacommand{x}"#)
+    }
+
+    func testRenderedMathIsReadAsSpeechNotSource() {
+        let label = VinculumLabel(frame: .zero)
+        label.latex = #"x^2"#
+        XCTAssertTrue(label.isRendered)
+        let (element, text) = a11y(label)
+        XCTAssertTrue(element)
+        XCTAssertNotEqual(text, #"x^2"#, "VoiceOver reads spoken math, not the source")
+        XCTAssertEqual(text?.isEmpty, false)
+    }
+
     /// The review flagged template-image drawing as unverified on iOS
     /// (plausible black-on-dark). Rasterize a dark-theme label onto a dark
     /// background and require ink pixels that differ from it — on BOTH
