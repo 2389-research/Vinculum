@@ -30,9 +30,15 @@ genuine releases rather than doc bumps:
   metrics (#1), the two parser data-loss bugs (#2, #9), FreeType memory/thread
   safety (#4, #3), plus the P0 nets (reproducible Linux CI #32, Linux goldens
   #11). No API change → a patch.
-- The rest of Phase 1 (Apple-side #5/#6/#17/#7, layout fidelity #10/#20/#21, …)
-  → a following **1.4.3**.
-- Phase 2's API-3 rename is source-breaking → cut it (and API-4) in a **1.5.0**
+- **1.5.0 — shipped 2026-07-16.** The rest of Phase 1, and **Phase 1 is now
+  complete (16/16)**: `\nolimits` (#20), amsmath display style in aligned blocks
+  (#21), the parser's silent content loss on unterminated arguments (#8), three
+  accessibility bugs (#6, #7, #26), the truncated variant ladder (#36), plus the
+  test nets (#12, #46). **This was planned as a 1.4.3 patch and became a minor
+  bump**: #20 needs a new `MathNode` case, which is source-breaking for exhaustive
+  client switches. The version was planned for Phase 2's rename; that now needs
+  **1.6.0**.
+- Phase 2's API-3 rename is source-breaking → cut it (and API-4) in a **1.6.0**
   (or **2.0.0** if we treat the renames as major) so consumers move once.
 - Phases 3–5 → subsequent minor/patch releases.
 
@@ -79,9 +85,9 @@ to prove the memory/concurrency fixes.
 | #36 | FONT-2 · truncated variant ladder | Reject/handle truncated `MathVariants` construction data; targeted parser test. |
 | #26 | SWIFTUI-4 · `.isImage` trait | Mark `MathView` as static text for VoiceOver; manual verification. |
 | #12 | TEST-2 · fuzz never hits rasterizers | Add per-backend fuzz that reaches FreeType/Cairo/CoreText (guards LINUX-2/CONC-1). |
-| #46 | TEST-7 · concurrency stress (TSan) | Stress the render/measure caches under TSan (guards CONC-1). |
+| #46 | TEST-7 · concurrency stress | Stress the render/measure caches (guards CONC-1). **Shipped without TSan** — it cannot run for this package: SwiftPM/xcodebuild inject it into Apple-signed `xctest`, which dyld blocks, and the iOS-simulator flag reports success while instrumenting nothing (a deliberate race went unflagged). See the note in `RenderCacheConcurrencyTests`. |
 
-**Exit:** no known wrong-output or memory/concurrency defects; ship as 1.4.2/1.5.0.
+**Exit:** ✅ **met** — shipped as 1.4.2 + 1.5.0 (2026-07-16). No known wrong-output or memory/concurrency defects remain in this phase.
 
 ---
 
