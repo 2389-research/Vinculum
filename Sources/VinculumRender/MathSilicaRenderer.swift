@@ -39,15 +39,11 @@ public enum MathSilicaRenderer {
         return (otf, font)
     }
 
-    /// Render `latex` to PNG bytes with the given bundled font, or nil if the
-    /// LaTeX is unsupported or the font can't be loaded.
-    public static func renderPNG(latex: String, resource: String = "latinmodern-math",
-                                 baseSize: CGFloat = 24, display: Bool = false) -> Data? {
-        guard let (_, font) = loadFont(resource: resource) else { return nil }
-
-        let constants = mathConstants(for: font) ?? .latinModern
-
-        let measure: MathTextMeasurer = { text, size, _ in
+    /// The FreeType `MathTextMeasurer` for `font` — glyph metrics + ink extents
+    /// from the same face that outlines the glyphs. Shared with the display-list
+    /// tests so they build the exact scene `renderPNG` does (no drift).
+    static func freeTypeMeasurer(font: FreeTypeFont) -> MathTextMeasurer {
+        { text, size, _ in
             var width: CGFloat = 0
             var inkTop: CGFloat = 0, inkBot: CGFloat = 0, anyInk = false
             for scalar in text.unicodeScalars {
@@ -65,6 +61,16 @@ public enum MathSilicaRenderer {
                                 inkAscent: anyInk ? min(asc, inkTop) : asc,
                                 inkDescent: anyInk ? inkBot : -desc)
         }
+    }
+
+    /// Render `latex` to PNG bytes with the given bundled font, or nil if the
+    /// LaTeX is unsupported or the font can't be loaded.
+    public static func renderPNG(latex: String, resource: String = "latinmodern-math",
+                                 baseSize: CGFloat = 24, display: Bool = false) -> Data? {
+        guard let (_, font) = loadFont(resource: resource) else { return nil }
+
+        let constants = mathConstants(for: font) ?? .latinModern
+        let measure = freeTypeMeasurer(font: font)
 
         let node = MathParser.parse(latex)
         guard MathParser.isFullySupported(node) else { return nil }
@@ -92,6 +98,52 @@ public enum MathSilicaRenderer {
         // same way.
         let coords = Coords(pad: pad, baseline: scene.ascent + pad)
         draw(scene, in: ctx, coords: coords, font: font, ink: CGColor(red: 0, green: 0, blue: 0, alpha: 1))
+        return encodePNG(surface)
+    }
+
+    /// Rasterizes a platform-free `DisplayList` (`MathDisplayListRenderer`)
+    /// straight to PNG — no font needed, since the list carries its glyphs as
+    /// outlines. This dogfoods the display list through the real Cairo backend
+    /// and is the Linux counterpart of what the Android `Canvas` side draws: the
+    /// self-contained list in, pixels out. Bounds are tight; `pad` is the margin.
+    public static func png(for list: DisplayList, pad: CGFloat = 4) -> Data? {
+        let w = Int((list.width + pad * 2).rounded(.up))
+        let h = Int((list.height + pad * 2).rounded(.up))
+        guard w > 0, h > 0,
+              let surface = try? Cairo.Surface.Image(format: .argb32, width: w, height: h),
+              let ctx = try? CairoContext(surface: surface, size: CGSize(width: w, height: h),
+                                          flipped: true) else { return nil }
+
+        ctx.fillColor = CGColor(red: 1, green: 1, blue: 1, alpha: 1)
+        ctx.beginPath(); ctx.addRect(CGRect(x: 0, y: 0, width: CGFloat(w), height: CGFloat(h)))
+        ctx.fillPath(using: .winding)
+
+        let coords = Coords(pad: pad, baseline: list.ascent + pad)
+        for op in list.ops {
+            switch op {
+            case let .fillPath(subpaths, c):
+                ctx.fillColor = CGColor(red: c.red, green: c.green, blue: c.blue, alpha: c.alpha)
+                ctx.beginPath()
+                addPath(subpaths, in: ctx, coords: coords, dx: 0, dy: 0)   // paths are absolute
+                ctx.fillPath(using: .winding)
+
+            case let .fillRect(rect, c):
+                ctx.fillColor = CGColor(red: c.red, green: c.green, blue: c.blue, alpha: c.alpha)
+                let tl = coords.map(rect.origin.x, rect.origin.y + rect.size.height)
+                ctx.beginPath()
+                ctx.addRect(CGRect(x: tl.x, y: tl.y, width: rect.size.width, height: rect.size.height))
+                ctx.fillPath(using: .winding)
+
+            case let .strokePath(path, width, cap, join, c):
+                ctx.strokeColor = CGColor(red: c.red, green: c.green, blue: c.blue, alpha: c.alpha)
+                ctx.lineWidth = width
+                ctx.lineCap = cap.cgLineCap
+                ctx.lineJoin = join.cgLineJoin
+                ctx.beginPath()
+                addPath(path, in: ctx, coords: coords, dx: 0, dy: 0)
+                ctx.strokePath()
+            }
+        }
         return encodePNG(surface)
     }
 
