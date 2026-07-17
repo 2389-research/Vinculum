@@ -110,8 +110,12 @@ public final class VinculumLabel: PlatformView {
         // "backslash n o t a command": exactly the half-render the type's contract
         // forbids, leaking through the accessibility tree. The SwiftUI sibling
         // MathView already gates this correctly; the label diverged (#7).
-        let speech: String? = renderedFlag ? result?.spokenDescription
-                                           : (showsErrorCard ? latex : nil)
+        // Bound, not optional-chained: rendered math is ALWAYS exposed, and that
+        // half of the invariant is the dangerous one — silencing real math is a
+        // worse bug than the one above.
+        let speech: String? = if let result { result.spokenDescription }
+                              else if showsErrorCard { latex }
+                              else { nil }
         #if canImport(AppKit)
         setAccessibilityElement(speech != nil)
         setAccessibilityRole(.staticText)
