@@ -110,6 +110,7 @@ jobs:
             -destination "platform=iOS Simulator,name=$SIM" \
             -only-testing:VinculumRenderTests/VinculumLabelTests \
             -only-testing:VinculumRenderTests/MathFontConstantsTests \
+            -only-testing:VinculumRenderTests/MathImageAccessibilityTests \
             > ios-test.log 2>&1; then
             grep -E "error:|failed" ios-test.log | sort -u | head -40
             tail -20 ios-test.log
