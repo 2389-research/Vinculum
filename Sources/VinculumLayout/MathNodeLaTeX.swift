@@ -110,6 +110,12 @@ extension MathNode {
             // reverting to the operator's default side scripts.
             return base.toLaTeX() + "\\limits "
 
+        case .noLimitsOperator(let base):
+            // Symmetric with `\limits` above: keep the modifier so a round-trip
+            // still sets the scripts to the side rather than reverting to the
+            // operator's default (which for a display \sum is stacked).
+            return base.toLaTeX() + "\\nolimits "
+
         case .classified(let base, let cls):
             let cmd: String
             switch cls {

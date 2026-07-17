@@ -159,7 +159,13 @@ public enum MathParser {
         case "limits":
             tokens.removeFirst()
             return .limitsOperator(base: node)
-        case "nolimits", "displaylimits":
+        case "nolimits":
+            tokens.removeFirst()
+            return .noLimitsOperator(base: node)
+        case "displaylimits":
+            // Correctly a no-op: \displaylimits restores the CURRENT style's
+            // default placement, which is what an unmodified operator already
+            // does. Unlike \nolimits, nothing is lost by dropping it.
             tokens.removeFirst()
             return node
         default:

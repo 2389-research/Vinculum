@@ -87,7 +87,8 @@ scripts inline:
 ```
 
 Integral-class operators correctly keep their scripts **to the side** even in
-display (TeX `\nolimits` behavior):
+display — TeX's default for that class (the same placement `\nolimits` forces
+explicitly for ∑-class operators):
 
 ```latex
 \int  \iint  \iiint  \iiiint  \oint  \oiint  \oiiint
@@ -443,8 +444,9 @@ honored):
   `\mathrm`/italic so their exact spacing may shift on re-serialization; the
   alphabet switches (`\bf`/`\cal`/`\frak`/`\bb`/`\scr`/`\sf`/`\tt`) round-trip
   exactly.
-- `\nolimits` / `\displaylimits` are accepted but leave the operator's default
-  placement — only `\limits` actively forces stacking.
+- `\displaylimits` is accepted and is a no-op — it restores the current style's
+  default placement, which an unmodified operator already uses. (`\limits` and
+  `\nolimits` both actively force their form and round-trip exactly.)
 - A bare `\\` outside an environment is a no-op: inline math is one line
   (multi-line splitting is a host/line-breaking concern, not layout's).
 

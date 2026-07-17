@@ -489,35 +489,47 @@ vertical rules, and `\hline`/`\cline` horizontal rules for `array`.
 
 ## How to add a new command
 
-Adding a construct touches a small, well-defined set of places. The single most
-important thing to know: **a new `MathNode` case must be added to SEVEN
-exhaustive `switch`es over `MathNode`**, and the compiler forces every one of
-them (none has a `default:` for the node cases). Miss one and the build fails —
-which is the point.
+Adding a construct touches a small, well-defined set of places. A new `MathNode`
+case must be added to **five exhaustive `switch`es**, which the compiler forces —
+plus **one that it does not**, which is the part worth reading carefully.
 
-### The seven exhaustive switches (for a new `MathNode` case)
+### The five the compiler forces (for a new `MathNode` case)
 
-1. **`MathLayoutEngine.box(for:size:display:)`** (`MathLayoutEngine.swift`) —
+1. **`MathNode.children`** (`MathNode.swift`) — the structural accessor every
+   generic tree walk uses (hit-testing, diagnostics, the tests' traversal).
+   Return the node's child subtrees. Listed first because it is load-bearing far
+   beyond its size: `MathParser.isFullySupported` and
+   `MathParser.unsupportedCommands` are *not* switches at all — they recurse
+   through `children`, so getting this right gives you both for free, and
+   getting it wrong makes an unsupported subtree invisible to the render gate.
+2. **`MathLayoutEngine.box(for:size:display:)`** (`MathLayoutEngine.swift`) —
    the node → `MathBox` dispatch. Add a case that builds geometry (usually
    delegating to a builder in the matching `Layout+*.swift` extension).
-2. **`MathLayoutEngine.atomClass(of:)`** (`MathLayoutEngine.swift`) — the
+3. **`MathLayoutEngine.atomClass(of:)`** (`MathLayoutEngine.swift`) — the
    spacing class the node contributes to a row. Return the right
    `MathAtomClass` (or `nil` if it shouldn't participate, like `.space`).
-3. **`MathParser.isFullySupported`** (`MathDiagnostics.swift`) — recurse into
-   the new case's children so the render API can gate on it. This is the gate
-   `MathImageRenderer` checks before committing to a native render.
-4. **`MathParser.unsupportedCommands`** (`MathDiagnostics.swift`) — recurse the
-   same way so the fallback card can name any unsupported command *inside* the
-   new node.
-5. **`MathNode.children`** (`MathNode.swift`) — the structural accessor every
-   generic tree walk uses (hit-testing, diagnostics, the tests' traversal).
-   Return the node's child subtrees.
-6. **`MathNode.toLaTeX()`** (`MathNodeLaTeX.swift`) — round-trip serialization.
+4. **`MathNode.toLaTeX()`** (`MathNodeLaTeX.swift`) — round-trip serialization.
    Emit the source form so `toLaTeX()` stays render-equivalent — a first-class,
-   header-documented feature.
-7. **`MathSpeech.speak(_:)`** (`MathSpeech.swift`) — the ClearSpeak spoken-math
+   header-documented feature. A modifier that isn't emitted here is silently
+   lost on round-trip (`\nolimits` was, until #20).
+5. **`MathSpeech.speak(_:)`** (`MathSpeech.swift`) — the ClearSpeak spoken-math
    description, so VoiceOver reads the new construct instead of announcing
    "image".
+
+### The one it does NOT force
+
+**`MathLayoutEngine.glyphTypography(of:size:)`** (`MathLayoutEngine.swift`) has a
+`default:`, so a missing case compiles and falls through to the plain-glyph path
+— **silently wrong, with no build error**. If your node is a transparent wrapper
+around a base (like `.limitsOperator` / `.noLimitsOperator` / `.classified`), it
+must delegate to its base here.
+
+This list was verified empirically in #20 by removing each case in turn and
+checking whether the build actually broke — an earlier version of this section
+claimed seven compiler-enforced switches, including two that are not switches at
+all, and promised "miss one and the build fails", which is not true of
+`glyphTypography`. If you add a case, re-check this list the same way rather than
+trusting it.
 
 (If your case is a new `MathElement` rather than a `MathNode`, note
 `MathElement.color` and `MathElement.translated(by:)` in `MathScene.swift` are

@@ -1,5 +1,38 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- **`\nolimits` now works.** In TeX it forces an operator's scripts to the *side*
+  even in display style (`\sum\nolimits_{i=1}^n` → ∑ᵢ₌₁ⁿ), the standard way to keep
+  an operator compact inside a display equation. Vinculum recognized the command,
+  consumed it, and threw the modifier away: placement is decided from the
+  operator's identity alone, so a display `\sum` stacked its limits regardless —
+  and `toLaTeX()` dropped the modifier too, so a round-trip silently re-stacked. A
+  new `MathNode.noLimitsOperator` case mirrors the existing `.limitsOperator`
+  (force-ON) with a force-OFF counterpart. `\displaylimits` remains a no-op, which
+  is correct: it restores the current style's default, which an unmodified operator
+  already uses. (#20)
+
+### Changed
+- **`MathNode` has a new case (`.noLimitsOperator`)** — a source-breaking change
+  for any client that switches exhaustively over `MathNode`, hence the minor bump.
+  `MathNode` is a layout-model type most hosts never switch over; if you do, add
+  the case (it is a transparent wrapper — delegate to its base).
+
+### Documentation
+- **The "how to add a new command" checklist in ARCHITECTURE.md was wrong**, and
+  #20 is the first change to actually exercise it. It claimed seven
+  compiler-enforced exhaustive switches; verified empirically (by removing each
+  case in turn and checking whether the build broke), there are **five**. Two of
+  the listed seven — `isFullySupported` and `unsupportedCommands` — are not
+  switches at all; they recurse through `MathNode.children`. And the promise that
+  "miss one and the build fails" is **false** for
+  `MathLayoutEngine.glyphTypography`, which has a `default:` and so accepts a
+  missing case silently. The list is now measured rather than asserted.
+- `\nolimits` behavior corrected in COMMANDS.md and COVERAGE.md, which documented
+  the old drop-it-on-the-floor behavior as intentional.
+
 ## 1.4.2 — 2026-07-16
 
 **Correctness: Linux font metrics, two parser data-loss bugs, and FreeType
