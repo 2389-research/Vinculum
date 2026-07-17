@@ -117,6 +117,34 @@ No system fonts are required — FreeType loads the bundled `.otf`s from bytes.
 
 ---
 
+## Render regression tests (Linux goldens)
+
+`MathSilicaGoldenTests` renders the shared parity corpus and compares each
+render against a committed **ink signature** in `Tests/fixtures/linux-golden.txt`
+— a size-normalized 32×8 grid, each cell holding how many tenths of it carry ink
+(0–9). It runs automatically in the Linux CI job (`swift test --traits
+LinuxRaster`).
+
+**Why a signature, not a golden PNG.** The Apple goldens are produced and diffed
+in the same environment; a Linux golden has to survive whatever FreeType/Cairo
+the CI image ships. Quantizing coverage into a coarse grid (±1 level tolerated,
+>2% of cells drifting fails) absorbs anti-aliasing noise while still failing on
+what actually regresses — a blank, garbled, or wrongly-laid-out render, none of
+which the old "is it a valid PNG?" smoke check could see.
+
+**Re-blessing** (deliberately, after an intended render change) — do it in the
+CI image so the signature matches what CI will compute:
+
+```bash
+docker run --rm -v "$PWD":/work -w /work swift:6.2 bash -c '
+  apt-get update && apt-get install -y pkg-config libcairo2-dev libfreetype6-dev libfontconfig1-dev fonts-dejavu
+  cp ci/Package.resolved.linux Package.resolved
+  VINCULUM_UPDATE_LINUX_GOLDENS=1 swift test --traits LinuxRaster'
+```
+
+Review the diff before committing: a re-bless is a claim that the render changed
+*on purpose*.
+
 ## Parity with macOS
 
 The layout is identical (same platform-free engine), so the geometry matches.
