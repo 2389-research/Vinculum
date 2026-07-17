@@ -38,6 +38,29 @@ final class FreeTypeFont: @unchecked Sendable {
         if let library { FT_Done_FreeType(library) }
     }
 
+    /// The OpenType `'MATH'` sfnt table tag.
+    static let mathTableTag: UInt32 = 0x4D41_5448
+
+    /// The raw bytes of an sfnt table (e.g. `'MATH'`), or nil if the font has no
+    /// such table.
+    ///
+    /// `MathTableParser` parses a TABLE, never a font file: the Apple path feeds
+    /// it `CGFont.table(for: 'MATH')`, and this is the FreeType counterpart.
+    /// Handing it a whole `.otf` instead fails the table's version guard — the
+    /// bytes there are the sfnt tag — which is how every bundled font silently
+    /// fell back to Latin Modern's metrics on Linux (#1).
+    func sfntTable(tag: UInt32) -> Data? {
+        guard let face else { return nil }
+        // Two-pass, per FreeType's API: a nil buffer reports the length.
+        var length: FT_ULong = 0
+        guard FT_Load_Sfnt_Table(face, FT_ULong(tag), 0, nil, &length) == 0, length > 0 else { return nil }
+        var bytes = [UInt8](repeating: 0, count: Int(length))
+        let ok = bytes.withUnsafeMutableBufferPointer { buf -> Bool in
+            FT_Load_Sfnt_Table(face, FT_ULong(tag), 0, buf.baseAddress, &length) == 0
+        }
+        return ok ? Data(bytes) : nil
+    }
+
     /// The glyph index for a Unicode scalar (0 if the font lacks it).
     func glyphIndex(_ scalar: Unicode.Scalar) -> UInt16 {
         guard let face else { return 0 }
