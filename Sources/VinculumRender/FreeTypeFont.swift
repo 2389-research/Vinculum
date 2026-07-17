@@ -21,6 +21,16 @@ final class FreeTypeFont: @unchecked Sendable {
     /// rested on `Data`'s undocumented representation. Own the buffer instead and
     /// the guarantee is ours to make (#4).
     private let storage: UnsafeMutableBufferPointer<UInt8>
+
+    /// Serializes every use of `face`.
+    ///
+    /// FreeType allows only one thread at a time per `FT_Face`, and each accessor
+    /// below calls `FT_Load_Glyph`, which mutates the face's *shared* glyph slot —
+    /// so two concurrent `advanceEm` calls race inside libfreetype. Without this,
+    /// the `@unchecked Sendable` above is a promise the type doesn't keep. Mirrors
+    /// `MathFont.ctFontLock`, which backs the same annotation on Apple (#3).
+    private let lock = NSLock()
+
     let unitsPerEm: CGFloat
     let ascentEm: CGFloat            // font ascender, em-normalized
     let descentEm: CGFloat           // magnitude of the descender, em-normalized
@@ -73,6 +83,7 @@ final class FreeTypeFont: @unchecked Sendable {
     /// bytes there are the sfnt tag — which is how every bundled font silently
     /// fell back to Latin Modern's metrics on Linux (#1).
     func sfntTable(tag: UInt32) -> Data? {
+        lock.lock(); defer { lock.unlock() }
         guard let face else { return nil }
         // Two-pass, per FreeType's API: a nil buffer reports the length.
         var length: FT_ULong = 0
@@ -86,12 +97,14 @@ final class FreeTypeFont: @unchecked Sendable {
 
     /// The glyph index for a Unicode scalar (0 if the font lacks it).
     func glyphIndex(_ scalar: Unicode.Scalar) -> UInt16 {
+        lock.lock(); defer { lock.unlock() }
         guard let face else { return 0 }
         return UInt16(truncatingIfNeeded: FT_Get_Char_Index(face, FT_ULong(scalar.value)))
     }
 
     /// The glyph's advance width, em-normalized (multiply by point size).
     func advanceEm(glyph: UInt16) -> CGFloat {
+        lock.lock(); defer { lock.unlock() }
         guard let face, FT_Load_Glyph(face, FT_UInt(glyph), FT_Int32(FT_LOAD_NO_SCALE)) == 0,
               let slot = face.pointee.glyph else { return 0 }
         return CGFloat(slot.pointee.advance.x) / unitsPerEm
@@ -101,6 +114,7 @@ final class FreeTypeFont: @unchecked Sendable {
     /// `bottom` relative to it (negative below). Accents seat on the real ink,
     /// not the font's global ascent.
     func inkExtentEm(glyph: UInt16) -> (top: CGFloat, bottom: CGFloat) {
+        lock.lock(); defer { lock.unlock() }
         guard let face, FT_Load_Glyph(face, FT_UInt(glyph), FT_Int32(FT_LOAD_NO_SCALE)) == 0,
               let slot = face.pointee.glyph else { return (0, 0) }
         let m = slot.pointee.metrics
@@ -111,6 +125,8 @@ final class FreeTypeFont: @unchecked Sendable {
     /// The glyph outline at `size` points, as `PathOp`s in y-up scene
     /// coordinates with the origin at the glyph's baseline pen position.
     func outline(glyph: UInt16, size: CGFloat) -> [PathOp]? {
+        // Held across the decompose too: it reads the slot FT_Load_Glyph just filled.
+        lock.lock(); defer { lock.unlock() }
         guard let face, FT_Load_Glyph(face, FT_UInt(glyph), FT_Int32(FT_LOAD_NO_SCALE)) == 0,
               let slot = face.pointee.glyph else { return nil }
         var outline = slot.pointee.outline
