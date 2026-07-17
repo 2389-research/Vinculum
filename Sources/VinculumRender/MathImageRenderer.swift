@@ -49,6 +49,18 @@ public enum MathImageRenderer {
         c.totalCostLimit = 32 * 1024 * 1024
         return c
     }()
+    /// Approximate resident pixel bytes for a rendered image — the `NSCache`
+    /// cost, and the only thing `totalCostLimit` can bound.
+    ///
+    /// It must be PIXEL space, not point space. On iOS the renderer uses the
+    /// screen scale, so the buffer holds `scale²` more bytes than a point-area
+    /// estimate — 4× at 2×, 9× at 3×. Counting points let a 32 MB limit retain
+    /// ~288 MB of real bitmaps on exactly the 3× devices the cache comment calls
+    /// out (`countLimit` remained the only real bound) (#5).
+    static func cacheCost(size: CGSize, pixelScale: CGFloat) -> Int {
+        Int(size.width * size.height * 4 * pixelScale * pixelScale)
+    }
+
     /// The rendered equation for the given LaTeX, or nil if unsupported —
     /// the image, its baseline descent, and the spoken description, all from
     /// the cache when warm.
@@ -128,6 +140,9 @@ public enum MathImageRenderer {
         image.isTemplate = isTemplate
         // Pre-publication accessibility stamp (see Entry invariant).
         image.accessibilityDescription = speech
+        // The block-based NSImage renders on demand and holds no fixed pixel
+        // buffer, so there is no scale factor to account for here.
+        let pixelScale: CGFloat = 1
         #else
         let renderer = UIGraphicsImageRenderer(size: size)
         var image = renderer.image { rendererContext in
@@ -154,9 +169,12 @@ public enum MathImageRenderer {
                 stamped.accessibilityLabel = speech
             }
         }
+        // UIGraphicsImageRenderer's default format uses the screen scale, so the
+        // buffer really is `scale`× per axis. Ask the image rather than assume.
+        let pixelScale = image.scale
         #endif
 
-        let cost = Int(size.width * size.height * 4) // ~bytes/point²; proportional
+        let cost = cacheCost(size: size, pixelScale: pixelScale)
         return Entry(image: image, descent: scene.descent + padding, speech: speech, cost: cost)
     }
 }
