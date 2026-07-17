@@ -69,14 +69,11 @@ final class WordmarkTests: XCTestCase {
         return (0..<sums.count).map { counts[$0] == 0 ? 0 : min(9, sums[$0] * 10 / counts[$0]) }
     }
 
-    /// Renders the light wordmark exactly as `ComparisonGenerator` does.
+    /// Renders the light wordmark through the SAME recipe the generator writes
+    /// the asset with — see `WordmarkRecipe`.
     private func renderWordmark() -> NSImage? {
         NSApp?.appearance = NSAppearance(named: .aqua)
-        let cobalt = NSColor(srgbRed: 0x31/255, green: 0x5C/255, blue: 0x9B/255, alpha: 1)
-        let latex = "\\sqrt{\\color{#18212B}{\\mathrm{Vinculum}}}"
-        return MathImageRenderer.rendered(latex: latex, display: true,
-                                          mathTheme: MathTheme(ink: cobalt, prefersDark: false),
-                                          baseSize: 44, font: .stixTwo)?.image
+        return WordmarkRecipe.render(WordmarkRecipe.light)
     }
 
     private func committedWordmark() -> NSImage? {
