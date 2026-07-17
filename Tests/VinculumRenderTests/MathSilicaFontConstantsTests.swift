@@ -22,10 +22,17 @@ final class MathSilicaFontConstantsTests: XCTestCase {
             let upm = Int(loaded.font.unitsPerEm)
 
             // The bug, asserted directly: a font FILE is not a MATH table.
+            //
+            // This also encodes that every bundled font is CFF-flavoured — bytes
+            // 0-3 are 'OTTO', which fails the parser's version guard, so the old
+            // code fell back. A TrueType-flavoured MATH font (sfnt 0x00010000)
+            // would instead *coincidentally pass* that guard and parse garbage,
+            // i.e. the old bug was worse than a fallback for such fonts. If one is
+            // ever bundled this assertion fails — which is the right outcome.
             XCTAssertNil(MathTableParser.constants(from: loaded.otf, unitsPerEm: upm),
                          "\(res): the whole .otf must not parse as a MATH table")
 
-            XCTAssertNotNil(loaded.font.sfntTable(tag: 0x4D41_5448 /* 'MATH' */),
+            XCTAssertNotNil(loaded.font.sfntTable(tag: FreeTypeFont.mathTableTag),
                             "\(res): no MATH table could be extracted")
             // Goes through the same resolution the renderer uses, so reverting the
             // fix to the font-file form fails here.
@@ -38,6 +45,12 @@ final class MathSilicaFontConstantsTests: XCTestCase {
         // The fallback's signature: every font reporting one identical constant.
         XCTAssertGreaterThan(Set(axisHeights.values).count, 1,
                              "all bundled fonts report the same axis height — constants are still falling back: \(axisHeights)")
+    }
+
+    func testSfntTableIsNilForAnAbsentTag() throws {
+        let loaded = try XCTUnwrap(MathSilicaRenderer.loadFont(resource: "latinmodern-math"))
+        XCTAssertNil(loaded.font.sfntTable(tag: 0x5A5A_5A5A /* 'ZZZZ' */),
+                     "an absent sfnt tag must yield nil — not empty or garbage bytes")
     }
 }
 #endif

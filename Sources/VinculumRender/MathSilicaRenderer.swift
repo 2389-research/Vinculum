@@ -24,7 +24,7 @@ public enum MathSilicaRenderer {
     /// metrics for every bundled font (#1). The renderer and the tests go through
     /// here, so a regression to the font-file form fails the tests.
     static func mathConstants(for font: FreeTypeFont) -> MathFontConstants? {
-        font.sfntTable(tag: 0x4D41_5448 /* 'MATH' */)
+        font.sfntTable(tag: FreeTypeFont.mathTableTag)
             .flatMap { MathTableParser.constants(from: $0, unitsPerEm: Int(font.unitsPerEm)) }
     }
 

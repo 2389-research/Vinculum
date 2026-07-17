@@ -38,6 +38,9 @@ final class FreeTypeFont: @unchecked Sendable {
         if let library { FT_Done_FreeType(library) }
     }
 
+    /// The OpenType `'MATH'` sfnt table tag.
+    static let mathTableTag: UInt32 = 0x4D41_5448
+
     /// The raw bytes of an sfnt table (e.g. `'MATH'`), or nil if the font has no
     /// such table.
     ///
