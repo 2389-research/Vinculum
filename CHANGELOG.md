@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.5.0 — 2026-07-16
 
 ### Added
 - **`\nolimits` now works.** In TeX it forces an operator's scripts to the *side*

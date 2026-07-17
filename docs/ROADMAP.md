@@ -1,6 +1,6 @@
 # Vinculum Roadmap
 
-> **Status (2026-07-16, v1.4.2):** The best-in-class bar the original roadmap
+> **Status (2026-07-16, v1.5.0):** The best-in-class bar the original roadmap
 > set is met. Everything the July-2026 iosMath audit flagged as a gap is
 > closed, the "firsts" no native library had are shipped, and Vinculum now
 > **renders on Linux** as well as Apple. What remains is a short, well-scoped

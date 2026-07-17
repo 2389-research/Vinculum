@@ -25,7 +25,7 @@ import PackageDescription
 // resolve fetches zero external dependencies. Linux users who want the native
 // raster backend opt in:
 //
-//   .package(url: "…/Vinculum", from: "1.4.2", traits: ["LinuxRaster"])
+//   .package(url: "…/Vinculum", from: "1.5.0", traits: ["LinuxRaster"])
 //
 // or build/test with `--traits LinuxRaster`. (`Package.resolved` is
 // git-ignored: a committed trait-on lockfile at the root would re-pull Cairo
