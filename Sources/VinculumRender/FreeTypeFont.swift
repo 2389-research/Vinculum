@@ -10,22 +10,39 @@ import VinculumLayout
 final class FreeTypeFont: @unchecked Sendable {
     private var library: FT_Library?
     private var face: FT_Face?
-    private let data: Data            // FreeType borrows these bytes; keep them alive.
+    /// The font bytes, owned outright.
+    ///
+    /// `FT_New_Memory_Face` does **not** copy: it reads through this pointer on
+    /// every later `FT_Load_Glyph`, i.e. for the face's whole lifetime. But
+    /// `Data.withUnsafeBytes` only guarantees its pointer *for the duration of
+    /// the closure* — nothing forbids `Data` from vending a temporary and keeping
+    /// its bytes elsewhere. Holding the `Data` alive kept the buffer alive but
+    /// never promised FreeType's stored address stayed valid, so correctness
+    /// rested on `Data`'s undocumented representation. Own the buffer instead and
+    /// the guarantee is ours to make (#4).
+    private let storage: UnsafeMutableBufferPointer<UInt8>
     let unitsPerEm: CGFloat
     let ascentEm: CGFloat            // font ascender, em-normalized
     let descentEm: CGFloat           // magnitude of the descender, em-normalized
 
     init?(bytes: Data) {
-        self.data = bytes
+        // Stable, self-owned copy — see `storage`. Freed in deinit, and on every
+        // failure path below (a failable class init that returns nil before full
+        // initialization never runs deinit, so cleanup here is manual).
+        let storage = UnsafeMutableBufferPointer<UInt8>.allocate(capacity: bytes.count)
+        _ = storage.initialize(fromContentsOf: bytes)
+
         var lib: FT_Library?
-        guard FT_Init_FreeType(&lib) == 0, let lib else { return nil }
-        self.library = lib
-        var face: FT_Face?
-        let ok = data.withUnsafeBytes { raw -> Bool in
-            guard let base = raw.bindMemory(to: UInt8.self).baseAddress else { return false }
-            return FT_New_Memory_Face(lib, base, FT_Long(raw.count), 0, &face) == 0
+        guard FT_Init_FreeType(&lib) == 0, let lib else {
+            storage.deallocate(); return nil
         }
-        guard ok, let face else { FT_Done_FreeType(lib); return nil }
+        var face: FT_Face?
+        guard FT_New_Memory_Face(lib, storage.baseAddress, FT_Long(storage.count), 0, &face) == 0,
+              let face else {
+            FT_Done_FreeType(lib); storage.deallocate(); return nil
+        }
+        self.storage = storage
+        self.library = lib
         self.face = face
         let upm = CGFloat(face.pointee.units_per_EM)
         self.unitsPerEm = upm > 0 ? upm : 1000
@@ -34,8 +51,14 @@ final class FreeTypeFont: @unchecked Sendable {
     }
 
     deinit {
+        // Free the buffer last: FreeType holds a pointer into `storage` for the
+        // face's lifetime, so tearing the face down first is the conservative
+        // order. (Reversing it doesn't trip ASan today — FT_Done_Face appears not
+        // to read the buffer — but that's an implementation detail of FreeType,
+        // not a guarantee, and not one worth depending on.)
         if let face { FT_Done_Face(face) }
         if let library { FT_Done_FreeType(library) }
+        storage.deallocate()
     }
 
     /// The OpenType `'MATH'` sfnt table tag.
