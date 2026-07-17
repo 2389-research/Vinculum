@@ -74,6 +74,11 @@ gallery engines rendering the pre-font-truth pipeline).
 
 ## Active plan — Linux render parity
 
+> The Linux-parity work below is now part of a broader, issue-tracked plan: the
+> July-2026 review's 47 issues are sequenced into six milestones (P0–P5) in
+> [ISSUE_REMEDIATION_PLAN.md](ISSUE_REMEDIATION_PLAN.md). Linux parity is
+> milestone **P3**; the LP-* items here map onto those issues.
+
 **Goal.** Bring the Linux (Silica/Cairo/FreeType) backend to full font-truth
 parity with the Apple path. The layout is already identical (platform-free
 engine); the gaps are the *providers* the Linux path doesn't yet supply. The
