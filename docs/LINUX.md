@@ -21,7 +21,7 @@ where you actually want the native raster backend:
 
 ```swift
 // A consumer that wants Linux rendering:
-.package(url: "https://github.com/2389-research/Vinculum.git", from: "1.4.1",
+.package(url: "https://github.com/2389-research/Vinculum.git", from: "1.4.2",
          traits: ["LinuxRaster"])
 ```
 

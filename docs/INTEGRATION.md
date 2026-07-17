@@ -412,7 +412,7 @@ so layout code never sees a stale size).
 On Linux, `VinculumRender` draws with Silica/Cairo/FreeType. The backend is
 behind the **`LinuxRaster` package trait** (default OFF), so a default consumer
 pulls no Silica dependency; opt in with
-`.package(url: "…/Vinculum", from: "1.4.1", traits: ["LinuxRaster"])`
+`.package(url: "…/Vinculum", from: "1.4.2", traits: ["LinuxRaster"])`
 (or `--traits LinuxRaster`). One call renders LaTeX to a PNG:
 
 ```swift

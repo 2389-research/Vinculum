@@ -73,7 +73,7 @@ Swift Package Manager. Add the dependency:
 ```swift
 // Package.swift
 dependencies: [
-    .package(url: "https://github.com/2389-research/Vinculum.git", from: "1.0.0"),
+    .package(url: "https://github.com/2389-research/Vinculum.git", from: "1.4.2"),
 ]
 ```
 

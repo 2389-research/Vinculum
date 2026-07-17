@@ -23,10 +23,15 @@ Issues carry `area:*` / `kind:*` / `priority:*` labels; this plan adds a
 
 ## Versioning
 
-`Sources/` is currently byte-identical to 1.4.1. This plan changes real behavior
-(correctness fixes + features), so it lands as a genuine release:
+This plan changes real behavior (correctness fixes + features), so it lands as
+genuine releases rather than doc bumps:
 
-- Phases 0–1 (correctness + safety nets) → **1.4.2 / 1.5.0**.
+- **1.4.2 — shipped 2026-07-16.** The first slice of Phases 0–1: Linux font
+  metrics (#1), the two parser data-loss bugs (#2, #9), FreeType memory/thread
+  safety (#4, #3), plus the P0 nets (reproducible Linux CI #32, Linux goldens
+  #11). No API change → a patch.
+- The rest of Phase 1 (Apple-side #5/#6/#17/#7, layout fidelity #10/#20/#21, …)
+  → a following **1.4.3**.
 - Phase 2's API-3 rename is source-breaking → cut it (and API-4) in a **1.5.0**
   (or **2.0.0** if we treat the renames as major) so consumers move once.
 - Phases 3–5 → subsequent minor/patch releases.

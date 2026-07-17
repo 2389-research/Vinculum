@@ -1,11 +1,33 @@
 # Changelog
 
-## Unreleased
+## 1.4.2 — 2026-07-16
 
-Correctness fixes, reproducible Linux CI, and doc/tooling/brand work. The parser
-fixes touch `Sources/`, so the next tag is a real release (not a docs-only bump).
+**Correctness: Linux font metrics, two parser data-loss bugs, and FreeType
+memory/thread safety.** No API changes — a pure bug-fix release. The headline is
+that **four of the five bundled fonts were rendering with the wrong metrics on
+Linux**; if you render on Linux with anything but Latin Modern, this changes (and
+fixes) your output.
 
 ### Fixed
+- **Linux: every font now uses its own MATH constants.** `MathTableParser` parses
+  a MATH *table*, but the Linux renderer handed it the whole `.otf` — whose first
+  bytes are the sfnt tag (`'OTTO'`), failing the version guard. `constants`
+  returned nil and the `?? .latinModern` fallback silently gave Termes, Pagella,
+  STIX Two and Fira Math *Latin Modern's* metrics, so font choice had no effect on
+  Linux layout. The table is now extracted with FreeType, mirroring the Apple
+  path's `CGFont.table(for:)`. Measured: Fira Math's axis height is 0.28 and STIX
+  Two's 0.258 — both had been rendering as 0.25, and axis height places every
+  fraction bar and minus sign. Latin Modern is unchanged. (#1)
+- **Linux: `FreeTypeFont` owns its font bytes.** `FT_New_Memory_Face` doesn't copy
+  — it reads through the pointer for the face's whole lifetime — but the pointer
+  came from `Data.withUnsafeBytes`, which only guarantees validity inside the
+  closure. Correctness rested on `Data`'s undocumented representation; the buffer
+  is now owned outright. (#4)
+- **Linux: `FreeTypeFont`'s shared `FT_Face` is locked.** Its `@unchecked
+  Sendable` promise was false: every accessor calls `FT_Load_Glyph`, which mutates
+  the face's shared glyph slot. Sharing one font across threads didn't merely race
+  — it crashed (SIGBUS). Now serialized behind an `NSLock`, mirroring
+  `MathFont.ctFontLock` on the Apple side. (#3)
 - **Parser: a stateful switch no longer swallows `\end`.** A stateful switch
   (`\bf`, `\color{…}`, `\displaystyle`, …) as the last token of an environment
   cell scanned through the environment's own `\end`, absorbing the terminator
