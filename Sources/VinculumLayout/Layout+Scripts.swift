@@ -177,6 +177,8 @@ extension MathLayoutEngine {
             return Self.limitFunctionNames.contains(name)
         case .limitsOperator:
             return true                       // \operatorname* always stacks
+        case .noLimitsOperator:
+            return false                      // \nolimits always sets to the side
         case let .classified(_, cls):
             return cls == .largeOperator      // \mathop takes limits
         default:

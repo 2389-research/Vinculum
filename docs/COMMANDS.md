@@ -78,8 +78,11 @@ before the operator is the numerator, everything after is the denominator.
 Big-operator limits are automatic: ∑-class stacks limits above/below in display,
 ∫-class keeps them to the side, and the `\lim`-family stacks. `\operatorname*`
 and `\mathop{…}` force the stacking (limits) form. `\limits` after an operator
-forces stacking explicitly (`\int\limits_a^b`); `\nolimits` / `\displaylimits`
-are accepted and leave the operator's default placement.
+forces stacking explicitly (`\int\limits_a^b`), and `\nolimits` forces the
+side-set form even in display (`\sum\nolimits_{i=1}^n`) — the usual way to keep
+an operator compact inside a display equation. `\displaylimits` is accepted and
+is a no-op: it restores the current style's default, which is what an unmodified
+operator already does.
 
 ## Delimiters
 

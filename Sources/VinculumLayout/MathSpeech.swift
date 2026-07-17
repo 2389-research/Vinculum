@@ -71,7 +71,7 @@ public enum MathSpeech {
         case .functionName(let name):
             return spokenFunction(name)
 
-        case .limitsOperator(let base), .classified(let base, _):
+        case .limitsOperator(let base), .noLimitsOperator(let base), .classified(let base, _):
             return speak(base)
 
         case .ruleBox:

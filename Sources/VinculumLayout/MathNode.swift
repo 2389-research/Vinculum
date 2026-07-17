@@ -30,6 +30,12 @@ public indirect enum MathNode: Hashable, Sendable {
     /// (a custom `\lim`-like operator). Transparent to layout except that
     /// `takesDisplayLimits` is true for it.
     case limitsOperator(base: MathNode)
+    /// An operator with `\nolimits`: its scripts sit to the SIDE even in
+    /// display style (`\sum\nolimits_{i=1}^n`), the standard way to keep an
+    /// operator compact inside a display equation. The mirror of
+    /// `limitsOperator` — transparent to layout except that
+    /// `takesDisplayLimits` is false for it.
+    case noLimitsOperator(base: MathNode)
     /// A subexpression with a forced atom class: `\mathbin`, `\mathrel`,
     /// `\mathop`, `\mathord`, `\mathopen`, `\mathclose`, `\mathpunct`. Layout is
     /// transparent; only the inter-atom spacing class changes.
@@ -99,7 +105,8 @@ extension MathNode {
             return segments
         case .matrix(let rows, _, _, _):
             return rows.flatMap { $0 }
-        case .limitsOperator(let base), .classified(let base, _), .raised(let base, _),
+        case .limitsOperator(let base), .noLimitsOperator(let base),
+             .classified(let base, _), .raised(let base, _),
              .colorbox(let base, _, _), .accent(let base, _), .decorated(let base, _),
              .styled(let base, _), .mathStyle(let base, _):
             return [base]

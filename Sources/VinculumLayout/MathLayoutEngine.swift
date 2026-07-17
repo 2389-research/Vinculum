@@ -83,7 +83,7 @@ public struct MathLayoutEngine: Sendable {
         case .symbol(let glyph, _, let style):
             let rendered = Self.mathVariant(glyph, italic: style == .italic, bold: style == .bold)
             return typography(rendered, size)
-        case .classified(let base, _), .limitsOperator(let base):
+        case .classified(let base, _), .limitsOperator(let base), .noLimitsOperator(let base):
             return glyphTypography(of: base, size: size)
         default:
             return nil
@@ -136,7 +136,7 @@ public struct MathLayoutEngine: Sendable {
         case .functionName(let name):
             return glyphBox(name, size: s, italic: false)
 
-        case .limitsOperator(let base):
+        case .limitsOperator(let base), .noLimitsOperator(let base):
             return box(for: base, size: s, style: style)   // transparent; limits handled in scriptsBox
 
         case .classified(let base, _):
@@ -336,7 +336,7 @@ public struct MathLayoutEngine: Sendable {
         switch node {
         case .symbol(_, let cls, _): return cls
         case .functionName: return .largeOperator
-        case .limitsOperator(let base): return atomClass(of: base)
+        case .limitsOperator(let base), .noLimitsOperator(let base): return atomClass(of: base)
         case .classified(_, let cls): return cls
         case .raised(let base, _): return atomClass(of: base)
         // Fractions and delimited subformulas are TeX's Inner class (TeXbook
