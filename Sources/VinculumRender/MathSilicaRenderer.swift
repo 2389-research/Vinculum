@@ -13,20 +13,40 @@ import VinculumLayout
 
 public enum MathSilicaRenderer {
 
-    private static let resources = ["latinmodern-math", "texgyretermes-math",
-                                    "texgyrepagella-math", "stixtwo-math", "firamath"]
+    static let resources = ["latinmodern-math", "texgyretermes-math",
+                            "texgyrepagella-math", "stixtwo-math", "firamath"]
+
+    /// The font's OWN MATH constants, or nil if it carries no MATH table.
+    ///
+    /// `MathTableParser` parses the MATH TABLE's bytes, never a font file: handing
+    /// it the whole `.otf` fails the version guard (bytes 0-3 are the sfnt tag —
+    /// 'OTTO' for our CFF fonts), which silently substituted Latin Modern's
+    /// metrics for every bundled font (#1). The renderer and the tests go through
+    /// here, so a regression to the font-file form fails the tests.
+    static func mathConstants(for font: FreeTypeFont) -> MathFontConstants? {
+        font.sfntTable(tag: 0x4D41_5448 /* 'MATH' */)
+            .flatMap { MathTableParser.constants(from: $0, unitsPerEm: Int(font.unitsPerEm)) }
+    }
+
+    /// A bundled font's raw bytes plus its FreeType face, or nil if the resource
+    /// isn't one of ours or can't be read. Shared with the font-constants tests
+    /// so they exercise exactly the load path the renderer uses.
+    static func loadFont(resource: String) -> (otf: Data, font: FreeTypeFont)? {
+        guard resources.contains(resource),
+              let otf = Bundle.module.url(forResource: resource, withExtension: "otf")
+                .flatMap({ try? Data(contentsOf: $0) }),
+              let font = FreeTypeFont(bytes: otf) else { return nil }
+        return (otf, font)
+    }
 
     /// Render `latex` to PNG bytes with the given bundled font, or nil if the
     /// LaTeX is unsupported or the font can't be loaded.
     public static func renderPNG(latex: String, resource: String = "latinmodern-math",
                                  baseSize: CGFloat = 24, display: Bool = false) -> Data? {
-        guard resources.contains(resource),
-              let otf = Bundle.module.url(forResource: resource, withExtension: "otf")
-                .flatMap({ try? Data(contentsOf: $0) }),
-              let font = FreeTypeFont(bytes: otf) else { return nil }
+        guard let (_, font) = loadFont(resource: resource) else { return nil }
 
         let upm = Int(font.unitsPerEm)
-        let constants = MathTableParser.constants(from: otf, unitsPerEm: upm) ?? .latinModern
+        let constants = mathConstants(for: font) ?? .latinModern
 
         let measure: MathTextMeasurer = { text, size, _ in
             var width: CGFloat = 0
