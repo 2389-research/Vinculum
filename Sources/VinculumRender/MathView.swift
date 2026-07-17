@@ -34,6 +34,14 @@ public struct MathView: View {
                 .alignmentGuide(.firstTextBaseline) { d in d.height - r.descent }
                 .alignmentGuide(.lastTextBaseline) { d in d.height - r.descent }
                 .accessibilityLabel(r.spokenDescription)
+                // A rendered equation is TEXT that happens to be drawn, not a
+                // picture. Left alone, the Image keeps SwiftUI's default
+                // .isImage trait, so VoiceOver announced "…image" after the
+                // equation here while the AppKit/UIKit sibling VinculumLabel —
+                // which declares .staticText — did not. Same library, same
+                // equation, two different announcements (#26).
+                .accessibilityAddTraits(.isStaticText)
+                .accessibilityRemoveTraits(.isImage)
         }
     }
 
