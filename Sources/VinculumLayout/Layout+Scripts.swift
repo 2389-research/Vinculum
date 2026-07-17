@@ -17,9 +17,12 @@ extension MathLayoutEngine {
         // Descend one script level: 70% from text, but only down to the 50%
         // scriptscript floor from there (TeX sizes, not compounding shrink).
         let scriptSize = size * style.scriptSizeRatio(constants)
-        // A superscript is uncramped; a subscript is cramped (TeX sup_style /
-        // sub_style), so nested exponents inside a subscript ride lower.
-        var supEngine = self; supEngine.cramped = false
+        // TeX sup_style PRESERVES the enclosing cramped bit (script size +
+        // C mod 2) while sub_style always forces it — so a superscript inherits
+        // `self.cramped` rather than clearing it. Clearing dropped the bit one
+        // level down, letting a nested exponent inside a cramped context (e.g.
+        // the z of \sqrt{x^{y^z}}) ride at the uncramped shift (#10).
+        var supEngine = self                      // inherits self.cramped
         var subEngine = self; subEngine.cramped = true
         let supBox = sup.map { supEngine.box(for: $0, size: scriptSize, style: style.scriptStyle) }
         let subBox = sub.map { subEngine.box(for: $0, size: scriptSize, style: style.scriptStyle) }
