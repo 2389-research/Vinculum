@@ -57,15 +57,19 @@ final class MathSilicaGoldenTests: XCTestCase {
             let gy = min(Self.gridH - 1, y * Self.gridH / max(h, 1))
             for x in 0..<w {
                 let gx = min(Self.gridW - 1, x * Self.gridW / max(w, 1))
-                // argb32 little-endian byte order is B,G,R,A. The renderer fills
-                // white and draws black ink, so darkness == ink. Count *covered*
-                // pixels rather than averaging darkness: averaging dilutes a thin
-                // stroke across a whole cell to near-zero, collapsing the
-                // signature's dynamic range — and with it any ability to notice
-                // the render changed.
-                let inked = (255 - Int(bytes[y * stride + x * 4 + 2])) >= 64
+                // argb32, little-endian byte order B,G,R,A. Ink is darkness in the
+                // DARKEST channel, not in red alone: the corpus renders
+                // \color{red}{a}, whose pixels are (255,0,0) — a red-channel test
+                // reads those glyphs as blank and would never notice them break.
+                //
+                // Count *covered* pixels rather than averaging darkness: averaging
+                // dilutes a thin stroke across a whole cell to near-zero, which
+                // collapses the signature's dynamic range — and with it any ability
+                // to notice the render changed at all.
+                let off = y * stride + x * 4
+                let darkest = min(Int(bytes[off]), Int(bytes[off + 1]), Int(bytes[off + 2]))
                 let idx = gy * Self.gridW + gx
-                if inked { sums[idx] += 1 }
+                if 255 - darkest >= 64 { sums[idx] += 1 }
                 counts[idx] += 1
             }
         }
