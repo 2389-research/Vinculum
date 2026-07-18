@@ -280,6 +280,37 @@ Notes that matter:
   Kotlin. Everything the Canvas needs is geometry + color. This is what lets the
   Kotlin side stay font-agnostic and the cache key stay simple.
 
+### Serialization format — decided: a hand-rolled binary, not FlatBuffers (#78)
+
+**Chosen: `VDL1`, a small little-endian tagged binary** (`DisplayListWire.swift`),
+reversing the issue's initial FlatBuffers lean. Reasoning:
+
+- **The package is dependency-free by charter** (`Package.swift` says so). FlatBuffers
+  needs a runtime dependency *and* a `flatc` codegen step — the one thing this format
+  must not drag into the core.
+- **Zero-copy buys nothing here.** A display list is a few KB; the fixture for a full
+  canonical list is **144 bytes**. There is no large buffer to avoid copying.
+- **It is a few dozen lines on each side.** The writer is Swift; the reader is
+  `ByteBuffer.order(LITTLE_ENDIAN)` in Kotlin, no tools.
+
+Layout: `"VDL1"` magic · `width/ascent/descent` (f32) · `opCount` (u32) · then
+`fillPath` / `fillRect` / `strokePath` ops, each carrying 8-bit rgba and f32
+coordinates (both match what the Canvas draws). Full grammar is in the
+`DisplayListWire` doc comment.
+
+**Versioning:** the `"1"` in the magic *is* the version. A reader MUST check the
+4-byte magic and reject an unknown one — that rejection is the compatibility
+guarantee (an old reader refuses new data cleanly rather than misreading it). A
+change that would mislead an old reader bumps the magic (`VDL2`) and re-cuts the
+fixture.
+
+**Cross-language contract:** `Tests/fixtures/displaylist-wire-v1.bin` is a committed
+serialization of a canonical list covering every op and segment kind. The Swift
+side proves the writer is byte-stable against it and the reference reader decodes
+it; the future Kotlin reader is tested against **the same bytes**, so the two ends
+cannot drift silently. Regenerate only on a deliberate format change, with
+`VINCULUM_UPDATE_WIRE_FIXTURE=1`.
+
 ### Kotlin API sketches
 
 ```kotlin

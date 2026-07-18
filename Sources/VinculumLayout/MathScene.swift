@@ -184,8 +184,8 @@ public enum PathOp: Sendable {
 
 /// Platform-free stroke styling (CoreGraphics' CGLineCap/Join aren't on all
 /// platforms, so the scene uses its own).
-public enum StrokeCap: Sendable { case butt, round, square }
-public enum StrokeJoin: Sendable { case miter, round, bevel }
+public enum StrokeCap: Sendable, Equatable { case butt, round, square }
+public enum StrokeJoin: Sendable, Equatable { case miter, round, bevel }
 
 /// One positioned drawing primitive. Coordinates are y-up with the origin at
 /// the scene/box baseline. A `nil` color means the renderer's theme ink.
