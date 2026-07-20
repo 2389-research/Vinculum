@@ -170,14 +170,27 @@ jobs:
             -Xlinker "/EXPORT:vinculum_free" `
             -Xlinker "/EXPORT:vinculum_abi_version" `
             -Xlinker "/EXPORT:vinculum_set_font_dir"
-      - name: Locate + verify DLL exports (dumpbin)
+      - name: Locate + verify DLL exports
         shell: pwsh
         run: |
           $dll = Get-ChildItem -Recurse -Filter VinculumAndroid.dll .build | Select-Object -First 1
           if (-not $dll) { throw "VinculumAndroid.dll not produced" }
           Write-Host "DLL: $($dll.FullName)"
           "VINC_DLL_DIR=$($dll.DirectoryName)" | Out-File $env:GITHUB_ENV -Append
-          $exports = dumpbin /exports $dll.FullName | Out-String
+
+          # dumpbin isn't on PATH (needs the VS dev shell). Prefer llvm-readobj, which
+          # ships with the Swift/LLVM toolchain and is already on PATH; fall back to
+          # locating dumpbin via vswhere. Either prints the PE export table.
+          $exports = ""
+          if (Get-Command llvm-readobj -ErrorAction SilentlyContinue) {
+            $exports = & llvm-readobj --coff-exports $dll.FullName | Out-String
+          } else {
+            $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+            $vs = & $vswhere -latest -property installationPath
+            $dumpbin = Get-ChildItem "$vs\VC\Tools\MSVC" -Recurse -Filter dumpbin.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+            if (-not $dumpbin) { throw "no export-dump tool found (neither llvm-readobj nor dumpbin)" }
+            $exports = & $dumpbin.FullName /exports $dll.FullName | Out-String
+          }
           Write-Host $exports
           foreach ($sym in 'vinculum_render_displaylist','vinculum_free','vinculum_abi_version','vinculum_set_font_dir') {
             if ($exports -notmatch $sym) { throw "missing export: $sym" }
