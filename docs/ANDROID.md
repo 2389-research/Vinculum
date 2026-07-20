@@ -403,20 +403,43 @@ Android seam that silently disagrees, the same way the Linux golden net does.
 
 ---
 
-## Staged roadmap (effort/risk are guesses until the toolchain is real)
+## Staged roadmap
 
-| Stage | Deliverable | Risk |
+| Stage | Deliverable | Status |
 | --- | --- | --- |
-| 0 | **Swift foundation** (buildable/testable on macOS+Linux *before* Android exists): `AndroidRender` = Cairo-free `MathScene` → display list via FreeType; a C-ABI entry point; unit-tested against the golden corpus. | Low — reuses `FreeTypeFont`; no Android needed to verify it. |
-| 1 | Cross-compile `VinculumLayout`+`AndroidRender` to a `.so` for arm64; smoke-test over JNI. | **High** — first contact with the Swift Android SDK; Foundation-on-Android gaps surface here. |
-| 2 | `VinculumMath` raw Kotlin API + display-list Canvas draw. | Low-med. |
-| 3 | **Compose `Math()`** + bitmap cache (the flagship). | Low-med. |
-| 4 | AAR packaging, ABI splits, Maven publish, Android CI. | Med — packaging is fiddly (the SwiftPM trait + Silica pin already showed this). |
-| 5 | Classic `View`/span, then Markwon plugin. | Low. |
-| 6 | Cross-backend parity gate vs the corpus (#62 machinery). | Low-med. |
+| 0 | **Swift foundation**: platform-free `DisplayList` emitter, FreeType + CoreText outliners, the C ABI, the wire format, the FreeType⊥Cairo trait split. Verified on macOS+Linux. | ✅ **done** (#86 #87 #88 #89 #91) |
+| 1 | **Cross-compile to an Android `.so`.** `VinculumLayout` → `aarch64-android` (Foundation works), FreeType cross-built for Android, the C ABI + FreeType linked into a self-contained `libVinculumAndroid.so` with the JNI symbols exported. | ✅ **compiles + links** (#75 #92); JNI *runtime* smoke test on an emulator still to do |
+| 2 | `VinculumMath` raw Kotlin API + display-list Canvas draw. | Kotlin/Gradle |
+| 3 | **Compose `Math()`** + bitmap cache (the flagship). | Kotlin/Gradle |
+| 4 | AAR packaging, ABI splits, Maven publish, Android CI. | Kotlin/Gradle |
+| 5 | Classic `View`/span, then Markwon plugin. | Kotlin/Gradle |
+| 6 | Cross-backend parity gate vs the corpus (#62 machinery). | after C0c |
 
-Stage 0 is the one piece buildable and verifiable *today, here*, with no Android
-toolchain — it is the recommended first code once we move past design.
+### What Stage 1 actually took (the reproducible recipe)
+
+Proven on a Linux x86_64 host + Docker. Two gotchas worth remembering:
+
+- **Toolchain/SDK version lock.** The `swift:6.2` Docker tag floats (it is 6.2.4
+  now); finagolfin's Android SDK is fixed at 6.2.0-RELEASE; Swift modules only
+  import into the *exact* compiler version. Pin both to the same patch — download
+  the 6.2.0 toolchain from swift.org to match the SDK.
+- **FreeType isn't in the SDK sysroot.** Cross-build it (no PNG/zlib/harfbuzz/
+  brotli, `-fPIC`, `-fuse-ld=lld`, `-resource-dir` pointing at the SDK's
+  compiler-rt/unwind) — see [`scripts/build-freetype-android.sh`](../scripts/build-freetype-android.sh).
+  It statically links into the `.so`, so nothing extra ships on device.
+
+Then:
+```
+swift build --swift-sdk aarch64-unknown-linux-android24 --traits FreeTypeRaster \
+  -Xcc -I<freetype-include> -Xlinker -L<freetype-lib> --product VinculumAndroid
+```
+produces `libVinculumAndroid.so` (ELF AArch64, DYN) exporting `vinculum_render_displaylist`,
+`vinculum_free`, `vinculum_abi_version`.
+
+The remaining Stage-1 step (**C0c**, #92) is the on-emulator JNI smoke test —
+call the entry point, decode the `VDL1` buffer, confirm geometry matches
+macOS/Linux, and exercise Foundation runtime behaviour (`Thread.threadDictionary`,
+`NSLock`) under a real ART process, which compilation can't prove.
 
 ---
 

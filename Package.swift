@@ -38,6 +38,12 @@ let package = Package(
     products: [
         .library(name: "VinculumLayout", targets: ["VinculumLayout"]),
         .library(name: "VinculumRender", targets: ["VinculumRender"]),
+        // The Android JNI library: VinculumRender as a dynamic `.so`, exporting
+        // the C ABI (`vinculum_render_displaylist` etc., #77). Built when
+        // cross-compiling with the Swift Android SDK + FreeTypeRaster; on
+        // Apple/Linux `swift build` also emits it (a harmless dylib of the same
+        // module). See docs/ANDROID.md and scripts/build-freetype-android.sh.
+        .library(name: "VinculumAndroid", type: .dynamic, targets: ["VinculumRender"]),
     ],
     traits: [
         // The FreeType TIER on its own: glyph outlines + metrics + MATH-table
@@ -88,9 +94,11 @@ let package = Package(
                     .product(name: "Cairo", package: "Cairo",
                              condition: .when(platforms: [.linux], traits: ["LinuxRaster"])),
                     // FreeType is the lower tier: available under FreeTypeRaster
-                    // alone (the Android C ABI) OR LinuxRaster (which enables it).
+                    // alone (the Android C ABI) OR LinuxRaster (which enables it),
+                    // on Linux AND Android (both have FreeType; the Android build
+                    // links a cross-built libfreetype.a — build-freetype-android.sh).
                     .target(name: "CFreetypeShim",
-                            condition: .when(platforms: [.linux], traits: ["FreeTypeRaster"])),
+                            condition: .when(platforms: [.linux, .android], traits: ["FreeTypeRaster"])),
                 ], path: "Sources/VinculumRender",
                 resources: [.copy("Resources/latinmodern-math.otf"),
                             .copy("Resources/texgyretermes-math.otf"),
