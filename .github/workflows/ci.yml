@@ -70,6 +70,38 @@ jobs:
           swift build --traits LinuxRaster
           swift test --traits LinuxRaster
 
+  # Windows: VinculumLayout is Foundation-only with no platform imports (audited
+  # clean — no #if os, no POSIX/filesystem assumptions, no C interop), so it
+  # should build and test on the official Swift Windows toolchain with no source
+  # changes. VinculumRender's sources are all canImport-guarded (AppKit/UIKit on
+  # Apple, SilicaCairo/CFreetypeShim on Linux) → it compiles to an empty module
+  # here, exactly like the default Linux build. Advisory while it settles, so a
+  # Windows-toolchain hiccup can't block every PR.
+  windows:
+    name: swift build+test (Windows)
+    runs-on: windows-latest
+    continue-on-error: true
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Don't leave the repo token in git config: the next step runs a
+          # third-party action (compnerd/gha-setup-swift@main), which has no need
+          # for it. The Windows job never pushes, so nothing downstream needs it.
+          persist-credentials: false
+      - name: Install Swift (Windows toolchain)
+        uses: compnerd/gha-setup-swift@eeda069c5bc95ac8a9ac5cea7d4f588ae5420ca5  # pinned (was @main); compnerd/gha-setup-swift main
+        with:
+          swift-version: swift-6.2-release
+          swift-build: 6.2-RELEASE
+      - name: Swift version
+        run: swift --version
+      # Default traits: Foundation-only VinculumLayout + an empty VinculumRender.
+      - name: Build
+        run: swift build
+      - name: Test (VinculumLayout — the Foundation-only geometry suite)
+        run: swift test
+
   test:
     name: swift test (macOS)
     runs-on: macos-15
