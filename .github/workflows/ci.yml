@@ -137,6 +137,36 @@ jobs:
           echo "running $W"
           wasmtime "$W"
 
+  # Kotlin decoder conformance: VinculumWire.kt is the Kotlin twin of Swift's
+  # DisplayListWire. This gates it against the SAME committed VDL1 fixture the
+  # Swift side round-trips (DisplayListWireTests) — so the two ends of the JNI
+  # boundary cannot drift. Pure JVM (VinculumWire uses only java.nio): no Android
+  # SDK, no emulator, seconds to run. The conformance harness also verifies the
+  # decoder's robustness (null on bad magic / truncation / forged count).
+  kotlin:
+    name: Kotlin VDL1 decoder conformance
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Install kotlinc
+        run: |
+          curl -sL https://github.com/JetBrains/kotlin/releases/download/v2.4.10/kotlin-compiler-2.4.10.zip -o /tmp/k.zip
+          unzip -q /tmp/k.zip -d /opt
+          echo "/opt/kotlinc/bin" >> "$GITHUB_PATH"
+      - name: Compile VinculumWire + the conformance harness
+        run: |
+          kotlinc \
+            android/vinculum/src/main/kotlin/ai/vinc/VinculumWire.kt \
+            android/vinculum/src/test/kotlin/ai/vinc/VinculumWireConformance.kt \
+            -include-runtime -d /tmp/conf.jar
+      - name: Run VDL1 conformance against the committed fixture
+        run: java -cp /tmp/conf.jar ai.vinc.VinculumWireConformance Tests/fixtures/displaylist-wire-v1.bin
+
   test:
     name: swift test (macOS)
     runs-on: macos-15
