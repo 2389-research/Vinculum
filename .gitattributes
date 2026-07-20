@@ -1,0 +1,9 @@
+# Golden / fixture files are byte-exact artifacts, compared verbatim by tests.
+# Force LF and never CRLF-translate them: they are generated with LF-terminated
+# lines, and a Windows checkout would otherwise translate the committed goldens
+# to CRLF, so a freshly-rendered (LF) result would spuriously mismatch. The SVG
+# parity gate caught exactly this on its first Windows run — this is the fix.
+Tests/fixtures/svg-golden/*.svg text eol=lf
+
+# Binary fixtures (the VDL1 wire corpus) must never be touched at all.
+*.bin binary
