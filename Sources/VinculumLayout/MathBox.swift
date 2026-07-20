@@ -1,4 +1,8 @@
+#if os(WASI)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// The compositional unit of layout: a rectangle of typeset material with its
 /// metrics and the positioned primitives that draw it. Boxes nest — a builder

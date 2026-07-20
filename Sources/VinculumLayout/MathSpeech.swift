@@ -1,4 +1,8 @@
+#if os(WASI)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Spoken-math descriptions from the node tree — the text VoiceOver reads
 /// for a rendered equation ("x equals the fraction negative b plus or minus
@@ -222,10 +226,10 @@ public enum MathSpeech {
     /// Collapses doubled spaces/commas the templates can produce.
     private static func collapse(_ s: String) -> String {
         var out = s
-        while out.contains("  ") { out = out.replacingOccurrences(of: "  ", with: " ") }
-        out = out.replacingOccurrences(of: " ,", with: ",")
-        while out.contains(",,") { out = out.replacingOccurrences(of: ",,", with: ",") }
-        out = out.trimmingCharacters(in: CharacterSet(charactersIn: " ,"))
+        while out.contains("  ") { out = out.vReplacing( "  ", with: " ") }
+        out = out.vReplacing( " ,", with: ",")
+        while out.contains(",,") { out = out.vReplacing( ",,", with: ",") }
+        out = out.vTrimming { $0 == " " || $0 == "," }
         return out
     }
 }

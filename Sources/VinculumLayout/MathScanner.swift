@@ -1,4 +1,8 @@
+#if os(WASI)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Splits a run of paragraph source text into math and non-math segments.
 ///
@@ -62,7 +66,7 @@ public enum MathScanner {
                 }
                 // LaTeX display `\[ … \]` and inline `\( … \)` delimiters.
                 if next == "[", let close = findClosingBracket(in: chars, from: i + 2, closer: "]") {
-                    let latex = String(chars[(i + 2)..<close]).trimmingCharacters(in: .whitespacesAndNewlines)
+                    let latex = String(chars[(i + 2)..<close]).vTrimmingWhitespaceAndNewlines()
                     if !latex.isEmpty {
                         flushPlain()
                         segments.append(.displayMath(latex))
@@ -87,7 +91,7 @@ public enum MathScanner {
             // Display math: $$ … $$
             if i + 1 < chars.count, chars[i + 1] == "$" {
                 if let close = findClosingDouble(in: chars, from: i + 2) {
-                    let latex = String(chars[(i + 2)..<close]).trimmingCharacters(in: .whitespacesAndNewlines)
+                    let latex = String(chars[(i + 2)..<close]).vTrimmingWhitespaceAndNewlines()
                     if !latex.isEmpty {
                         flushPlain()
                         segments.append(.displayMath(latex))

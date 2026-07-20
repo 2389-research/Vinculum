@@ -1,4 +1,8 @@
+#if os(WASI)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Inter-atom spacing, in *math units* (`mu` = 1/18 em) — the unit Knuth
 /// defines in Chapter 18 of *The TeXbook*. TeX never spaces atoms with a raw

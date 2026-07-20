@@ -1,4 +1,8 @@
+#if os(WASI)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// The wire format that carries a `DisplayList` across the JNI boundary to the
 /// Android `Canvas` side (`docs/ANDROID.md`, #78).

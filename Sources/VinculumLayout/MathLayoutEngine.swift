@@ -1,4 +1,8 @@
+#if os(WASI)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Lays a `MathNode` tree out into a platform-free `MathScene`. Geometry only:
 /// it measures glyphs through the injected `MathTextMeasurer` and emits

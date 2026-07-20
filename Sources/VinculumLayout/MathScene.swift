@@ -1,4 +1,8 @@
+#if os(WASI)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 // Vinculum's device-independent scene — the math analog of TeX's DVI: layout
 // produces a platform-free description of WHAT to draw, and a renderer decides
@@ -18,7 +22,7 @@ public struct MathColor: Hashable, Sendable {
 
     /// Resolves a `\color` argument: a "#rrggbb" hex or a named palette color.
     public static func resolve(_ name: String) -> MathColor? {
-        let key = name.trimmingCharacters(in: .whitespaces).lowercased()
+        let key = name.vTrimmingWhitespace().lowercased()
         if key.hasPrefix("#") { return hex(key) }
         switch key {
         case "red": return MathColor(red: 1, green: 0.23, blue: 0.19)
