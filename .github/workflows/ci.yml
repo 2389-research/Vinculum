@@ -144,12 +144,25 @@ jobs:
           "VCPKG_BIN=$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows\bin"     | Out-File $env:GITHUB_ENV -Append
       - name: Swift version
         run: swift --version
-      # Build the C ABI as a Windows DLL. @_cdecl marks the symbols extern "C" but
-      # does NOT dllexport them on Windows, so force the four ABI entry points onto
-      # the export table with /EXPORT linker directives — dumpbin then proves them.
+      # Show what vcpkg actually produced — the real .lib name is the thing lld-link
+      # needs (the modulemap's `link "freetype"` → it searches for `freetype.lib`).
+      - name: Inspect vcpkg freetype layout
+        shell: pwsh
+        run: |
+          Write-Host "VCPKG_LIB = $env:VCPKG_LIB"
+          Get-ChildItem "$env:VCPKG_LIB" -Filter *.lib | Select-Object Name
+          Get-ChildItem "$env:VCPKG_BIN" -Filter *.dll | Select-Object Name
+      # Build the C ABI as a Windows DLL. Two Windows-toolchain realities handled:
+      #  • lld-link finds libraries via the MSVC `LIB` env var far more reliably than
+      #    a forwarded -Xlinker -LIBPATH: — so prepend the vcpkg lib dir to $env:LIB.
+      #  • @_cdecl marks the symbols extern "C" but does NOT dllexport them on Windows,
+      #    so force the four ABI entry points onto the export table with /EXPORT — and
+      #    the next step's dumpbin proves they landed.
       - name: Build native DLL (VinculumAndroid, FreeTypeRaster)
         shell: pwsh
         run: |
+          $env:LIB     = "$env:VCPKG_LIB;$env:LIB"
+          $env:INCLUDE = "$env:VCPKG_INC;$env:INCLUDE"
           swift build -c release --product VinculumAndroid --traits FreeTypeRaster `
             -Xcc "-I$env:VCPKG_INC" `
             -Xlinker "-LIBPATH:$env:VCPKG_LIB" `
