@@ -407,12 +407,19 @@ Android seam that silently disagrees, the same way the Linux golden net does.
 | Stage | Deliverable | Status |
 | --- | --- | --- |
 | 0 | **Swift foundation**: platform-free `DisplayList` emitter, FreeType + CoreText outliners, the C ABI, the wire format, the FreeType⊥Cairo trait split. Verified on macOS+Linux. | ✅ **done** (#86 #87 #88 #89 #91) |
-| 1 | **Cross-compile to an Android `.so`.** `VinculumLayout` → `aarch64-android` (Foundation works), FreeType cross-built for Android, the C ABI + FreeType linked into a self-contained `libVinculumAndroid.so` with the JNI symbols exported. | ✅ **compiles + links** (#75 #92); JNI *runtime* smoke test on an emulator still to do |
+| 1 | **Cross-compile to an Android `.so` and RUN it.** `VinculumLayout` → `aarch64-android` (Foundation works), FreeType cross-built for Android, the C ABI + FreeType linked into a self-contained `libVinculumAndroid.so`, and — via a JNI-in-APK harness on an emulator — **LaTeX renders on-device**, byte-identical to the Linux build. | ✅ **DONE, proven on-device** (#75 #92; harness in `android/smoke/`) |
 | 2 | `VinculumMath` raw Kotlin API + display-list Canvas draw. | Kotlin/Gradle |
 | 3 | **Compose `Math()`** + bitmap cache (the flagship). | Kotlin/Gradle |
 | 4 | AAR packaging, ABI splits, Maven publish, Android CI. | Kotlin/Gradle |
 | 5 | Classic `View`/span, then Markwon plugin. | Kotlin/Gradle |
-| 6 | Cross-backend parity gate vs the corpus (#62 machinery). | after C0c |
+| 6 | Cross-backend parity gate vs the corpus (#62 machinery). | Kotlin/Gradle |
+
+**The gate is cleared.** `x = \frac{-b}{2a}` on an API-34 emulator via JNI:
+`SUPPORTED OK abi=1 bytes=2681 magic=VDL1` — a valid `VDL1` display list,
+**byte-for-byte the same 2681 bytes the Linux build produces**, with
+`\notacommand{x}` returning nil (the never-half-broken contract, on-device). The
+Swift runtime, Foundation, `Thread.threadDictionary`, and `NSLock` all work under
+a real ART process. Harness + reproducible recipe: [`android/smoke/`](../android/smoke/).
 
 ### What Stage 1 actually took (the reproducible recipe)
 

@@ -42,6 +42,15 @@ func renderDisplayListWire(latex: String, display: Bool, baseSize: CGFloat,
 @_cdecl("vinculum_abi_version")
 public func vinculum_abi_version() -> Int32 { 1 }
 
+/// Sets the directory the bundled `.otf` fonts are loaded from, replacing the
+/// `Bundle.module` lookup that traps inside an APK. The Android host extracts the
+/// fonts (shipped as APK assets) once and passes their directory here before the
+/// first render. Pass nil to clear. See `FreeTypeFonts.fontDirectory`.
+@_cdecl("vinculum_set_font_dir")
+public func vinculum_set_font_dir(_ dirPtr: UnsafePointer<CChar>?) {
+    FreeTypeFonts.fontDirectory = dirPtr.map { String(cString: $0) }
+}
+
 /// Renders `latex` (UTF-8, `byteLen` bytes) to a freshly allocated buffer of
 /// `outLen` bytes (a `VDL1` display list), or returns nil for unsupported or
 /// malformed input. The caller owns the buffer and MUST release it with
