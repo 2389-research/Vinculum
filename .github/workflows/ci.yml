@@ -115,13 +115,13 @@ jobs:
   # admitting .windows to the shim's trait gate in Package.swift.
   #
   # Advisory (continue-on-error) while the spike settles: the open question this
-  # job answers is whether @_cdecl symbols export from a .dynamic product on the
-  # Swift Windows toolchain (dumpbin /exports is the proof), and whether vcpkg
-  # freetype links clean. No capability is claimed anywhere until this is green.
+  # job proves is that @_cdecl symbols export from a .dynamic product on the Swift
+  # Windows toolchain (llvm-readobj --coff-exports is the proof) and that vcpkg
+  # freetype links clean. Now GREEN and a real gate (no continue-on-error): the
+  # native render path can't silently drift, same as the kotlin/dotnet jobs.
   windows-native:
     name: native DLL + P/Invoke (Windows)
     runs-on: windows-latest
-    continue-on-error: true
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4

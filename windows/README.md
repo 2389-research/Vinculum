@@ -20,7 +20,7 @@ Verified: `dotnet test` runs the C# decoder against the **same committed
 `displaylist-wire-v1.bin`** the Swift and Kotlin conformance tests use, plus a
 SkiaSharp render smoke — gated in CI (the `dotnet` job) on every PR.
 
-## 2. The P/Invoke bridge — implemented, under CI verification
+## 2. The P/Invoke bridge — verified green on `windows-latest`
 Unlike Android (which needs a C shim because `JNIEnv` is awkward from Swift), .NET
 `[DllImport]` calls the `@_cdecl` C functions directly — no shim.
 
@@ -42,13 +42,19 @@ Unlike Android (which needs a C shim because `JNIEnv` is awkward from Swift), .N
   entry points; `dumpbin /exports` proves they're on the export table.
 
 **Verified where?** The `native DLL + P/Invoke (Windows)` CI job on `windows-latest`
-builds the DLL (vcpkg FreeType), asserts the four exports, then runs the .NET tests
-with `VINC_NATIVE=1` — which flips the native `[SkippableFact]` tests from soft-skip
-to **required** (mirrors Android's `MMK_NATIVE`). Until that job is green, no Windows
-render capability is claimed here or anywhere in the docs/site. The job is advisory
-(`continue-on-error`) while the spike settles — the open question it answers is
-whether `@_cdecl` symbols export cleanly from a `.dynamic` product on the Swift
-Windows toolchain, and whether vcpkg FreeType links without transitive-DLL gaps.
+builds the DLL (vcpkg FreeType, `/LIBPATH:` + `/EXPORT:` linker flags), proves the
+four `@_cdecl` symbols are on the export table with `llvm-readobj --coff-exports`,
+then runs the .NET tests with `VINC_NATIVE=1` — which flips the native
+`[SkippableFact]` tests from soft-skip to **required** (mirrors Android's
+`MMK_NATIVE`). The end-to-end test renders `\frac`/`\sqrt` through the native ABI →
+`VDL1` bytes → the shared `VinculumWire.Decode` → SkiaSharp ink, entirely on Windows.
+It is a **real gate now** (no `continue-on-error`), so the native render path can't
+silently drift.
+
+Both spike questions came back yes: `@_cdecl` symbols export cleanly from a
+`.dynamic` product on the Swift Windows toolchain (given `/EXPORT:` directives —
+`@_cdecl` alone gives `extern "C"` naming but not `dllexport`), and vcpkg FreeType
+links without transitive-DLL gaps (its `bin` dir goes on the loader `PATH`).
 
 On managed-only hosts (the ubuntu `dotnet` job, local dev) the native tests
 soft-skip, so the pure decoder/renderer suite still runs everywhere.
