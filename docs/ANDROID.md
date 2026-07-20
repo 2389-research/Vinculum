@@ -1,12 +1,13 @@
 # Vinculum on Android — design exploration
 
-> **Status: DESIGN, NOT BUILT (2026-07-17).** No Android code exists yet. This
-> document captures the ideas considered, the reasoning, and the decisions, so
-> the build can start from a settled architecture instead of a blank page.
-> Nothing here has been compiled against an Android toolchain; treat effort and
-> risk estimates as informed guesses, not measurements. The website and README
-> deliberately make **no** Android claims until this ships — see
-> [PERFORMANCE.md](PERFORMANCE.md)'s discipline: claims must not outrun reality.
+> **Status: FOUNDATION PROVEN ON-DEVICE (updated 2026-07-20).** The Swift core
+> now cross-compiles to Android and **renders LaTeX on a real emulator via JNI**
+> (see the roadmap — `x=\frac{-b}{2a}` → a `VDL1` display list byte-identical to
+> the Linux build). What remains is the **Kotlin bridge** (Canvas draw, Compose,
+> AAR) — no shipping Android *library* exists yet, so the website and README still
+> make **no** Android claims until that ships ([PERFORMANCE.md](PERFORMANCE.md)'s
+> discipline: claims must not outrun reality). The design reasoning below stands;
+> the effort/risk notes it opened with are now, for the Swift side, measurements.
 
 ## The goal
 
