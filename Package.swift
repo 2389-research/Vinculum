@@ -94,11 +94,16 @@ let package = Package(
                     .product(name: "Cairo", package: "Cairo",
                              condition: .when(platforms: [.linux], traits: ["LinuxRaster"])),
                     // FreeType is the lower tier: available under FreeTypeRaster
-                    // alone (the Android C ABI) OR LinuxRaster (which enables it),
-                    // on Linux AND Android (both have FreeType; the Android build
-                    // links a cross-built libfreetype.a — build-freetype-android.sh).
+                    // alone (the Android/Windows C ABI) OR LinuxRaster (which
+                    // enables it), on Linux, Android AND Windows (all have
+                    // FreeType; the Android build links a cross-built
+                    // libfreetype.a — build-freetype-android.sh; the Windows build
+                    // links vcpkg's freetype.lib — see the native-dll CI job).
+                    // The three FreeType sources guard on `canImport(CFreetypeShim)`
+                    // alone, so admitting .windows here is all it takes to compile
+                    // the same C ABI into a Windows DLL.
                     .target(name: "CFreetypeShim",
-                            condition: .when(platforms: [.linux, .android], traits: ["FreeTypeRaster"])),
+                            condition: .when(platforms: [.linux, .android, .windows], traits: ["FreeTypeRaster"])),
                 ], path: "Sources/VinculumRender",
                 resources: [.copy("Resources/latinmodern-math.otf"),
                             .copy("Resources/texgyretermes-math.otf"),

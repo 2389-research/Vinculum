@@ -102,6 +102,86 @@ jobs:
       - name: Test (VinculumLayout — the Foundation-only geometry suite)
         run: swift test
 
+  # ── Windows NATIVE render path (MermaidKit-pattern piece 2) ──
+  # The `windows` job above proves the Foundation-only LAYOUT core builds. This
+  # job proves the RENDER path: the same @_cdecl C ABI that Android's JNI calls,
+  # cross-linked against FreeType, built as a Windows DLL, then driven end-to-end
+  # from .NET through P/Invoke — [DllImport], no shim (unlike Android's JNI).
+  #
+  # The Vinculum-specific wrinkle vs MermaidKit: the C ABI NEEDS FreeType (the
+  # math glyphs ARE the bundled .otf fonts, not device fonts), so the DLL links
+  # vcpkg's freetype. The three FreeType Swift sources guard on
+  # `canImport(CFreetypeShim)` alone, so no #if os() changes were needed — just
+  # admitting .windows to the shim's trait gate in Package.swift.
+  #
+  # Advisory (continue-on-error) while the spike settles: the open question this
+  # job answers is whether @_cdecl symbols export from a .dynamic product on the
+  # Swift Windows toolchain (dumpbin /exports is the proof), and whether vcpkg
+  # freetype links clean. No capability is claimed anywhere until this is green.
+  windows-native:
+    name: native DLL + P/Invoke (Windows)
+    runs-on: windows-latest
+    continue-on-error: true
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install Swift (Windows toolchain)
+        uses: compnerd/gha-setup-swift@eeda069c5bc95ac8a9ac5cea7d4f588ae5420ca5  # pinned (was @main)
+        with:
+          swift-version: swift-6.2-release
+          swift-build: 6.2-RELEASE
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Install FreeType (vcpkg)
+        shell: pwsh
+        run: |
+          & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install freetype:x64-windows
+          "VCPKG_INC=$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows\include" | Out-File $env:GITHUB_ENV -Append
+          "VCPKG_LIB=$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows\lib"     | Out-File $env:GITHUB_ENV -Append
+          "VCPKG_BIN=$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows\bin"     | Out-File $env:GITHUB_ENV -Append
+      - name: Swift version
+        run: swift --version
+      # Build the C ABI as a Windows DLL. @_cdecl marks the symbols extern "C" but
+      # does NOT dllexport them on Windows, so force the four ABI entry points onto
+      # the export table with /EXPORT linker directives — dumpbin then proves them.
+      - name: Build native DLL (VinculumAndroid, FreeTypeRaster)
+        shell: pwsh
+        run: |
+          swift build -c release --product VinculumAndroid --traits FreeTypeRaster `
+            -Xcc "-I$env:VCPKG_INC" `
+            -Xlinker "-LIBPATH:$env:VCPKG_LIB" `
+            -Xlinker "/EXPORT:vinculum_render_displaylist" `
+            -Xlinker "/EXPORT:vinculum_free" `
+            -Xlinker "/EXPORT:vinculum_abi_version" `
+            -Xlinker "/EXPORT:vinculum_set_font_dir"
+      - name: Locate + verify DLL exports (dumpbin)
+        shell: pwsh
+        run: |
+          $dll = Get-ChildItem -Recurse -Filter VinculumAndroid.dll .build | Select-Object -First 1
+          if (-not $dll) { throw "VinculumAndroid.dll not produced" }
+          Write-Host "DLL: $($dll.FullName)"
+          "VINC_DLL_DIR=$($dll.DirectoryName)" | Out-File $env:GITHUB_ENV -Append
+          $exports = dumpbin /exports $dll.FullName | Out-String
+          Write-Host $exports
+          foreach ($sym in 'vinculum_render_displaylist','vinculum_free','vinculum_abi_version','vinculum_set_font_dir') {
+            if ($exports -notmatch $sym) { throw "missing export: $sym" }
+          }
+          Write-Host "All four @_cdecl symbols export from the DLL."
+      - name: .NET P/Invoke end-to-end (native DLL required)
+        shell: pwsh
+        env:
+          VINC_NATIVE: '1'
+        run: |
+          # The ABI's font-dir override reads the bundled .otf math fonts from here
+          # (Bundle.module traps outside a SwiftPM bundle, same as inside an APK).
+          $env:VINC_FONT_DIR = (Resolve-Path "Sources/VinculumRender/Resources").Path
+          # Put the Swift DLL, its runtime deps, and freetype's DLLs on the loader path.
+          $env:PATH = "$env:VINC_DLL_DIR;$env:VCPKG_BIN;$env:PATH"
+          dotnet test windows/Vinculum.Rendering.Tests -c Release
+
   # WebAssembly: VinculumLayout is Foundation-only, so it cross-compiles to
   # wasm32-unknown-wasip1 (one guarded line for WASI's missing Thread — #96). This
   # gates that: builds the SVG-render smoke to wasm and RUNS it under wasmtime,
