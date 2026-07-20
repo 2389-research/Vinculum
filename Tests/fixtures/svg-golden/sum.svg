@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 221.24 66.34" width="221.24" height="66.34" role="img">
+<text x="9.50" y="40.25" font-family='Latin Modern Math' font-size="27" fill="#000000">∑</text>
+<text x="16" y="12.50" font-family='Latin Modern Math' font-size="14" fill="#000000">𝑛</text>
+<text x="2" y="60.84" font-family='Latin Modern Math' font-size="14" fill="#000000">𝑖</text>
+<text x="16" y="60.84" font-family='Latin Modern Math' font-size="14" fill="#000000">=</text>
+<text x="30" y="60.84" font-family='Latin Modern Math' font-size="14" fill="#000000">1</text>
+<text x="47.33" y="40.25" font-family='Latin Modern Math' font-size="20" fill="#000000">𝑖</text>
+<text x="72.89" y="40.25" font-family='Latin Modern Math' font-size="20" fill="#000000">=</text>
+<rect x="99.24" y="34.75" width="119.20" height="1" fill="#000000"/>
+<text x="100.84" y="26.71" font-family='Latin Modern Math' font-size="18" fill="#000000">𝑛</text>
+<text x="118.84" y="26.71" font-family='Latin Modern Math' font-size="18" fill="#000000">(</text>
+<text x="136.84" y="26.71" font-family='Latin Modern Math' font-size="18" fill="#000000">𝑛</text>
+<text x="158.84" y="26.71" font-family='Latin Modern Math' font-size="18" fill="#000000">+</text>
+<text x="180.84" y="26.71" font-family='Latin Modern Math' font-size="18" fill="#000000">1</text>
+<text x="198.84" y="26.71" font-family='Latin Modern Math' font-size="18" fill="#000000">)</text>
+<text x="149.84" y="53.97" font-family='Latin Modern Math' font-size="18" fill="#000000">2</text>
+</svg>
