@@ -12,11 +12,20 @@ public enum MathParser {
 
     // Runtime recursion depth, thread-local so concurrent parses don't
     // interfere (the parser is a static API used from multiple threads).
+#if os(WASI)
+    // WASI Foundation ships no `Thread`, and the wasm runtime is single-threaded,
+    // so a plain static counter is equivalent — there is no cross-thread
+    // interference to guard against. (Verified: this is the ONLY change needed to
+    // cross-compile VinculumLayout to wasm32-unknown-wasip1.) Every other platform
+    // keeps the thread-local counter unchanged.
+    nonisolated(unsafe) private static var currentDepth = 0
+#else
     private static let depthKey = "VinculumMathParserDepth"
     private static var currentDepth: Int {
         get { Thread.current.threadDictionary[depthKey] as? Int ?? 0 }
         set { Thread.current.threadDictionary[depthKey] = newValue }
     }
+#endif
 
     /// Parses a LaTeX math string. Unknown commands become `.unsupported`
     /// leaves; the parse itself never fails.
