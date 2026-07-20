@@ -167,6 +167,24 @@ jobs:
       - name: Run VDL1 conformance against the committed fixture
         run: java -cp /tmp/conf.jar ai.vinc.VinculumWireConformance Tests/fixtures/displaylist-wire-v1.bin
 
+  # .NET renderer conformance: the C# VDL1 decoder (Vinculum.Rendering) is the
+  # third decoder — Swift, Kotlin, C# — checked against the SAME committed
+  # fixture, plus a headless SkiaSharp render smoke. Gates the .NET renderer so a
+  # fourth platform can't drift the wire contract. SkiaSharp needs libfontconfig.
+  dotnet:
+    name: .NET renderer (SkiaSharp) conformance
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: SkiaSharp native deps
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1
+      - name: Test (VDL1 conformance + SkiaSharp render)
+        run: dotnet test windows/Vinculum.Rendering.Tests -v quiet
+
   test:
     name: swift test (macOS)
     runs-on: macos-15
