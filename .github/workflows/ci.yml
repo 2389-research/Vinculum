@@ -90,7 +90,7 @@ jobs:
           # for it. The Windows job never pushes, so nothing downstream needs it.
           persist-credentials: false
       - name: Install Swift (Windows toolchain)
-        uses: compnerd/gha-setup-swift@main
+        uses: compnerd/gha-setup-swift@eeda069c5bc95ac8a9ac5cea7d4f588ae5420ca5  # pinned (was @main); compnerd/gha-setup-swift main
         with:
           swift-version: swift-6.2-release
           swift-build: 6.2-RELEASE
