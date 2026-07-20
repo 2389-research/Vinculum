@@ -3,7 +3,7 @@
 // time, on Android. The sibling of `CoreTextOutliner`: same seam, different
 // engine, and the SAME engine that measured the scene, so outlines land exactly
 // where layout placed them (the seam-parity law, #62). See docs/ANDROID.md.
-#if canImport(SilicaCairo) && !canImport(AppKit) && !canImport(UIKit)
+#if canImport(CFreetypeShim) && !canImport(AppKit) && !canImport(UIKit)
 import Foundation
 import VinculumLayout
 

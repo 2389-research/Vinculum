@@ -40,10 +40,24 @@ let package = Package(
         .library(name: "VinculumRender", targets: ["VinculumRender"]),
     ],
     traits: [
+        // The FreeType TIER on its own: glyph outlines + metrics + MATH-table
+        // constants, no Cairo. This is the tier the Android C ABI builds on
+        // (Android has FreeType but not Cairo). Enables only the CFreetypeShim
+        // link, not the Silica/Cairo graph.
+        .trait(
+            name: "FreeTypeRaster",
+            description: "Link the FreeType glyph/measure path (no Cairo) — the tier the "
+                + "Android C ABI uses; also enabled transitively by LinuxRaster."
+        ),
+        // The Cairo PNG backend, layered on the FreeType tier — so it ENABLES
+        // FreeTypeRaster. Off by default so no-trait consumers keep a Silica-free
+        // dependency graph.
         .trait(
             name: "LinuxRaster",
-            description: "Link the Silica/Cairo raster rendering backend (Linux only). "
-                + "Off by default so no-trait consumers keep a Silica-free dependency graph."
+            description: "Link the Silica/Cairo raster PNG backend (Linux only). "
+                + "Enables FreeTypeRaster. Off by default so no-trait consumers keep a "
+                + "Silica-free dependency graph.",
+            enabledTraits: ["FreeTypeRaster"]
         ),
     ],
     dependencies: [
@@ -73,8 +87,10 @@ let package = Package(
                              condition: .when(platforms: [.linux], traits: ["LinuxRaster"])),
                     .product(name: "Cairo", package: "Cairo",
                              condition: .when(platforms: [.linux], traits: ["LinuxRaster"])),
+                    // FreeType is the lower tier: available under FreeTypeRaster
+                    // alone (the Android C ABI) OR LinuxRaster (which enables it).
                     .target(name: "CFreetypeShim",
-                            condition: .when(platforms: [.linux], traits: ["LinuxRaster"])),
+                            condition: .when(platforms: [.linux], traits: ["FreeTypeRaster"])),
                 ], path: "Sources/VinculumRender",
                 resources: [.copy("Resources/latinmodern-math.otf"),
                             .copy("Resources/texgyretermes-math.otf"),

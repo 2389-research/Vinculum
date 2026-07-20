@@ -18,12 +18,12 @@ final class MathDisplayListSilicaTests: XCTestCase {
     // Build the scene + display list from LaTeX, mirroring renderPNG so the two
     // sides compare the identical scene.
     private func displayList(_ latex: String, baseSize: CGFloat = 24) throws -> DisplayList {
-        let (_, font) = try XCTUnwrap(MathSilicaRenderer.loadFont(resource: "latinmodern-math"))
+        let (_, font) = try XCTUnwrap(FreeTypeFonts.loadFont(resource: "latinmodern-math"))
         let node = MathParser.parse(latex)
         try XCTSkipUnless(MathParser.isFullySupported(node), "unsupported: \(latex)")
-        let constants = MathSilicaRenderer.mathConstants(for: font) ?? .latinModern
+        let constants = FreeTypeFonts.mathConstants(for: font) ?? .latinModern
         let engine = MathLayoutEngine(
-            services: MathFontServices(measure: MathSilicaRenderer.freeTypeMeasurer(font: font),
+            services: MathFontServices(measure: FreeTypeFonts.freeTypeMeasurer(font: font),
                                        constants: constants),
             baseSize: baseSize * 1.15)
         let scene = engine.layout(node, display: true)

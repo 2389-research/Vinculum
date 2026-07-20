@@ -70,6 +70,14 @@ Resolve each element to filled paths + rects in Swift (via FreeType), and the
 Android side just paints a flat display list. No text shaping, no font logic,
 and no CoreText/Cairo on the Kotlin side.
 
+> **Done:** the FreeType tier is now trait-separated from Cairo. A `FreeTypeRaster`
+> trait links only the FreeType shim; `LinuxRaster` enables it and adds Cairo on
+> top. So `FreeTypeFont`, the outliner, the font loader, and the C ABI all build
+> and test on Linux **without Cairo** (`swift test --traits FreeTypeRaster`, guarded
+> in CI) — the exact dependency shape Android needs. The only Android-specific step
+> left is adding the `.android` platform to the shim's condition, which needs the
+> Swift Android SDK (C0).
+
 ---
 
 ## Decisions
