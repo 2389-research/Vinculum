@@ -1,4 +1,8 @@
+#if os(WASI)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Reduces a `MathScene` to a `DisplayList` — the platform-free emitter behind
 /// the Android backend (`docs/ANDROID.md`). Same scene walk as

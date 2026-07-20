@@ -1,4 +1,8 @@
+#if os(WASI)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// One user-defined math macro: an argument count and a body template in
 /// which `#1`…`#9` are the parameter slots.
@@ -58,7 +62,7 @@ public enum MathMacros {
     /// The definition commands' contribution to a block, so a
     /// definition-only block can render a chip instead of an empty box.
     public static func isDefinitionOnly(_ latex: String, table: MathMacroTable) -> Bool {
-        expand(latex, with: table).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        expand(latex, with: table).vTrimmingWhitespaceAndNewlines().isEmpty
             && (latex.contains("\\newcommand") || latex.contains("\\def") || latex.contains("\\renewcommand"))
     }
 
@@ -110,7 +114,7 @@ public enum MathMacros {
             var j = i + 1, digits = ""
             while j < chars.count, chars[j] != "]" { digits.append(chars[j]); j += 1 }
             if j < chars.count { j += 1 }
-            argCount = Int(digits.trimmingCharacters(in: .whitespaces)) ?? 0
+            argCount = Int(digits.vTrimmingWhitespace()) ?? 0
             i = skipSpaces(chars, j)
         }
         guard i < chars.count, chars[i] == "{",

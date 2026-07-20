@@ -1,4 +1,8 @@
+#if os(WASI)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// LaTeX math lexer: source string → `Token` stream.
 extension MathParser {

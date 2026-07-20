@@ -1,4 +1,8 @@
+#if os(WASI)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Maps ASCII letters/digits to their Unicode Mathematical Alphanumeric
 /// Symbols codepoints (blackboard 𝔸, script 𝒜, fraktur 𝔞, sans 𝗔, mono 𝚊,

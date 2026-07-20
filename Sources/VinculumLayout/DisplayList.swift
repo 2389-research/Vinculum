@@ -1,4 +1,8 @@
+#if os(WASI)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// A fully self-contained, device-independent drawing list — a `MathScene`
 /// reduced to nothing but filled/stroked paths and filled rectangles in

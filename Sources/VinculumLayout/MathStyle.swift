@@ -1,4 +1,8 @@
+#if os(WASI)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// TeX's four math styles (The TeXbook ch. 17, Appendix G). Cramped variants
 /// are tracked separately (the engine's `cramped` flag), giving the full

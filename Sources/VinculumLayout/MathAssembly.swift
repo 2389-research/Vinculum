@@ -1,4 +1,8 @@
+#if os(WASI)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 // OpenType MATH glyph assembly — building arbitrarily-tall (or
 // -wide) glyphs from font-drawn parts (end caps + repeatable extenders)

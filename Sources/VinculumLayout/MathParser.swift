@@ -1,4 +1,8 @@
+#if os(WASI)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 public enum MathParser {
 
@@ -341,7 +345,7 @@ public enum MathParser {
                     tokens.removeFirst()
                 }
                 if tokens.first == .character("]") { tokens.removeFirst() }
-                switch s.trimmingCharacters(in: .whitespaces) {
+                switch s.vTrimmingWhitespace() {
                 case "l": align = .left; case "r": align = .right; default: align = .center
                 }
             }

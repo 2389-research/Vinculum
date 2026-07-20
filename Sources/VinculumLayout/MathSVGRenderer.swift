@@ -1,4 +1,8 @@
+#if os(WASI)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Renders a `MathScene` to SVG — the platform-free renderer that makes
 /// server-side math real: `VinculumLayout` already lays out on Linux; this
@@ -124,24 +128,24 @@ public enum MathSVGRenderer {
             case .close: d += "Z "
             }
         }
-        return d.trimmingCharacters(in: .whitespaces)
+        return d.vTrimmingWhitespace()
     }
 
     private static func fill(_ color: MathColor?, _ ink: String) -> String {
         guard let c = color else { return ink }
-        func h(_ v: CGFloat) -> String { String(format: "%02x", Int((max(0, min(1, v)) * 255).rounded())) }
+        func h(_ v: CGFloat) -> String { vHexByte(Int((max(0, min(1, v)) * 255).rounded())) }
         return "#\(h(c.red))\(h(c.green))\(h(c.blue))"
     }
 
     private static func fmt(_ v: CGFloat) -> String {
-        v == v.rounded() ? String(Int(v)) : String(format: "%.2f", v)
+        v == v.rounded() ? String(Int(v)) : vFormat2(v)
     }
 
     private static func escape(_ s: String) -> String {
-        s.replacingOccurrences(of: "&", with: "&amp;")
-            .replacingOccurrences(of: "<", with: "&lt;")
-            .replacingOccurrences(of: ">", with: "&gt;")
-            .replacingOccurrences(of: "'", with: "&apos;")
+        s.vReplacing( "&", with: "&amp;")
+            .vReplacing( "<", with: "&lt;")
+            .vReplacing( ">", with: "&gt;")
+            .vReplacing( "'", with: "&apos;")
     }
 
     private static func capName(_ c: StrokeCap) -> String {

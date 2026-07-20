@@ -1,4 +1,8 @@
+#if os(WASI)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import VinculumLayout
 
 // Headless SVG render smoke — the CI proof that VinculumLayout + MathSVGRenderer
@@ -30,6 +34,5 @@ for latex in corpus {
 if failures == 0 {
     print("VINCULUM_SVG_SMOKE: PASS (\(corpus.count) equations)")
 } else {
-    print("VINCULUM_SVG_SMOKE: FAIL (\(failures)/\(corpus.count))")
-    exit(1)
+    fatalError("VINCULUM_SVG_SMOKE: FAIL (\(failures)/\(corpus.count))")
 }

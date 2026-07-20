@@ -1,4 +1,8 @@
+#if os(WASI)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// A diagnosable parse problem, locatable in the source — the
 /// squiggle-underline substrate for live-editor hosts.
@@ -36,8 +40,8 @@ extension MathParser {
             // Locate this occurrence: search forward from the previous hit so
             // duplicates map to successive positions; fall back to a
             // whole-string search, then to nil.
-            let range = latex.range(of: raw, range: searchFrom..<latex.endIndex)
-                ?? latex.range(of: raw)
+            let range = latex[searchFrom...].firstRange(of: raw)
+                ?? latex.firstRange(of: raw)
             if let range { searchFrom = range.upperBound }
             issues.append(MathParseIssue(source: raw, message: message, range: range))
         }

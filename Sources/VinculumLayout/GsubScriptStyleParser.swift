@@ -1,4 +1,8 @@
+#if os(WASI)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// The OpenType `ssty` (Math Script Style) substitutions parsed from a font's
 /// GSUB table. `ssty` maps a base glyph to a purpose-redrawn optical variant

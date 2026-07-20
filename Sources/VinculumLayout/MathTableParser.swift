@@ -1,4 +1,8 @@
+#if os(WASI)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 // The font's OpenType MATH table, parsed from raw bytes into pure data. This file is platform-free — bytes
 // in (obtained by the renderer via CGFont, or from a fixture on Linux),

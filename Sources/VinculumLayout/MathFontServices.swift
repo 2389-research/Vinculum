@@ -1,4 +1,8 @@
+#if os(WASI)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Everything a font contributes to layout, bundled into one value: the
 /// glyph measurer, the parsed MATH-table constants, and the four optional

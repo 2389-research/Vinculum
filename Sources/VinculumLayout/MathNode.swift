@@ -1,4 +1,8 @@
+#if os(WASI)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// A parsed LaTeX math expression. The node tree is deliberately close to
 /// TeX's own model — rows of atoms with spacing classes — so the layout

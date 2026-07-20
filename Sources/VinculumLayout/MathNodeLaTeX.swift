@@ -1,4 +1,8 @@
+#if os(WASI)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 // MathNode → LaTeX serialization. The contract is a RENDER
 // round-trip, not string identity: `parse(node.toLaTeX())` must lay out to
@@ -85,7 +89,7 @@ extension MathNode {
                 }
                 if spec.rowRules.contains(where: { $0.boundary == rows.count }) { rowsOut.append("\\hline") }
                 let arrayBody = rowsOut.joined(separator: " \\\\ ")
-                    .replacingOccurrences(of: "\\hline \\\\ ", with: "\\hline ")
+                    .vReplacing( "\\hline \\\\ ", with: "\\hline ")
                 return "\\begin{array}{\(cols)} \(arrayBody) \\end{array}"
             case .centered:
                 let env: String
