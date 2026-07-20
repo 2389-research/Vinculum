@@ -102,6 +102,41 @@ jobs:
       - name: Test (VinculumLayout — the Foundation-only geometry suite)
         run: swift test
 
+  # WebAssembly: VinculumLayout is Foundation-only, so it cross-compiles to
+  # wasm32-unknown-wasip1 (one guarded line for WASI's missing Thread — #96). This
+  # gates that: builds the SVG-render smoke to wasm and RUNS it under wasmtime,
+  # asserting non-empty SVG. If someone adds a non-WASI-guarded Thread (or any
+  # WASI-incompatible API), this goes red — the biggest previously-ungated risk.
+  # The toolchain and the wasm SDK MUST be the same Swift version (6.3.3 here);
+  # the floating swift:6.2 tag drifts, so this pins the container to 6.3.3-noble
+  # to match the SDK. Advisory while it settles (the SDK download can be slow).
+  wasm:
+    name: wasm build + render (WebAssembly)
+    runs-on: ubuntu-latest
+    container: swift:6.3.3-noble
+    continue-on-error: true
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install the Swift WebAssembly SDK
+        run: |
+          swift sdk install \
+            https://download.swift.org/swift-6.3.3-release/wasm-sdk/swift-6.3.3-RELEASE/swift-6.3.3-RELEASE_wasm.artifactbundle.tar.gz \
+            --checksum cabfa08b73bb8ac783927ecd15fa386e99d0c139c5f232445067bcf58379cae7
+      - name: Install wasmtime
+        run: |
+          apt-get update && apt-get install -y xz-utils curl
+          curl -sL https://github.com/bytecodealliance/wasmtime/releases/download/v27.0.0/wasmtime-v27.0.0-x86_64-linux.tar.xz -o /tmp/wt.tar.xz
+          tar xf /tmp/wt.tar.xz -C /tmp
+          cp /tmp/wasmtime-*/wasmtime /usr/local/bin/
+      - name: Cross-compile VinculumLayout to wasm32
+        run: swift build --swift-sdk swift-6.3.3-RELEASE_wasm --product VinculumWasmSmoke
+      - name: Render LaTeX to SVG under wasmtime (asserts non-empty SVG)
+        run: |
+          W=$(find .build -name VinculumWasmSmoke.wasm | head -1)
+          echo "running $W"
+          wasmtime "$W"
+
   test:
     name: swift test (macOS)
     runs-on: macos-15

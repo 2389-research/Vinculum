@@ -115,6 +115,8 @@ let package = Package(
                           path: "Sources/VinculumDemo"),
         .executableTarget(name: "VinculumLinuxSmoke", dependencies: ["VinculumRender"],
                           path: "Sources/VinculumLinuxSmoke"),
+        .executableTarget(name: "VinculumWasmSmoke", dependencies: ["VinculumLayout"],
+                          path: "Sources/VinculumWasmSmoke"),
         .testTarget(name: "VinculumLayoutTests", dependencies: ["VinculumLayout"], path: "Tests/VinculumLayoutTests"),
         .testTarget(name: "VinculumRenderTests", dependencies: ["VinculumRender", "VinculumLayout"], path: "Tests/VinculumRenderTests"),
     ]
