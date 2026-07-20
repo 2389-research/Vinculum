@@ -19,6 +19,20 @@ public enum FreeTypeFonts {
     static let resources = ["latinmodern-math", "texgyretermes-math",
                             "texgyrepagella-math", "stixtwo-math", "firamath"]
 
+    /// An explicit directory to load the bundled `.otf`s from, bypassing
+    /// `Bundle.module`. This is the **Android** path: SwiftPM's resource-bundle
+    /// accessor (`Bundle.module`) traps with a fatalError inside an APK — there is
+    /// no `.bundle` directory next to the `.so` — so the host ships the fonts as
+    /// APK assets, extracts them once, and hands the directory here via
+    /// `vinculum_set_font_dir`. On Apple/Linux it stays nil and `Bundle.module`
+    /// works as before, so nothing changes there.
+    nonisolated(unsafe) private static var _fontDirectory: String?
+    private static let fontDirLock = NSLock()
+    static var fontDirectory: String? {
+        get { fontDirLock.lock(); defer { fontDirLock.unlock() }; return _fontDirectory }
+        set { fontDirLock.lock(); _fontDirectory = newValue; fontDirLock.unlock() }
+    }
+
     /// The font's OWN MATH constants, or nil if it carries no MATH table.
     ///
     /// `MathTableParser` parses the MATH TABLE's bytes, never a font file: handing
@@ -35,10 +49,21 @@ public enum FreeTypeFonts {
     /// isn't one of ours or can't be read. Shared with the font-constants tests
     /// so they exercise exactly the load path the renderer uses.
     static func loadFont(resource: String) -> (otf: Data, font: FreeTypeFont)? {
-        guard resources.contains(resource),
-              let otf = Bundle.module.url(forResource: resource, withExtension: "otf")
-                .flatMap({ try? Data(contentsOf: $0) }),
-              let font = FreeTypeFont(bytes: otf) else { return nil }
+        guard resources.contains(resource) else { return nil }
+        // A set fontDirectory wins and Bundle.module is never touched — the whole
+        // point on Android, where merely evaluating the `Bundle.module` accessor
+        // traps. Otherwise fall back to the SwiftPM resource bundle (Apple/Linux).
+        let otf: Data
+        if let dir = fontDirectory {
+            let url = URL(fileURLWithPath: dir).appendingPathComponent("\(resource).otf")
+            guard let data = try? Data(contentsOf: url) else { return nil }
+            otf = data
+        } else {
+            guard let url = Bundle.module.url(forResource: resource, withExtension: "otf"),
+                  let data = try? Data(contentsOf: url) else { return nil }
+            otf = data
+        }
+        guard let font = FreeTypeFont(bytes: otf) else { return nil }
         return (otf, font)
     }
 

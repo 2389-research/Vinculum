@@ -28,6 +28,37 @@ final class VinculumWireCTests: XCTestCase {
         XCTAssertNil(renderDisplayListWire(latex: "", display: true, baseSize: 24))
     }
 
+    /// The Android font-directory override — the mechanism that replaces
+    /// `Bundle.module` (which traps inside an APK, verified on-device). Point it
+    /// at a directory of `.otf`s and rendering must produce the SAME bytes as the
+    /// default `Bundle.module` path, because it's the same fonts by another door.
+    func testFontDirectoryOverrideMatchesBundleModule() throws {
+        let latex = #"x = \frac{-b}{2a}"#
+        let viaBundle = try XCTUnwrap(renderDisplayListWire(latex: latex, display: true, baseSize: 24),
+                                      "baseline via Bundle.module")
+
+        // Stage the bundled fonts into a temp dir and load them from there.
+        let dir = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("vinc-fonts-\(getpid())")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir); FreeTypeFonts.fontDirectory = nil }
+        for res in FreeTypeFonts.resources {
+            let src = try XCTUnwrap(Bundle.module.url(forResource: res, withExtension: "otf"))
+            try Data(contentsOf: src).write(to: dir.appendingPathComponent("\(res).otf"))
+        }
+
+        FreeTypeFonts.fontDirectory = dir.path
+        let viaDir = try XCTUnwrap(renderDisplayListWire(latex: latex, display: true, baseSize: 24),
+                                   "override path must render")
+        XCTAssertEqual(viaDir, viaBundle,
+                       "the font-directory override must produce byte-identical output to Bundle.module")
+
+        // A bogus directory yields nil (missing font), not a crash.
+        FreeTypeFonts.fontDirectory = "/no/such/dir"
+        XCTAssertNil(renderDisplayListWire(latex: latex, display: true, baseSize: 24),
+                     "a missing font directory degrades to nil, not a trap")
+    }
+
     /// The decoded geometry matches the emitter directly — the C path doesn't
     /// distort the scene, it just serializes it.
     func testWireRoundTripEqualsDirectEmit() throws {
