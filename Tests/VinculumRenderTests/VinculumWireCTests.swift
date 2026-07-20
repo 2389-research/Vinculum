@@ -1,6 +1,6 @@
 // The Android C ABI (#77), exercised on Linux — including the real @_cdecl entry
 // point via pointer marshalling, which is what JNI calls.
-#if canImport(SilicaCairo) && !canImport(AppKit) && !canImport(UIKit)
+#if canImport(CFreetypeShim) && !canImport(AppKit) && !canImport(UIKit)
 import XCTest
 import Foundation
 @testable import VinculumRender
@@ -31,11 +31,11 @@ final class VinculumWireCTests: XCTestCase {
     /// The decoded geometry matches the emitter directly — the C path doesn't
     /// distort the scene, it just serializes it.
     func testWireRoundTripEqualsDirectEmit() throws {
-        let (_, font) = try XCTUnwrap(MathSilicaRenderer.loadFont(resource: "latinmodern-math"))
+        let (_, font) = try XCTUnwrap(FreeTypeFonts.loadFont(resource: "latinmodern-math"))
         let node = MathParser.parse(#"\sqrt{x^2 + 1}"#)
-        let constants = MathSilicaRenderer.mathConstants(for: font) ?? .latinModern
+        let constants = FreeTypeFonts.mathConstants(for: font) ?? .latinModern
         let engine = MathLayoutEngine(
-            services: MathFontServices(measure: MathSilicaRenderer.freeTypeMeasurer(font: font),
+            services: MathFontServices(measure: FreeTypeFonts.freeTypeMeasurer(font: font),
                                        constants: constants),
             baseSize: 24 * 1.15)
         let scene = engine.layout(node, display: true)

@@ -2,7 +2,7 @@
 // .otf from bytes (Silica's font-by-name path can't resolve non-default
 // families) and provides the two things the renderer needs: glyph metrics for
 // the measurer, and glyph outlines (as `PathOp`s) drawn as filled paths.
-#if canImport(SilicaCairo) && !canImport(AppKit) && !canImport(UIKit)
+#if canImport(CFreetypeShim) && !canImport(AppKit) && !canImport(UIKit)
 import Foundation
 import CFreetypeShim
 import VinculumLayout

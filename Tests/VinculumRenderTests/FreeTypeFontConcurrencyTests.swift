@@ -1,4 +1,4 @@
-#if canImport(SilicaCairo) && !canImport(AppKit) && !canImport(UIKit)
+#if canImport(CFreetypeShim) && !canImport(AppKit) && !canImport(UIKit)
 import XCTest
 import Foundation
 @testable import VinculumRender
@@ -15,7 +15,7 @@ import Foundation
 final class FreeTypeFontConcurrencyTests: XCTestCase {
 
     func testSharedFontSurvivesConcurrentUse() throws {
-        let loaded = try XCTUnwrap(MathSilicaRenderer.loadFont(resource: "latinmodern-math"))
+        let loaded = try XCTUnwrap(FreeTypeFonts.loadFont(resource: "latinmodern-math"))
         let font = loaded.font
         let scalars: [Unicode.Scalar] = ["x", "y", "+", "=", "1", "2", "a", "b"]
 

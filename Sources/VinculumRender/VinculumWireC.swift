@@ -3,12 +3,13 @@
 // is one-way — Vinculum measures with FreeType in-Swift, so nothing calls back
 // into Kotlin (unlike a native-font backend that needs a measure callback).
 //
-// GATING NOTE: this rides the FreeType path, which today compiles only under the
-// LinuxRaster trait (bundled with Silica/Cairo). The Android build has FreeType
-// but no Cairo, so a prerequisite of the on-device port (part of C0/#75, A3/#79)
-// is exposing the FreeType path WITHOUT the Cairo dependency. Until then this is
-// built and tested on Linux, where FreeType is present.
-#if canImport(SilicaCairo) && !canImport(AppKit) && !canImport(UIKit)
+// GATING: the FreeType tier is now trait-separated from Cairo — the
+// `FreeTypeRaster` trait (which `LinuxRaster` enables) links only CFreetypeShim,
+// so this whole path builds and tests on Linux WITHOUT Cairo, the config Android
+// needs. The one remaining Android-specific step is adding the `.android`
+// platform to CFreetypeShim's condition in Package.swift once the Swift Android
+// SDK is in play (C0/#75) — the platform triple can't be targeted before then.
+#if canImport(CFreetypeShim) && !canImport(AppKit) && !canImport(UIKit)
 import Foundation
 import VinculumLayout
 
@@ -21,12 +22,12 @@ import VinculumLayout
 /// `MathImageRenderer.rendered` returns nil on Apple.
 func renderDisplayListWire(latex: String, display: Bool, baseSize: CGFloat,
                            resource: String = "latinmodern-math") -> [UInt8]? {
-    guard let (_, font) = MathSilicaRenderer.loadFont(resource: resource) else { return nil }
+    guard let (_, font) = FreeTypeFonts.loadFont(resource: resource) else { return nil }
     let node = MathParser.parse(latex)
     guard MathParser.isFullySupported(node) else { return nil }
-    let constants = MathSilicaRenderer.mathConstants(for: font) ?? .latinModern
+    let constants = FreeTypeFonts.mathConstants(for: font) ?? .latinModern
     let engine = MathLayoutEngine(
-        services: MathFontServices(measure: MathSilicaRenderer.freeTypeMeasurer(font: font),
+        services: MathFontServices(measure: FreeTypeFonts.freeTypeMeasurer(font: font),
                                    constants: constants),
         baseSize: display ? baseSize * 1.15 : baseSize)
     let scene = engine.layout(node, display: display)

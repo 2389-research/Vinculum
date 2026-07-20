@@ -13,64 +13,18 @@ import VinculumLayout
 
 public enum MathSilicaRenderer {
 
-    static let resources = ["latinmodern-math", "texgyretermes-math",
-                            "texgyrepagella-math", "stixtwo-math", "firamath"]
-
-    /// The font's OWN MATH constants, or nil if it carries no MATH table.
-    ///
-    /// `MathTableParser` parses the MATH TABLE's bytes, never a font file: handing
-    /// it the whole `.otf` fails the version guard (bytes 0-3 are the sfnt tag —
-    /// 'OTTO' for our CFF fonts), which silently substituted Latin Modern's
-    /// metrics for every bundled font (#1). The renderer and the tests go through
-    /// here, so a regression to the font-file form fails the tests.
-    static func mathConstants(for font: FreeTypeFont) -> MathFontConstants? {
-        font.sfntTable(tag: FreeTypeFont.mathTableTag)
-            .flatMap { MathTableParser.constants(from: $0, unitsPerEm: Int(font.unitsPerEm)) }
-    }
-
-    /// A bundled font's raw bytes plus its FreeType face, or nil if the resource
-    /// isn't one of ours or can't be read. Shared with the font-constants tests
-    /// so they exercise exactly the load path the renderer uses.
-    static func loadFont(resource: String) -> (otf: Data, font: FreeTypeFont)? {
-        guard resources.contains(resource),
-              let otf = Bundle.module.url(forResource: resource, withExtension: "otf")
-                .flatMap({ try? Data(contentsOf: $0) }),
-              let font = FreeTypeFont(bytes: otf) else { return nil }
-        return (otf, font)
-    }
-
-    /// The FreeType `MathTextMeasurer` for `font` — glyph metrics + ink extents
-    /// from the same face that outlines the glyphs. Shared with the display-list
-    /// tests so they build the exact scene `renderPNG` does (no drift).
-    static func freeTypeMeasurer(font: FreeTypeFont) -> MathTextMeasurer {
-        { text, size, _ in
-            var width: CGFloat = 0
-            var inkTop: CGFloat = 0, inkBot: CGFloat = 0, anyInk = false
-            for scalar in text.unicodeScalars {
-                let gid = font.glyphIndex(scalar)
-                width += font.advanceEm(glyph: gid) * size
-                let (t, b) = font.inkExtentEm(glyph: gid)
-                if t != b {   // non-empty glyph
-                    inkTop = anyInk ? max(inkTop, t * size) : t * size
-                    inkBot = anyInk ? min(inkBot, b * size) : b * size
-                    anyInk = true
-                }
-            }
-            let asc = font.ascentEm * size, desc = font.descentEm * size
-            return GlyphMetrics(width: width, ascent: asc, descent: desc,
-                                inkAscent: anyInk ? min(asc, inkTop) : asc,
-                                inkDescent: anyInk ? inkBot : -desc)
-        }
-    }
+    // Font loading, the FreeType measurer, and MATH constants moved to the
+    // Cairo-free `FreeTypeFonts` tier (so the Android C ABI can use them without
+    // Cairo). This renderer is the Cairo drawing on top.
 
     /// Render `latex` to PNG bytes with the given bundled font, or nil if the
     /// LaTeX is unsupported or the font can't be loaded.
     public static func renderPNG(latex: String, resource: String = "latinmodern-math",
                                  baseSize: CGFloat = 24, display: Bool = false) -> Data? {
-        guard let (_, font) = loadFont(resource: resource) else { return nil }
+        guard let (_, font) = FreeTypeFonts.loadFont(resource: resource) else { return nil }
 
-        let constants = mathConstants(for: font) ?? .latinModern
-        let measure = freeTypeMeasurer(font: font)
+        let constants = FreeTypeFonts.mathConstants(for: font) ?? .latinModern
+        let measure = FreeTypeFonts.freeTypeMeasurer(font: font)
 
         let node = MathParser.parse(latex)
         guard MathParser.isFullySupported(node) else { return nil }

@@ -31,20 +31,33 @@ jobs:
           if [ -z "$pkg" ] || [ "$pkg" != "$doc" ]; then
             echo "::error::CONTRIBUTING.md swift-tools-version ($doc) != Package.swift ($pkg)"; exit 1
           fi
-      # VinculumRender's Linux backend links Silica (Cairo/FontConfig/FreeType);
-      # its C libraries must be present for SwiftPM to build the Cairo modules.
-      - name: Install Silica system deps
+      # FreeType only — deliberately NOT Cairo yet, so the FreeTypeRaster step
+      # below proves the FreeType tier links WITHOUT Cairo (the Android
+      # dependency shape). Cairo is installed later, just before LinuxRaster.
+      - name: Install FreeType (default + FreeTypeRaster)
         run: |
           apt-get update
-          apt-get install -y pkg-config libcairo2-dev libfreetype6-dev libfontconfig1-dev fonts-dejavu
+          apt-get install -y pkg-config libfreetype6-dev
       - name: Swift version
         run: swift --version
       # Default (no-trait): the Silica raster backend is behind LinuxRaster
       # (default OFF), so a plain build is Silica-free — parsing + layout only.
       - name: Build (default, Silica-free)
         run: swift build
+      # FreeTypeRaster: the FreeType TIER without Cairo — the config the Android
+      # C ABI uses (Android has FreeType, not Cairo). Run with Cairo NOT INSTALLED,
+      # so a regression that reintroduces a Cairo dependency fails here instead of
+      # slipping through. The trait pulls in no branch dependency (CFreetypeShim is
+      # a system lib), so the graph is as clean as the default build.
+      - name: Build + test (FreeTypeRaster, Cairo absent)
+        run: |
+          swift build --traits FreeTypeRaster
+          swift test --traits FreeTypeRaster
+      # Now Cairo, for the full raster backend.
+      - name: Install Cairo (for LinuxRaster)
+        run: apt-get install -y libcairo2-dev libfontconfig1-dev fonts-dejavu
       # LinuxRaster ON: build + test the Silica/Cairo/FreeType render backend,
-      # including the render smoke tests.
+      # including the render smoke tests. LinuxRaster enables FreeTypeRaster.
       - name: Build + test (LinuxRaster)
         run: |
           # Restore the pinned Silica/Cairo/transitive graph so this — the only
