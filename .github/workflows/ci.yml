@@ -254,6 +254,26 @@ jobs:
           name: nupkgs
           path: nupkgs/*.nupkg
 
+  # WinUI 3 control — the modern-stack twin of the WPF control. Needs no Swift/native
+  # DLL to compile (it references the managed Vinculum.Rendering); its render correctness
+  # rests on SceneRenderer, pixel-tested headless. Separate + advisory while the Windows
+  # App SDK build settles, so a WinUI-SDK hiccup can't red the proven windows-native gate.
+  windows-winui:
+    name: WinUI 3 control (Windows)
+    runs-on: windows-latest
+    continue-on-error: true
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Build WinUI 3 control
+        shell: pwsh
+        run: dotnet build windows/Vinculum.Windows.WinUI -c Release
+
   # WebAssembly: VinculumLayout is Foundation-only, so it cross-compiles to
   # wasm32-unknown-wasip1 (one guarded line for WASI's missing Thread — #96). This
   # gates that: builds the SVG-render smoke to wasm and RUNS it under wasmtime,

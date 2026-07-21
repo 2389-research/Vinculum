@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- WinUI 3 (Windows App SDK) — Windows-only; built by the advisory windows-winui job. -->
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <UseWinUI>true</UseWinUI>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Vinculum.Windows.WinUI</RootNamespace>
+    <!-- A control library, not a packaged app: no MSIX, no self-contained bootstrap. -->
+    <WindowsAppSDKSelfContained>false</WindowsAppSDKSelfContained>
+    <EnableMsixTooling>false</EnableMsixTooling>
+
+    <!-- NuGet metadata. The ProjectReference becomes a package dependency at pack time. -->
+    <PackageId>Vinculum.Windows.WinUI</PackageId>
+    <Version>2.0.0-preview.1</Version>
+    <Authors>Clint Ecker</Authors>
+    <Description>A drop-in WinUI 3 control (VinculumMathView) that renders LaTeX math via SkiaSharp. Set the Latex property and it paints. Depends on Vinculum.Rendering, which carries the native Windows engine.</Description>
+    <PackageTags>latex;math;winui;windowsappsdk;control;skiasharp</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/2389-research/Vinculum</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/2389-research/Vinculum</PackageProjectUrl>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.240923002" />
+    <PackageReference Include="SkiaSharp.Views.WinUI" Version="2.88.8" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Vinculum.Rendering/Vinculum.Rendering.csproj" />
+  </ItemGroup>
+</Project>
