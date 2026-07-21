@@ -245,6 +245,8 @@ through STIX Two / Apple Symbols (no bundled font needed). The pre-Unicode
 | --- | --- | :---: |
 | Point accents | `\hat \check \tilde \bar \vec \dot \ddot \breve \mathring \acute \grave` | ✅ |
 | Stretchy | `\widehat \widetilde \widecheck` | ✅ (walk the font's horizontal width-variant ladder; widest drawn cut that fits) |
+| Harpoon (over) | `\overrightharpoon \overleftharpoon` | ✅ (stretchy, tracks the base width) |
+| Under-accent | `\utilde` | ✅ (a wide tilde *below* the base, stretchy) |
 | Rules | `\overline \underline` | ✅ (drawn rule, not a glyph) |
 
 Point accents use ink extents (not the loose typographic box) for
@@ -437,7 +439,6 @@ Honest list of what degrades to a source fallback (or is only partially
 honored):
 
 - `\mathchoice`, `\DeclareMathOperator` (needs a macro-table branch) — ❌.
-- `\utilde` and harpoon accents (`\overrightharpoon`, `\overleftharpoon`, …) — ❌.
 - `\begin{CD}` (commutative diagrams — a diagram problem, out of scope).
 - **Out of scope by design:** `\href`, `\includegraphics`, mhchem `\ce`,
   siunitx, `\verb`.

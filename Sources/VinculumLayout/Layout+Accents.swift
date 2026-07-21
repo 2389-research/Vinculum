@@ -42,6 +42,38 @@ extension MathLayoutEngine {
             return MathBox(width: baseBox.width, ascent: ascent, descent: descent, elements: elements)
         }
 
+        // Under-accents (\utilde): a stretchy mark BELOW the base. Mirrors the
+        // stretchy over path but seats the mark under the base's ink/descent.
+        if accent.isUnder, let markGlyph = accent.stretchyGlyph {
+            let clearance = size * MathLayout.Accent.clearance
+            let attach = coreBox.width / 2
+            if let shape = accentVariants?(markGlyph, coreBox.width, size) {
+                let m = shape.metrics
+                // The mark's baseline so its ink top sits `clearance` below the base.
+                let markBaselineY = -baseBox.descent - clearance - m.inkAscent
+                let descent = max(baseBox.descent, -(markBaselineY + m.inkDescent))
+                var elements = baseBox.elements
+                elements.append(.glyph(id: shape.glyphID, size: size,
+                                       origin: CGPoint(x: attach - (m.inkLeft + m.width / 2), y: markBaselineY),
+                                       color: colorOverride))
+                return MathBox(width: baseBox.width, ascent: baseBox.ascent, descent: descent,
+                               inkAscent: baseBox.inkAscent, elements: elements)
+            }
+            // Scaling fallback: a scaled tilde below.
+            let accentSize = min(size * MathLayout.Accent.stretchyMax,
+                                 max(size * MathLayout.Accent.stretchyMin, coreBox.width * MathLayout.Accent.stretchyTarget))
+            let glyph = Self.mathVariant("~", italic: false, bold: false)
+            let m = measure(glyph, accentSize, false)
+            let markBaselineY = -baseBox.descent - clearance - m.inkAscent
+            let descent = max(baseBox.descent, -(markBaselineY + m.inkDescent))
+            var elements = baseBox.elements
+            elements.append(.glyphs(text: glyph, size: accentSize, mono: false,
+                                    origin: CGPoint(x: attach - m.width / 2, y: markBaselineY),
+                                    color: colorOverride))
+            return MathBox(width: baseBox.width, ascent: baseBox.ascent, descent: descent,
+                           inkAscent: baseBox.inkAscent, elements: elements)
+        }
+
         guard let rawGlyph = accent.glyph else { return baseBox }
         let clearance = size * MathLayout.Accent.clearance
         let baseAttach = glyphTypography(of: base, size: size)?.topAccentAttachment

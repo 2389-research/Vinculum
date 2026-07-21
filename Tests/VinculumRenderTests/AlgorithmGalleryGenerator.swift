@@ -46,6 +46,9 @@ final class AlgorithmGalleryGenerator: XCTestCase {
             ("Tall bases: the accent seats on the ink, scripts stay attached", [
                 #"\hat{A}^2 \quad \bar{X}_n \quad \overline{AB}^{\,2}"#,
             ]),
+            ("Harpoon accents (over) and \\utilde (a wide tilde below)", [
+                #"\overrightharpoon{AB} \quad \overleftharpoon{v} \quad \utilde{x} \quad \utilde{abc}"#,
+            ]),
         ])
 
         // Rules 13/13a — large operators and limits.
