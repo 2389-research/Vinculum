@@ -186,6 +186,10 @@ public struct MathLayoutEngine: Sendable {
         case .multiScripts(let base, let preSub, let preSuper, let postSub, let postSuper):
             return multiScriptsBox(base, preSub: preSub, preSuper: preSuper,
                                    postSub: postSub, postSuper: postSuper, size: s, style: style)
+        case .spanned(_, _, let content):
+            // The span only matters inside a grid (matrixBox reads it); standalone
+            // it renders as its content.
+            return box(for: content, size: s, style: style)
 
         case .delimited(let left, let body, let right):
             return delimitedBox(left, body, right, size: s, style: style)
@@ -358,6 +362,7 @@ public struct MathLayoutEngine: Sendable {
         case .radical, .row, .ruleBox, .colorbox: return .ordinary
         case .scripts(let base, _, _): return atomClass(of: base)
         case .multiScripts(let base, _, _, _, _): return atomClass(of: base)
+        case .spanned(_, _, let content): return atomClass(of: content)
         case .accent(let base, _): return atomClass(of: base)
         case .genfrac: return .ordinary
         case .overUnder(_, _, _, let kind):

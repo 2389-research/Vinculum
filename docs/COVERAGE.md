@@ -192,6 +192,7 @@ All ✅.
 | `aligned` / `align` / `alignat` / `alignedat` / `split` / `gather` / `gathered` / `multline` | ✅ | alignment at `&` |
 | `substack` | ✅ | tight centered stack (script size) |
 | `array` | ✅ | `{l c r \| c}` per-column alignment + `\|` vertical rules + `\hline` / `\cline{i-j}` — augmented matrices `[A\|b]`, bordered/truth tables |
+| `\multicolumn{n}{align}{…}` | ✅ | A cell spanning `n` columns with its own `l`/`c`/`r` alignment; overflow grows the span. Works in every grid environment |
 
 - `array` draws `\hline` / `\cline{a-b}` and `|` column rules. In the other
   environments those tokens are consumed and ignored (they don't flip the grid

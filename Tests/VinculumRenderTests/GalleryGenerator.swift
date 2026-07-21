@@ -46,6 +46,10 @@ final class GalleryGenerator: XCTestCase {
                 #"\begin{cases} x^2 & x \ge 0 \\ -x & x < 0 \end{cases}"#,
                 #"\begin{aligned} a &= b + c \\ &= d + e \end{aligned}"#,
             ]),
+            (#"\multicolumn — a cell spanning columns"#, [
+                #"\begin{array}{ccc} \multicolumn{3}{c}{\text{Totals}} \\ \hline a & b & c \end{array}"#,
+                #"\left[ \begin{array}{cc|c} 1 & 0 & 3 \\ 0 & 1 & 4 \end{array} \right]"#,
+            ]),
         ])
 
         try poster(to: out.appendingPathComponent("03-notation.png"), title: "Accents · binomials · braces · arrows · alphabets · color", sections: [

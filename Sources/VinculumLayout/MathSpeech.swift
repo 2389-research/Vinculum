@@ -63,6 +63,9 @@ public enum MathSpeech {
             if let postSuper { s += " to the power \(speak(postSuper))" }
             return s
 
+        case .spanned(_, _, let content):
+            return speak(content)
+
         case .delimited(let left, let body, let right):
             let name = fenceName(left, right)
             return "open \(name) \(speak(body)) close \(name)"

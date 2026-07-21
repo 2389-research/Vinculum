@@ -26,6 +26,10 @@ public indirect enum MathNode: Hashable, Sendable {
     /// left edge (right-aligned into the pre-cluster).
     case multiScripts(base: MathNode, preSub: MathNode?, preSuper: MathNode?,
                       postSub: MathNode?, postSuper: MathNode?)
+    /// `\multicolumn{n}{align}{content}` — a table cell spanning `n` columns with
+    /// its own alignment. Only meaningful inside a `matrix`/`array` row (the grid
+    /// layout reads the span); rendered standalone it is just its content.
+    case spanned(columns: Int, alignment: ArraySpec.Align, content: MathNode)
     /// Auto-sized fences around a body: ( ) [ ] { } | ‖.
     case delimited(left: String, body: MathNode, right: String)
     /// `\left … \middle| … \right`: fences with interior `\middle` delimiters,
@@ -113,6 +117,8 @@ extension MathNode {
             return [base] + (sub.map { [$0] } ?? []) + (sup.map { [$0] } ?? [])
         case .multiScripts(let base, let preSub, let preSuper, let postSub, let postSuper):
             return [base] + [preSub, preSuper, postSub, postSuper].compactMap { $0 }
+        case .spanned(_, _, let content):
+            return [content]
         case .delimited(_, let body, _):
             return [body]
         case .fenced(_, let segments):

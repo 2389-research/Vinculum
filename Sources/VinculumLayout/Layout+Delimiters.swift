@@ -148,7 +148,21 @@ extension MathLayoutEngine {
         // display — or making any of these inherit — would be TeX-incorrect.
         let cellStyle: MathStyle = style == .aligned ? .display : .text
 
-        let columns = rows.map(\.count).max() ?? 0
+        // Column spans (`\multicolumn`): each cell occupies `span` columns from its
+        // start column. Without any spanned cell this is exactly one column per cell,
+        // so the grid geometry is byte-identical to before.
+        func span(_ cell: MathNode) -> Int { if case .spanned(let n, _, _) = cell { return max(1, n) }; return 1 }
+        var cellStart: [[Int]] = []
+        for row in rows {
+            var starts: [Int] = []; var col = 0
+            for cell in row { starts.append(col); col += span(cell) }
+            cellStart.append(starts)
+        }
+        let columns = zip(rows, cellStart).map { row, starts -> Int in
+            guard let last = row.last, let start = starts.last else { return 0 }
+            return start + span(last)
+        }.max() ?? 0
+
         var cellBoxes: [[MathBox]] = []
         var colWidth = [CGFloat](repeating: 0, count: columns)
         var rowAscent = [CGFloat](repeating: 0, count: rows.count)
@@ -158,12 +172,28 @@ extension MathLayoutEngine {
             for (c, cell) in row.enumerated() {
                 let b = cellEngine.box(for: cell, size: size, style: cellStyle)
                 boxes.append(b)
-                colWidth[c] = max(colWidth[c], b.width)
+                // Single-column cells set their column width now; spanned cells are
+                // fitted in the second pass below so they don't inflate one column.
+                if span(cell) == 1 { colWidth[cellStart[r][c]] = max(colWidth[cellStart[r][c]], b.width) }
                 rowAscent[r] = max(rowAscent[r], b.ascent)
                 rowDescent[r] = max(rowDescent[r], b.descent)
             }
             if row.isEmpty { rowAscent[r] = size * MathLayout.Grid.emptyRowAscent; rowDescent[r] = size * MathLayout.Grid.emptyRowDescent }
             cellBoxes.append(boxes)
+        }
+
+        // Pass 2 — grow spanned columns to fit content that overflows the span
+        // (the overflow lands on the span's last column, as LaTeX does).
+        let matrixColGapForSpan = size * (style == .aligned ? MathLayout.Grid.alignedColGap : MathLayout.Grid.matrixColGap)
+        for (r, row) in rows.enumerated() {
+            for (c, cell) in row.enumerated() where span(cell) > 1 && columns > 0 {
+                let start = cellStart[r][c]
+                let end = min(start + span(cell) - 1, columns - 1)
+                guard end >= start else { continue }
+                let have = (start...end).reduce(0) { $0 + colWidth[$1] } + CGFloat(end - start) * matrixColGapForSpan
+                let need = cellBoxes[r][c].width
+                if need > have { colWidth[end] += need - have }
+            }
         }
 
         let rowGap = size * (style == .substack ? MathLayout.Grid.substackRowGap : MathLayout.Grid.matrixRowGap)
@@ -211,6 +241,23 @@ extension MathLayoutEngine {
             return x + leftPad
         }
 
+        // A `\multicolumn` cell aligns within the union of the columns it spans.
+        func spannedOriginX(cell: MathNode, start: Int, box: MathBox) -> CGFloat {
+            guard case .spanned(let n, let align, _) = cell, columns > 0 else {
+                return cellOriginX(col: start, box: box)
+            }
+            let end = min(start + max(1, n) - 1, columns - 1)
+            let spanLeft = colX[start]
+            let spanRight = colX[end] + colWidth[end]
+            let x: CGFloat
+            switch align {
+            case .left: x = spanLeft
+            case .right: x = spanRight - box.width
+            case .center: x = spanLeft + (spanRight - spanLeft - box.width) / 2
+            }
+            return x + leftPad
+        }
+
         var elements: [MathElement] = []
         var boundaryY = [CGFloat](repeating: 0, count: rows.count + 1)   // horizontal-rule Y per row boundary
         boundaryY[0] = ascent
@@ -218,7 +265,8 @@ extension MathLayoutEngine {
         for (r, boxes) in cellBoxes.enumerated() {
             let baseline = yTop - rowAscent[r]
             for (c, b) in boxes.enumerated() {
-                elements += b.placed(at: CGPoint(x: cellOriginX(col: c, box: b), y: baseline))
+                let x = spannedOriginX(cell: rows[r][c], start: cellStart[r][c], box: b)
+                elements += b.placed(at: CGPoint(x: x, y: baseline))
             }
             let rowBottom = yTop - rowAscent[r] - rowDescent[r]
             boundaryY[r + 1] = r < rows.count - 1 ? rowBottom - rowGap / 2 : rowBottom
