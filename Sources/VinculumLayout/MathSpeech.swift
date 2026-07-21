@@ -80,6 +80,13 @@ public enum MathSpeech {
             if premises.isEmpty { return "axiom \(speak(conclusion))" }
             return "from \(premises.map(speak).joined(separator: ", and ")), infer \(speak(conclusion))"
 
+        case .syntaxTree(let root):
+            func describe(_ n: SyntaxTreeNode) -> String {
+                if n.children.isEmpty { return speak(n.label) }
+                return "\(speak(n.label)) over \(n.children.map(describe).joined(separator: ", "))"
+            }
+            return "tree: \(describe(root))"
+
         case .youngTableau(let rows):
             let shape = rows.map { "\($0.count)" }.joined(separator: ", ")
             return "Young diagram with rows \(shape)"

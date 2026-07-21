@@ -102,6 +102,15 @@ public enum MathMLExporter {
                 : "<mrow>" + premises.map(mathml).joined(separator: "<mspace width=\"1em\"/>") + "</mrow>"
             return "<mfrac linethickness=\"0.8pt\">\(prem)\(mathml(conclusion))</mfrac>"
 
+        case .syntaxTree(let root):
+            // No tree element in Presentation MathML; approximate as nested rows a
+            // consumer can still walk (label followed by its children).
+            func emit(_ n: SyntaxTreeNode) -> String {
+                if n.children.isEmpty { return mathml(n.label) }
+                return "<mrow>\(mathml(n.label))<mrow>" + n.children.map(emit).joined() + "</mrow></mrow>"
+            }
+            return emit(root)
+
         case .youngTableau(let rows):
             return "<mtable frame=\"solid\" rowlines=\"solid\" columnlines=\"solid\">" + rows.map { row in
                 "<mtr>" + row.map { "<mtd>\($0.map(mathml) ?? "")</mtd>" }.joined() + "</mtr>"

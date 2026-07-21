@@ -620,6 +620,32 @@ the whole engine.
 
 ---
 
+## Syntax / parse trees
+
+![Syntax trees](https://raw.githubusercontent.com/2389-research/Vinculum/gallery/cmd-tree.png)
+
+`\Tree [.S [.NP … ] [.VP … ] ]` (qtree / tikz-qtree syntax; `\qtree` is an alias)
+typesets a syntax or parse tree: a labelled root centered above its children, joined by
+straight edges.
+
+- Each `[.Label child … ]` is an internal node; `.Label` is the node label, and every
+  child is either another `[.… ]` or a bare **leaf** (a word or terminal).
+- Multi-token labels/leaves use a group: `[.{NP} \text{the cat} ]`.
+- Labels are arbitrary math, so **expression trees** work too:
+  `\Tree [.{+} [.{\times} a b ] c ]`.
+
+A real 2D **tidy-tree** layout — subtree widths computed bottom-up, nodes placed
+top-down with parents centered over their children, edges drawn as stroked paths. New
+`MathNode.syntaxTree`; renders identically on all five platforms through `VDL1`,
+round-trips through `toLaTeX`, and speaks its structure.
+
+```latex
+\Tree [.S [.NP [.D \text{the} ] [.N \text{cat} ] ]
+          [.VP [.V \text{saw} ] [.NP [.D \text{a} ] [.N \text{bird} ] ] ] ]
+```
+
+---
+
 ## Commutative diagrams
 
 ![Commutative diagrams](https://raw.githubusercontent.com/2389-research/Vinculum/gallery/cmd-diagrams.png)
