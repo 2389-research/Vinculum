@@ -474,6 +474,47 @@ public enum MathParser {
             tokens.removeFirst()
             return parse(SIUnitx.quantity(value, unit))
 
+        // physics package: Dirac notation, derivatives, and bracket macros. Each reads
+        // its brace arguments as nodes, then re-parses a LaTeX template (like mhchem).
+        case "bra":     return parse(Physics.bra(argLaTeX(&tokens)))
+        case "ket":     return parse(Physics.ket(argLaTeX(&tokens)))
+        case "braket", "ip", "innerproduct":
+            let a = argLaTeX(&tokens); return parse(Physics.braket(a, optionalArgLaTeX(&tokens)))
+        case "ketbra", "op", "outerproduct", "dyad":
+            let a = argLaTeX(&tokens); return parse(Physics.ketbra(a, optionalArgLaTeX(&tokens)))
+        case "expval", "ev":
+            let a = argLaTeX(&tokens); return parse(Physics.expval(a, optionalArgLaTeX(&tokens)))
+        case "mel", "matrixel", "matrixelement":
+            let a = argLaTeX(&tokens), o = argLaTeX(&tokens), b = argLaTeX(&tokens)
+            return parse(Physics.mel(a, o, b))
+        case "abs":
+            if tokens.first == .character("*") { tokens.removeFirst() }
+            return parse(Physics.abs(argLaTeX(&tokens)))
+        case "norm":
+            if tokens.first == .character("*") { tokens.removeFirst() }
+            return parse(Physics.norm(argLaTeX(&tokens)))
+        case "comm", "commutator":
+            let a = argLaTeX(&tokens); return parse(Physics.comm(a, argLaTeX(&tokens)))
+        case "acomm", "anticommutator", "poissonbracket":
+            let a = argLaTeX(&tokens); return parse(Physics.acomm(a, argLaTeX(&tokens)))
+        case "order":
+            return parse(Physics.order(argLaTeX(&tokens)))
+        case "dd":
+            if tokens.first == .character("*") { tokens.removeFirst() }
+            return parse(Physics.dd(optionalArgLaTeX(&tokens)))
+        case "dv", "derivative":
+            let n = parseOptionalBracketArg(&tokens)?.toLaTeX()
+            let f = argLaTeX(&tokens)
+            return parse(Physics.dv(f, optionalArgLaTeX(&tokens), order: n))
+        case "pdv", "partialderivative":
+            let n = parseOptionalBracketArg(&tokens)?.toLaTeX()
+            let f = argLaTeX(&tokens)
+            let x = optionalArgLaTeX(&tokens)
+            return parse(Physics.pdv(f, x, optionalArgLaTeX(&tokens), order: n))
+        case "grad", "curl", "laplacian", "Tr", "tr", "rank":
+            if let op = Physics.vectorOperator(name) { return parse(op) }
+            return .unsupported("\\" + name)
+
         case "inferrule", "infer", "prftree":
             // mathpartir \inferrule[label]{premises}{conclusion}; premises split on \\.
             if tokens.first == .character("*") { tokens.removeFirst() }
@@ -902,6 +943,19 @@ public enum MathParser {
         var s = toks[...]
         let nodes = parseRow(&s, until: nil)
         return nodes.isEmpty ? nil : (nodes.count == 1 ? nodes[0] : .row(nodes))
+    }
+
+    /// A required brace argument, returned as its LaTeX (for transpiling macros that
+    /// re-parse a template — physics bra-ket, derivatives). Empty string if absent.
+    private static func argLaTeX(_ tokens: inout ArraySlice<Token>) -> String {
+        parseAtom(&tokens)?.toLaTeX() ?? ""
+    }
+
+    /// An *optional* brace argument: its LaTeX only if the next token opens a group,
+    /// else nil (so `\braket{a}` and `\braket{a}{b}` are distinguishable).
+    private static func optionalArgLaTeX(_ tokens: inout ArraySlice<Token>) -> String? {
+        guard tokens.first == .groupOpen else { return nil }
+        return parseAtom(&tokens)?.toLaTeX() ?? ""
     }
 
     /// Reads a `{ … }` group and splits it on top-level `\\` into a list of nodes
@@ -1423,7 +1477,7 @@ public enum MathParser {
             case "langle": return "⟨"
             case "rangle": return "⟩"
             case "lvert", "rvert", "vert": return "|"
-            case "lVert", "rVert", "Vert": return "‖"
+            case "lVert", "rVert", "Vert", "|": return "‖"   // `\|` is the norm delimiter ‖
             case "lceil": return "⌈"
             case "rceil": return "⌉"
             case "lfloor": return "⌊"
