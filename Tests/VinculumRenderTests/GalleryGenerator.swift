@@ -64,6 +64,7 @@ final class GalleryGenerator: XCTestCase {
             ]),
             ("Alphabets & color", [
                 #"\mathbb{R} \subset \mathbb{C}, \quad \mathcal{L}(f), \quad \mathfrak{g}, \quad \mathsf{AB}\, \mathtt{cd}"#,
+                #"\mathbf{F} = m\mathbf{a}, \quad \mathbf{2025}, \quad \mathbf{\Gamma}\!\cdot\!\mathbf{x}"#,
                 #"\color{#cc2222}{x} + \color{#2244cc}{y} = \color{#00aa88}{z}"#,
             ]),
         ])
