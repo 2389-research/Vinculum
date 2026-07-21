@@ -59,6 +59,34 @@ links without transitive-DLL gaps (its `bin` dir goes on the loader `PATH`).
 On managed-only hosts (the ubuntu `dotnet` job, local dev) the native tests
 soft-skip, so the pure decoder/renderer suite still runs everywhere.
 
-Also pending (mirroring Android): threading the device-font measure callback
-through P/Invoke (the #62 measure-seam lesson), a WinUI/WPF control, themed
-rendering across the ABI, and a NuGet package bundling the DLL.
+## 3. The drop-in control — `Vinculum.Windows.Wpf` (`VinculumMathView`)
+The consumable UI piece — the Windows analog of Apple's `VinculumLabel`, and the
+**first drop-in control outside Apple**. It's an `SKElement` (a WPF control backed by
+a SkiaSharp canvas) with dependency properties that mirror `VinculumLabel`:
+
+```xml
+<vinc:VinculumMathView Latex="x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}"
+                       DisplayMode="True" BaseSize="24" Ink="Black" />
+```
+
+Set `Latex` and it paints: the native ABI renders → `VDL1` → `VinculumWire.Decode` →
+`SceneRenderer` on the control's canvas. `Ink` maps to a light/dark theme foreground
+and rides the `SceneRenderer` ink override (recolor-preserving-alpha, unit-tested
+headless) — no ABI round-trip. `MeasureOverride` sizes the control from the display
+list, so it lays out like any WPF element.
+
+WPF is `net8.0-windows` (Windows-only), so it's **compile-verified** on the
+`windows-latest` CI job against the real WPF + SkiaSharp.Views SDK; its *render*
+correctness rests on `SceneRenderer`, which is pixel-tested headlessly (including the
+ink override) in the cross-platform `dotnet` job. Requires the native
+`VinculumAndroid.dll` + FreeType deps on the load path at runtime (the NuGet package
+will ship them as native assets).
+
+## Still pending (the road to 2.0.0 "full Windows")
+- **NuGet package** bundling `Vinculum.Rendering` + `VinculumNative` + the native DLL
+  and its FreeType deps as native assets, so a Windows dev just adds a package ref.
+- **WinUI 3 control** (fast-follow: same `SceneRenderer`, `SKXamlCanvas` instead of
+  `SKElement`; needs the Windows App SDK workload in CI).
+- Threading the device-font **measure callback** through P/Invoke (the #62 lesson) —
+  lower priority on Windows since math glyphs come from the bundled fonts, not device
+  fonts.

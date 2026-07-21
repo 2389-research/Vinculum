@@ -10,18 +10,22 @@ namespace Vinculum.Rendering;
 /// font is needed. Scene coords are y-up, baseline origin; the single y-flip is here.
 public static class SceneRenderer
 {
-    public static SKBitmap ToBitmap(DisplayList list, float pad = 4f, SKColor? background = null)
+    public static SKBitmap ToBitmap(DisplayList list, float pad = 4f, SKColor? background = null, SKColor? ink = null)
     {
         int w = Math.Max(1, (int)Math.Ceiling(list.Width + pad * 2));
         int h = Math.Max(1, (int)Math.Ceiling(list.Height + pad * 2));
         var bmp = new SKBitmap(w, h);
         using var canvas = new SKCanvas(bmp);
         if (background is SKColor bg) canvas.Clear(bg);
-        Draw(canvas, list, pad);
+        Draw(canvas, list, pad, ink);
         return bmp;
     }
 
-    public static void Draw(SKCanvas canvas, DisplayList list, float pad = 4f)
+    /// Draws the list at <paramref name="pad"/> inset. When <paramref name="ink"/> is set,
+    /// it recolors every op — the RGB becomes the ink, the op's own alpha is preserved — so
+    /// a control can honor a Foreground / light-dark theme without an ABI round-trip. Math is
+    /// monochrome, so a single ink is faithful (mirrors Apple VinculumLabel.textColor).
+    public static void Draw(SKCanvas canvas, DisplayList list, float pad = 4f, SKColor? ink = null)
     {
         using var paint = new SKPaint { IsAntialias = true };
         canvas.Save();
@@ -32,16 +36,16 @@ public static class SceneRenderer
             switch (op)
             {
                 case FillRect r:
-                    paint.Style = SKPaintStyle.Fill; paint.Color = ToColor(r.Color);
+                    paint.Style = SKPaintStyle.Fill; paint.Color = Resolve(r.Color, ink);
                     canvas.DrawRect(r.X, r.Y, r.W, r.H, paint);
                     break;
                 case FillPath fp:
-                    paint.Style = SKPaintStyle.Fill; paint.Color = ToColor(fp.Color);
+                    paint.Style = SKPaintStyle.Fill; paint.Color = Resolve(fp.Color, ink);
                     using (var path = BuildPath(fp.Subpaths)) canvas.DrawPath(path, paint);
                     break;
                 case StrokePath sp:
                     paint.Style = SKPaintStyle.Stroke;
-                    paint.Color = ToColor(sp.Color);
+                    paint.Color = Resolve(sp.Color, ink);
                     paint.StrokeWidth = sp.Width;
                     paint.StrokeCap = sp.Cap switch { 1 => SKStrokeCap.Round, 2 => SKStrokeCap.Square, _ => SKStrokeCap.Butt };
                     paint.StrokeJoin = sp.Join switch { 1 => SKStrokeJoin.Round, 2 => SKStrokeJoin.Bevel, _ => SKStrokeJoin.Miter };
@@ -54,6 +58,10 @@ public static class SceneRenderer
 
     static SKColor ToColor(uint argb) =>
         new((byte)(argb >> 16), (byte)(argb >> 8), (byte)argb, (byte)(argb >> 24));
+
+    // Ink override keeps the op's own alpha (so antialiased coverage survives), swaps RGB.
+    static SKColor Resolve(uint argb, SKColor? ink) =>
+        ink is SKColor k ? k.WithAlpha((byte)(argb >> 24)) : ToColor(argb);
 
     static SKPath BuildPath(IReadOnlyList<Seg> segs)
     {

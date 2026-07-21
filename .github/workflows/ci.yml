@@ -207,6 +207,13 @@ jobs:
           # Put the Swift DLL, its runtime deps, and freetype's DLLs on the loader path.
           $env:PATH = "$env:VINC_DLL_DIR;$env:VCPKG_BIN;$env:PATH"
           dotnet test windows/Vinculum.Rendering.Tests -c Release
+      # The WPF control (net8.0-windows) builds only on Windows — compile-verify it
+      # against the real WPF + SkiaSharp.Views SDK. Its render correctness rests on
+      # SceneRenderer (pixel-tested headless in the dotnet job); this proves the DP /
+      # SKElement plumbing compiles.
+      - name: Build WPF control (VinculumMathView)
+        shell: pwsh
+        run: dotnet build windows/Vinculum.Windows.Wpf -c Release
 
   # WebAssembly: VinculumLayout is Foundation-only, so it cross-compiles to
   # wasm32-unknown-wasip1 (one guarded line for WASI's missing Thread — #96). This
