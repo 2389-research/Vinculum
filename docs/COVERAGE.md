@@ -478,6 +478,33 @@ wider than the budget) is left intact rather than clipped.
 
 ---
 
+## Commutative diagrams
+
+![Commutative diagrams](https://raw.githubusercontent.com/2389-research/Vinculum/gallery/cmd-diagrams.png)
+
+`\begin{CD} … \end{CD}` (amscd): objects on a grid joined by labelled arrows.
+
+| Connector | Meaning |
+| --- | --- |
+| `@>a>b>` / `@<a<b<` | horizontal arrow → / ←, `a` above, `b` below |
+| `@VaVbV` / `@AaAbA` | vertical arrow ↓ / ↑, `a` left, `b` right |
+| `@=` / `@\|` | a horizontal / vertical **equality** edge (double rule, no head) |
+| `@.` | no arrow (an empty connector) |
+
+```latex
+\begin{CD}
+A @>f>> B \\
+@VgVV @VVhV \\
+C @>>k> D
+\end{CD}
+```
+
+Arrows are drawn as **stroked paths** (shaft + chevron head) and labels are laid out
+at script size, so a diagram renders identically on every platform through the `VDL1`
+wire — no diagram-specific primitive. Round-trips verbatim through `toLaTeX`.
+
+---
+
 ## Equation numbering & cross-references
 
 ![Equation numbering](https://raw.githubusercontent.com/2389-research/Vinculum/gallery/alg-numbering.png)
@@ -508,7 +535,6 @@ The numbering/label logic lives in `MathNumbering` (platform-free, headless-test
 Honest list of what degrades to a source fallback (or is only partially
 honored):
 
-- `\begin{CD}` (commutative diagrams — a diagram problem, out of scope).
 - **Out of scope by design:** `\href`, `\includegraphics`, mhchem `\ce`,
   siunitx, `\verb`.
 - `\mathcal` / `\mathfrak` / `\mathscr` render **letters only** (no digit

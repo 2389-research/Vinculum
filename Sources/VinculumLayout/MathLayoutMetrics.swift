@@ -34,6 +34,16 @@ package enum MathLayout {
         /// a little more open than matrix rows so wrapped math stays readable.
         public static let lineGap: CGFloat = 0.5
     }
+
+    /// Commutative diagrams (amscd `\begin{CD}`). All fractions of the base size.
+    public enum CD {
+        public static let columnGap: CGFloat = 2.8   // between object columns (holds a horizontal arrow + labels)
+        public static let rowGap: CGFloat = 2.2      // between object rows (holds a vertical arrow + labels)
+        public static let endPad: CGFloat = 0.28     // gap between an object edge and the arrow it meets
+        public static let headLength: CGFloat = 0.34 // arrowhead chevron length
+        public static let headWidth: CGFloat = 0.22  // arrowhead half-width
+        public static let labelGap: CGFloat = 0.12   // gap between the shaft and its label
+    }
     /// Big operator (∑, ∫) enlargement when it takes stacked limits. TeX
     /// swaps in the display-size glyph from family 3; we scale instead.
     public static let displayOperatorScale: CGFloat = 1.35

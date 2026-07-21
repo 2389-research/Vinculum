@@ -76,6 +76,12 @@ public enum MathSpeech {
         case .fenced(_, let segments):
             return "open " + segments.map(speak).joined(separator: ", such that ") + " close"
 
+        case .commutativeDiagram(let grid):
+            let objects = grid.flatMap { $0 }.compactMap { cell -> String? in
+                if case .object(let n) = cell { return speak(n) }; return nil
+            }
+            return "commutative diagram with " + objects.joined(separator: ", ")
+
         case .matrix(let rows, _, _, let style):
             if style == .cases {
                 return "cases: " + rows.map { $0.map(speak).joined(separator: " when ") }

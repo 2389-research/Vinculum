@@ -835,6 +835,115 @@ public enum MathParser {
         return name
     }
 
+    // MARK: - Commutative diagrams (amscd)
+
+    private enum CDItem { case object(MathNode); case arrow(CDArrow); case noArrow }
+
+    /// Parses a `\begin{CD} … \end{CD}` body. Rows split on `\\`; within a row,
+    /// objects and `@`-arrows alternate. An arrow row (all arrows) becomes vertical
+    /// arrows at the even columns; an object row becomes objects with horizontal
+    /// arrows between them.
+    private static func parseCDBody(_ tokens: inout ArraySlice<Token>) -> MathNode {
+        var rowTokens: [[Token]] = [[]]
+        while let t = tokens.first {
+            if case .command("end") = t { tokens.removeFirst(); _ = readBraceName(&tokens); break }
+            tokens.removeFirst()
+            if case .command("\\") = t { rowTokens.append([]); continue }
+            rowTokens[rowTokens.count - 1].append(t)
+        }
+
+        var grid: [[CDCell]] = []
+        for row in rowTokens {
+            var slice = row[...]
+            let items = parseCDRow(&slice)
+            if items.isEmpty { continue }
+            grid.append(cdCells(from: items))
+        }
+        let cols = grid.map(\.count).max() ?? 0
+        for i in grid.indices { while grid[i].count < cols { grid[i].append(.empty) } }
+        while let last = grid.last, last.allSatisfy({ $0 == .empty }) { grid.removeLast() }
+        guard !grid.isEmpty else { return .row([]) }
+        return .commutativeDiagram(grid: grid)
+    }
+
+    private static func parseCDRow(_ slice: inout ArraySlice<Token>) -> [CDItem] {
+        var items: [CDItem] = []
+        while let t = slice.first {
+            if case .character("@") = t {
+                items.append(parseCDArrow(&slice))
+            } else {
+                items.append(.object(parseCDObject(&slice)))
+            }
+        }
+        return items
+    }
+
+    /// Reads an object cell: atoms up to the next top-level `@`.
+    private static func parseCDObject(_ slice: inout ArraySlice<Token>) -> MathNode {
+        var toks: [Token] = []
+        var depth = 0
+        while let t = slice.first {
+            if case .character("@") = t, depth == 0 { break }
+            if t == .groupOpen { depth += 1 }; if t == .groupClose { depth -= 1 }
+            toks.append(t); slice.removeFirst()
+        }
+        var s = toks[...]
+        let nodes = parseRow(&s, until: nil)
+        return nodes.count == 1 ? nodes[0] : .row(nodes)
+    }
+
+    /// Parses `@>a>b>` / `@<a<b<` / `@VaVbV` / `@AaAbA` / `@=` / `@|` / `@.`.
+    private static func parseCDArrow(_ slice: inout ArraySlice<Token>) -> CDItem {
+        slice.removeFirst()                       // consume '@'
+        guard let t = slice.first, case .character(let d) = t else { return .noArrow }
+        slice.removeFirst()                       // consume the direction char
+        switch d {
+        case "=", "|": return .arrow(CDArrow(kind: .equal))
+        case ".":      return .noArrow
+        case ">", "<", "V", "A":
+            let kind: CDArrow.Kind = d == ">" ? .right : d == "<" ? .left : d == "V" ? .down : .up
+            let label1 = readCDLabel(&slice, until: d)
+            let label2 = readCDLabel(&slice, until: d)
+            return .arrow(CDArrow(kind: kind, label1: label1, label2: label2))
+        default:       return .noArrow
+        }
+    }
+
+    /// Reads a label up to (and consuming) the next top-level direction char `d`.
+    private static func readCDLabel(_ slice: inout ArraySlice<Token>, until d: Character) -> MathNode? {
+        var toks: [Token] = []
+        var depth = 0
+        while let t = slice.first {
+            if case .character(let c) = t, c == d, depth == 0 { slice.removeFirst(); break }
+            if t == .groupOpen { depth += 1 }; if t == .groupClose { depth -= 1 }
+            toks.append(t); slice.removeFirst()
+        }
+        guard !toks.isEmpty else { return nil }
+        var s = toks[...]
+        let nodes = parseRow(&s, until: nil)
+        return nodes.isEmpty ? nil : (nodes.count == 1 ? nodes[0] : .row(nodes))
+    }
+
+    private static func cdCells(from items: [CDItem]) -> [CDCell] {
+        let isObjectRow = items.contains { if case .object = $0 { return true }; return false }
+        if isObjectRow {
+            return items.map { item in
+                switch item {
+                case .object(let n): return .object(n)
+                case .arrow(let a): return .hArrow(a)
+                case .noArrow: return .empty
+                }
+            }
+        }
+        // Vertical-arrow row: arrows land on even columns, gaps between.
+        var cells: [CDCell] = []
+        for (i, item) in items.enumerated() {
+            if i > 0 { cells.append(.empty) }
+            if case .arrow(let a) = item { cells.append(.vArrow(a)) } else { cells.append(.empty) }
+        }
+        return cells
+    }
+
     /// Parses the body of `\begin{env} … \end{env}` into a `.matrix`. Cells
     /// are split on `&`, rows on `\\`; unknown environments still lay out as a
     /// bare centered grid so the content survives.
@@ -842,6 +951,9 @@ public enum MathParser {
         let env = readBraceName(&tokens)
         let starred = env.hasSuffix("*")
         let base = starred ? String(env.dropLast()) : env
+
+        // amscd commutative diagrams parse a different grammar (`@`-arrows).
+        if base == "CD" { return parseCDBody(&tokens) }
 
         // `array` carries a column spec (l/c/r + `|` rules); `alignedat`/
         // `alignat` a column count we don't need.

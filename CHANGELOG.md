@@ -7,6 +7,13 @@ each with docs + a specimen figure. Every feature is platform-free (renders
 identically on all targets through the `VDL1` seam).
 
 ### Added
+- **Commutative diagrams** — `\begin{CD} … \end{CD}` (amscd): objects on a grid
+  joined by labelled arrows (`@>a>b>`, `@<`, `@VaVbV`, `@A`, `@=`/`@\|` equality
+  edges, `@.`). A real 2D-diagram layout — objects in a grid, arrows drawn as stroked
+  paths (shaft + chevron head), labels at script size — so it renders identically on
+  all five platforms through the `VDL1` wire, with no diagram-specific primitive.
+  New `MathNode.commutativeDiagram`; round-trips verbatim. (Gap analysis Tier 2 — the
+  flagship diagram.)
 - **Equation numbering & cross-references** — document-scoped (like macros).
   `\label{key}` records an equation's number; `\eqref{key}` → `(N)` and `\ref{key}`
   → `N` resolve throughout prose and math (dangling key → `(?)`). `MathText`'s new

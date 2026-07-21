@@ -43,6 +43,10 @@ public indirect enum MathNode: Hashable, Sendable {
     /// `cases`, `aligned`. `left`/`right` are the enclosing fences (empty for
     /// none); `style` selects column alignment.
     case matrix(rows: [[MathNode]], left: String, right: String, style: MathMatrixStyle)
+    /// A commutative diagram (`\begin{CD}…\end{CD}`, amscd): a grid of objects
+    /// joined by labelled arrows. Rows alternate object rows and vertical-arrow
+    /// rows; within an object row, cells alternate objects and horizontal arrows.
+    case commutativeDiagram(grid: [[CDCell]])
     /// Upright function name (sin, log …).
     case functionName(String)
     /// A `\operatorname*`-style operator that takes stacked limits in display
@@ -130,6 +134,14 @@ extension MathNode {
             return segments
         case .matrix(let rows, _, _, _):
             return rows.flatMap { $0 }
+        case .commutativeDiagram(let grid):
+            return grid.flatMap { $0 }.flatMap { cell -> [MathNode] in
+                switch cell {
+                case .object(let n): return [n]
+                case .hArrow(let a), .vArrow(let a): return [a.label1, a.label2].compactMap { $0 }
+                case .empty: return []
+                }
+            }
         case .limitsOperator(let base), .noLimitsOperator(let base),
              .classified(let base, _), .raised(let base, _),
              .colorbox(let base, _, _), .accent(let base, _), .decorated(let base, _),
@@ -143,6 +155,29 @@ extension MathNode {
 
 /// `\cfrac` denominator alignment (`\cfrac[l]`/`[r]`/`[c]`).
 public enum CfracAlign: Hashable, Sendable { case left, center, right }
+
+/// One cell of a commutative diagram grid (`\begin{CD}`). Objects sit at even
+/// (row, col); horizontal arrows at (even row, odd col); vertical arrows at
+/// (odd row, even col); the rest are empty.
+public enum CDCell: Hashable, Sendable {
+    case object(MathNode)
+    case hArrow(CDArrow)   // horizontal (→ ← or =)
+    case vArrow(CDArrow)   // vertical (↑ ↓ or ‖)
+    case empty
+}
+
+/// An arrow in a commutative diagram: a direction and up to two labels
+/// (above/below for horizontal, left/right for vertical). `.equal` is a double
+/// rule (`@=` / `@|`), drawn without a head.
+public struct CDArrow: Hashable, Sendable {
+    public enum Kind: Hashable, Sendable { case right, left, up, down, equal }
+    public var kind: Kind
+    public var label1: MathNode?   // above (horizontal) / left (vertical)
+    public var label2: MathNode?   // below (horizontal) / right (vertical)
+    public init(kind: Kind, label1: MathNode? = nil, label2: MathNode? = nil) {
+        self.kind = kind; self.label1 = label1; self.label2 = label2
+    }
+}
 
 /// A `.decorated` treatment: a frame, reserved (invisible) space, or a
 /// strike-through.
