@@ -27,6 +27,13 @@ package enum MathSpacing {
 package enum MathLayout {
     /// Unsupported source drawn in mono, one notch down from the run size.
     public static let unsupportedSourceScale: CGFloat = 0.85
+
+    /// Automatic line breaking (width-aware layout).
+    public enum LineBreak {
+        /// Vertical gap between wrapped lines, as a fraction of the base size —
+        /// a little more open than matrix rows so wrapped math stays readable.
+        public static let lineGap: CGFloat = 0.5
+    }
     /// Big operator (∑, ∫) enlargement when it takes stacked limits. TeX
     /// swaps in the display-size glyph from family 3; we scale instead.
     public static let displayOperatorScale: CGFloat = 1.35

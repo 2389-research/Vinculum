@@ -460,6 +460,24 @@ MathMLExporter.export(MathParser.parse(#"x^2"#))
 
 ---
 
+## Automatic line breaking
+
+![Automatic line breaking](https://raw.githubusercontent.com/2389-research/Vinculum/gallery/alg-linebreak.png)
+
+`engine.layout(node, display:, maxWidth:)` wraps an over-wide equation across lines
+at TeX's break points — **after a binary operator or relation** (`+`, `−`, `=`, `<`,
+`→` …), so the operator ends the line and the next term begins the next. Only the
+top-level sequence breaks; nested subformulas (fractions, roots, fenced groups) stay
+whole, exactly as TeX does. Lines stack baseline-aligned, the block's baseline on the
+first line.
+
+`maxWidth` is opt-in: omit it (or pass `nil`) and layout is a single line, **byte-for-
+byte identical** to before — so nothing about existing output changes. A greedy fit
+keeps each line within the budget; an unbreakable run (one wide fraction, or an atom
+wider than the budget) is left intact rather than clipped.
+
+---
+
 ## Not yet supported (roadmap gaps)
 
 Honest list of what degrades to a source fallback (or is only partially
@@ -477,8 +495,9 @@ honored):
 - `\displaylimits` is accepted and is a no-op — it restores the current style's
   default placement, which an unmodified operator already uses. (`\limits` and
   `\nolimits` both actively force their form and round-trip exactly.)
-- A bare `\\` outside an environment is a no-op: inline math is one line
-  (multi-line splitting is a host/line-breaking concern, not layout's).
+- A bare `\\` outside an environment is a no-op (an *explicit* forced break).
+  *Automatic* width-aware breaking is available via `layout(node, maxWidth:)` — see
+  "Automatic line breaking" above.
 
 If you need one of these, it's a good first contribution — see the "add a
 command" walkthrough in [ARCHITECTURE.md](ARCHITECTURE.md).
