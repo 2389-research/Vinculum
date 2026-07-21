@@ -12,14 +12,14 @@ detail is linked per item.
 | Key | Value |
 | --- | --- |
 | Name | Vinculum |
-| What it is | Native LaTeX math typesetting library. Renders on Apple platforms (CoreText) and on Linux (Silica/Cairo/FreeType → PNG); layout is platform-free |
-| Version | 1.4.0+ (SemVer; see [CHANGELOG.md](https://github.com/2389-research/Vinculum/blob/main/CHANGELOG.md)) |
+| What it is | Native LaTeX math typesetting library. Renders on Apple (CoreText), Linux (Silica/Cairo/FreeType → PNG), Windows (.NET/SkiaSharp via a C ABI + FreeType), Android (JNI/Kotlin `Canvas`), and WebAssembly (SVG); layout is platform-free and shared across all of them |
+| Version | 2.0.0+ (SemVer; see [CHANGELOG.md](https://github.com/2389-research/Vinculum/blob/main/CHANGELOG.md)) |
 | License (code) | MIT |
 | License (bundled fonts) | GUST Font License (Latin Modern, TeX Gyre Termes/Pagella), SIL OFL (STIX Two, Fira Math) — redistribution/embedding permitted |
 | Repo | https://github.com/2389-research/Vinculum |
-| Install | SwiftPM: `.package(url: "https://github.com/2389-research/Vinculum.git", from: "1.0.0")` |
-| Products | `VinculumRender` (rendering — CoreText on Apple, Silica/Cairo/FreeType on Linux), `VinculumLayout` (Foundation-only parsing + layout, all platforms) |
-| Platforms | macOS 14+, iOS 17+, visionOS 1+, tvOS 17+; **Linux (rendering via Silica + layout)** |
+| Install | SwiftPM: `.package(url: "https://github.com/2389-research/Vinculum.git", from: "2.0.0")`; Windows via NuGet (`Vinculum.Rendering`, `Vinculum.Windows.Wpf`, `Vinculum.Windows.WinUI`) |
+| Products | `VinculumRender` (rendering — CoreText on Apple, Silica/Cairo/FreeType on Linux), `VinculumLayout` (Foundation-only parsing + layout, all platforms), `VinculumAndroid` (the C ABI as a dynamic library — Android JNI / Windows DLL); .NET packages `Vinculum.Rendering` + `.Windows.Wpf` + `.Windows.WinUI` |
+| Platforms | macOS 14+, iOS 17+, visionOS 1+, tvOS 17+; **Linux** (Silica raster + layout); **Windows** (native render + WPF/WinUI controls, NuGet); **Android** (JNI, on-device proven); **WebAssembly** (`wasm32-unknown-wasip1`, SVG) |
 | Language/runtime | Swift 6.2+ toolchain (Swift 6 language mode), strict concurrency, `Sendable` API, zero third-party dependencies |
 | Origin | Extracted from Quoin; sibling of MermaidKit |
 
@@ -167,7 +167,7 @@ Screenshots:
 | Feature | Specific |
 | --- | --- |
 | Test suite | 235 tests: headless geometry (Linux), golden-image regression with coverage ratchet, per-font canaries, fuzz, performance ceilings, the p. 170 spacing chart pinned cell-by-cell |
-| CI matrix | Linux (headless layout), macOS (full suite), iOS simulator (runtime tests), gallery auto-publish |
+| CI matrix | macOS (full suite), iOS simulator, Linux (VinculumLayout + Silica), Windows (Swift layout, native DLL + P/Invoke render, WPF, WinUI 3), WebAssembly (build + render under wasmtime), Kotlin + .NET `VDL1` wire conformance, gallery auto-publish |
 | Golden discipline | 93 pixel-pinned fixtures; a fixture that *starts* rendering fails CI until promoted (coverage can't silently change) |
 | Ground truth | MATH-table parsing pinned against committed raw font bytes and fontTools; inter-atom spacing pinned against the TeXbook p. 170 chart |
 | Docs as verification | ~38 gallery images regenerate from the live engine on every push to `main`; a wrong-looking figure means a wrong engine (this pipeline caught a mis-seated `\vec` arrow and a chart-coverage regression) |

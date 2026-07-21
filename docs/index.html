@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <title>Vinculum — native LaTeX math typesetting</title>
-<meta name="description" content="Native LaTeX math typesetting for Apple platforms and Linux. Real glyph shapes and TeX metrics from the font's OpenType MATH table — no MathJax, no WebView, no third-party Swift dependencies.">
+<meta name="description" content="Native LaTeX math typesetting for Apple, Linux, Windows, Android, and WebAssembly. Real glyph shapes and TeX metrics from the font's OpenType MATH table — no MathJax, no WebView, no third-party Swift dependencies on the default build.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M16 46 L40 86 L66 20 L98 20' fill='none' stroke='%23315C9B' stroke-width='12' stroke-linejoin='miter'/></svg>">
 <style>
   :root {
@@ -194,7 +194,7 @@
 <main>
   <section class="hero" style="border-top:none">
     <div class="wrap">
-      <span class="eyebrow">Swift · Apple &amp; Linux</span>
+      <span class="eyebrow">Swift · Apple · Linux · Windows · Android · WebAssembly</span>
       <h1>Native LaTeX math typesetting.</h1>
       <p class="lede">
         Real glyph shapes and TeX metrics read straight from the font’s OpenType
@@ -206,8 +206,9 @@
         <a class="btn btn-ghost" href="#start">Get started</a>
       </div>
       <p class="fit">
-        A Swift package for Apple platforms &amp; Linux. Not shipping Swift? Render to
-        self-contained SVG or PNG and serve the output from any backend.
+        A Swift package for Apple &amp; Linux — and, through one portable display-list
+        seam, native rendering on Windows (WPF &amp; WinUI, from NuGet), Android, and
+        WebAssembly. Not shipping Swift? Render to self-contained SVG or PNG too.
       </p>
       <div class="hero-art">
         <img src="https://raw.githubusercontent.com/2389-research/Vinculum/gallery/04-equations.png"
@@ -226,6 +227,14 @@
           <p>macOS · iOS · visionOS · tvOS. Draws with OS-provided CoreText/CoreGraphics — nothing else linked — into a baseline-aligned <code>NSTextAttachment</code>, SwiftUI <code>MathView</code>, or <code>VinculumLabel</code>.</p></div>
         <div class="card"><div class="ic">🐧</div><h3>Linux &amp; server-side</h3>
           <p>Native PNGs via Silica/Cairo + FreeType, behind the opt-in <code>LinuxRaster</code> trait — or self-contained SVG, which needs neither. Default builds stay dependency-free. <a href="https://github.com/2389-research/Vinculum/blob/main/docs/LINUX.md">LINUX.md ↗</a></p></div>
+        <div class="card"><div class="ic">🪟</div><h3>Windows &amp; .NET</h3>
+          <p>Native rendering through the C ABI + FreeType, drawn with SkiaSharp. A drop-in <code>VinculumMathView</code> control for <b>both WPF and WinUI&nbsp;3</b>, shipped as self-contained NuGet packages. <a href="https://github.com/2389-research/Vinculum/blob/main/windows/README.md">windows/README ↗</a></p></div>
+        <div class="card"><div class="ic">🤖</div><h3>Android</h3>
+          <p>The C ABI as a JNI library with a Kotlin <code>VDL1</code> decoder and <code>Canvas</code> renderer — same Skia as the Windows path, so output matches. On-device rendering proven. <a href="https://github.com/2389-research/Vinculum/blob/main/docs/ANDROID.md">ANDROID.md ↗</a></p></div>
+        <div class="card"><div class="ic">🕸️</div><h3>WebAssembly</h3>
+          <p>The platform-free layout core cross-compiles to <code>wasm32-unknown-wasip1</code> and renders SVG — a ~9.5&nbsp;MB module on FoundationEssentials (no ICU), run under wasmtime in CI.</p></div>
+        <div class="card"><div class="ic">🔗</div><h3>One portable seam</h3>
+          <p>Windows, Android, and WebAssembly all reuse it: a fully-resolved scene crosses the C ABI as the language-neutral <code>VDL1</code> binary, decoded by Swift, Kotlin, and C# — wire agreement CI-gated. <a href="https://github.com/2389-research/Vinculum/blob/main/docs/DISPLAYLIST.md">DISPLAYLIST.md ↗</a></p></div>
       </div>
     </div>
   </section>
@@ -361,6 +370,9 @@ textView.textStorage?.setAttributedString(
         <a class="doc" href="https://github.com/2389-research/Vinculum/blob/main/docs/FONTS.md"><b>Fonts</b><span>The five faces, compared; bring-your-own</span></a>
         <a class="doc" href="https://github.com/2389-research/Vinculum/blob/main/docs/INTEGRATION.md"><b>Integration</b><span>Attachments, documents, views, SVG, threading, caching</span></a>
         <a class="doc" href="https://github.com/2389-research/Vinculum/blob/main/docs/LINUX.md"><b>Linux</b><span>The Silica/Cairo/FreeType raster backend</span></a>
+        <a class="doc" href="https://github.com/2389-research/Vinculum/blob/main/windows/README.md"><b>Windows</b><span>The .NET/SkiaSharp renderer, WPF &amp; WinUI controls, NuGet</span></a>
+        <a class="doc" href="https://github.com/2389-research/Vinculum/blob/main/docs/ANDROID.md"><b>Android</b><span>The C ABI as a JNI library, Kotlin decoder + Canvas renderer</span></a>
+        <a class="doc" href="https://github.com/2389-research/Vinculum/blob/main/docs/DISPLAYLIST.md"><b>Display list</b><span>The VDL1 wire format + C ABI — the portable seam</span></a>
         <a class="doc" href="https://github.com/2389-research/Vinculum/blob/main/docs/PERFORMANCE.md"><b>Performance</b><span>Phase-by-phase profile — where every microsecond goes</span></a>
         <a class="doc" href="https://github.com/2389-research/Vinculum/blob/main/docs/ROADMAP.md"><b>Roadmap</b><span>Where it’s been, and the open lanes ahead</span></a>
         <a class="doc" href="https://github.com/2389-research/Vinculum/blob/main/CONTRIBUTING.md"><b>Contributing</b><span>Setup, the four-ring TDD loop, and adding a command</span></a>

@@ -7,7 +7,7 @@
 
     <!-- NuGet metadata -->
     <PackageId>Vinculum.Rendering</PackageId>
-    <Version>2.0.0-preview.1</Version>
+    <Version>2.0.0</Version>
     <Authors>Clint Ecker</Authors>
     <Description>Headless LaTeX math renderer for .NET. Decodes the Vinculum VDL1 display-list wire and paints it with SkiaSharp (the same engine as the Android/iOS renderers, so output matches byte-for-byte). On Windows (win-x64) it bundles the native rendering engine + Swift runtime + FreeType, so no toolchain is required on the consuming machine.</Description>
     <PackageTags>latex;math;rendering;skiasharp;mathjax;equation</PackageTags>
