@@ -515,6 +515,13 @@ public enum MathParser {
             if let op = Physics.vectorOperator(name) { return parse(op) }
             return .unsupported("\\" + name)
 
+        case "Tree", "qtree":
+            // qtree: the tokenizer captured the balanced [ … ] body verbatim.
+            guard case .rawText(let body)? = tokens.first else { return .row([]) }
+            tokens.removeFirst()
+            guard let root = SyntaxTree.parse(body) else { return .row([]) }
+            return .syntaxTree(root)
+
         case "inferrule", "infer", "prftree":
             // mathpartir \inferrule[label]{premises}{conclusion}; premises split on \\.
             if tokens.first == .character("*") { tokens.removeFirst() }

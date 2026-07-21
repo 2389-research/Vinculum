@@ -135,6 +135,7 @@ Use `\begin{env} … \end{env}`; cells split on `&`, rows on `\\`.
 | `\bra` `\ket` `\braket` `\ketbra` `\expval` `\mel` (physics) | `\braket{\phi}{\psi}`, `\ket{\psi}`, `\mel{\phi}{\hat A}{\psi}` | Dirac notation: bras, kets, inner/outer products, expectation values, matrix elements (auto-sized ⟨ \| ⟩) |
 | `\dd` `\dv` `\pdv` (physics) | `\dv{f}{x}`, `\dv[2]{f}{x}`, `\pdv{f}{x}{y}` | Derivatives: differential dx, ordinary df/dx (with order), partial ∂f/∂x and mixed ∂²f/∂x∂y |
 | `\abs` `\norm` `\comm` `\acomm` `\order` `\grad` `\curl` `\laplacian` (physics) | `\comm{A}{B}`, `\norm{v}`, `\grad\phi` | Brackets & operators: \|x\|, ‖v‖, [A,B], {A,B}, O(x); vector ∇, ∇×, ∇² |
+| `\Tree` (also `\qtree`) | `\Tree [.S [.NP … ] [.VP … ] ]` | Syntax / parse tree (qtree): labelled root over its children joined by edges; `[.Label …]` internal nodes, bare tokens are leaves, `{…}` multi-token labels; tidy-tree 2D layout |
 
 A bare `\\` **outside** any environment (an inline line break) is a no-op —
 inline math is a single line; multi-line splitting is a host concern.

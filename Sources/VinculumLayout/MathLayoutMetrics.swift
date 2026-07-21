@@ -68,6 +68,13 @@ package enum MathLayout {
         public static let labelScale: CGFloat = 0.7   // rule-label size relative to base
         public static let labelGap: CGFloat = 0.3     // gap between the bar and its label
     }
+
+    /// Syntax / parse trees (qtree `\Tree`). Fractions of the base size.
+    public enum Tree {
+        public static let siblingGap: CGFloat = 1.0   // horizontal gap between sibling subtrees
+        public static let levelGap: CGFloat = 1.1     // vertical gap between a label row and the next
+        public static let edgePad: CGFloat = 0.18     // gap between a label and an edge endpoint
+    }
     /// Big operator (∑, ∫) enlargement when it takes stacked limits. TeX
     /// swaps in the display-size glyph from family 3; we scale instead.
     public static let displayOperatorScale: CGFloat = 1.35

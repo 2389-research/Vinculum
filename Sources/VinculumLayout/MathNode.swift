@@ -58,6 +58,10 @@ public indirect enum MathNode: Hashable, Sendable {
     /// zero-or-more premises above a horizontal rule, the conclusion below, an
     /// optional label beside the rule. Recursive — a premise may be another rule.
     case inferenceRule(premises: [MathNode], conclusion: MathNode, label: MathNode?)
+    /// A syntax / parse tree (`\Tree [.S [.NP … ] [.VP … ] ]`, qtree): a labelled
+    /// root drawn above its children, joined by straight edges. Recursive via
+    /// `SyntaxTreeNode`.
+    case syntaxTree(SyntaxTreeNode)
     /// Upright function name (sin, log …).
     case functionName(String)
     /// A `\operatorname*`-style operator that takes stacked limits in display
@@ -151,6 +155,11 @@ extension MathNode {
             return []
         case .inferenceRule(let premises, let conclusion, let label):
             return premises + [conclusion] + (label.map { [$0] } ?? [])
+        case .syntaxTree(let root):
+            // Flatten every node's label so traversals (unsupported-command
+            // detection, hit-testing) still reach into the tree.
+            func labels(_ n: SyntaxTreeNode) -> [MathNode] { [n.label] + n.children.flatMap(labels) }
+            return labels(root)
         case .commutativeDiagram(let grid):
             return grid.flatMap { $0 }.flatMap { cell -> [MathNode] in
                 switch cell {
@@ -180,6 +189,18 @@ public struct PlotCurve: Hashable, Sendable {
     public init(expression: String, samples: Int = 120) {
         self.expression = expression; self.samples = samples
     }
+}
+
+/// One node of a syntax / parse tree (`\Tree`, qtree). A `label` drawn above its
+/// `children`; a node with no children is a leaf (a word or terminal). Recursive.
+public struct SyntaxTreeNode: Hashable, Sendable {
+    public var label: MathNode
+    public var children: [SyntaxTreeNode]
+    public init(label: MathNode, children: [SyntaxTreeNode] = []) {
+        self.label = label
+        self.children = children
+    }
+    public var isLeaf: Bool { children.isEmpty }
 }
 
 /// One cell of a commutative diagram grid (`\begin{CD}`). Objects sit at even

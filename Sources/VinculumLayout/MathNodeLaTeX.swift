@@ -93,6 +93,14 @@ extension MathNode {
             let lab = label.map { "[\($0.toLaTeX())]" } ?? ""
             return "\\inferrule\(lab){\(prem)}{\(conclusion.toLaTeX())}"
 
+        case .syntaxTree(let root):
+            func emit(_ n: SyntaxTreeNode) -> String {
+                let label = n.label.toLaTeX()
+                if n.isLeaf { return label }
+                return "[.\(label) " + n.children.map(emit).joined(separator: " ") + " ]"
+            }
+            return "\\Tree " + emit(root)
+
         case .youngTableau(let rows):
             // If every cell is empty, it's a \ydiagram{partition}; else \ytableaushort.
             if rows.allSatisfy({ $0.allSatisfy { $0 == nil } }) {

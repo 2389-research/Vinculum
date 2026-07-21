@@ -27,6 +27,10 @@ extension MathParser {
     /// (siunitx `\SI{value}{unit}`, `\qty{value}{unit}`).
     static let rawText2Commands: Set<String> = ["SI", "qty"]
 
+    /// Commands whose following balanced `[ … ]` bracket body is captured verbatim,
+    /// spaces intact (qtree `\Tree [.S … ]`).
+    static let bracketVerbatimCommands: Set<String> = ["Tree", "qtree"]
+
     struct Tokenizer {
         let input: [Character]
         init(_ s: String) { input = Array(s) }
@@ -79,6 +83,22 @@ extension MathParser {
                         }
                         if readVerbatimBody(), MathParser.rawText2Commands.contains(name) {
                             _ = readVerbatimBody()   // second body: \SI{value}{unit}
+                        }
+                    }
+                    // `\Tree [ … ]` (qtree): capture the balanced bracket body verbatim,
+                    // spaces intact — qtree uses spaces to separate labels and leaves,
+                    // which math-mode tokenizing would otherwise discard.
+                    if MathParser.bracketVerbatimCommands.contains(name) {
+                        while i < input.count, input[i] == " " || input[i] == "\n" || input[i] == "\t" { i += 1 }
+                        if i < input.count, input[i] == "[" {
+                            var depth = 0, raw = ""
+                            while i < input.count {
+                                let c = input[i]
+                                if c == "[" { depth += 1 } else if c == "]" { depth -= 1 }
+                                raw.append(c); i += 1
+                                if depth == 0 { break }
+                            }
+                            tokens.append(.rawText(raw))
                         }
                     }
                 case "{": tokens.append(.groupOpen); i += 1

@@ -7,6 +7,15 @@ each with docs + a specimen figure. Every feature is platform-free (renders
 identically on all targets through the `VDL1` seam).
 
 ### Added
+- **Syntax / parse trees** — `\Tree [.S [.NP … ] [.VP … ] ]` (qtree / tikz-qtree; `\qtree`
+  alias). A labelled root centered above its children, joined by straight edges;
+  `[.Label child …]` internal nodes, bare tokens are leaves, `{…}` for multi-token
+  labels/leaves, and labels are arbitrary math (so expression trees work too). A real
+  2D **tidy-tree** layout — subtree widths bottom-up, nodes placed top-down, edges as
+  stroked paths — so it renders identically on all five platforms through `VDL1` with no
+  new primitive. New `MathNode.syntaxTree`; round-trips through `toLaTeX`, speaks its
+  structure, exports to MathML as nested rows. The tokenizer gains `bracketVerbatimCommands`
+  so `\Tree`'s bracket body is captured with spaces intact. (Gap analysis — linguistics / CS.)
 - **Physics package — Dirac notation, derivatives, brackets** — the most-used `physics`
   macros, a transpiler to LaTeX (`Physics`) reusing the whole engine. Dirac notation
   (`\bra`, `\ket`, `\braket{ϕ}{ψ}` → ⟨ϕ\|ψ⟩, `\ketbra`, `\expval{A}{ψ}` → ⟨ψ\|A\|ψ⟩,
