@@ -494,6 +494,7 @@ public enum MathParser {
 
         case "hat", "check", "tilde", "bar", "vec", "dot", "ddot", "breve",
              "mathring", "acute", "grave", "widehat", "widetilde", "widecheck",
+             "overrightharpoon", "overleftharpoon", "utilde",
              "overline", "underline":
             // The case list and MathAccent.init? must agree; rather than trust
             // that (a force-unwrap would violate the never-crash contract),

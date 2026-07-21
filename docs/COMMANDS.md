@@ -155,6 +155,8 @@ Each takes one following atom: `\hat{x}`, `\widehat{AB}`, etc.
 | `\acute` | ́ | `\grave` | ̀ |
 | `\mathring` | ̊ | `\widehat` | wide ̂ |
 | `\widetilde` | wide ̃ | `\widecheck` | wide ̌ |
+| `\overrightharpoon` | stretchy ⇀ over | `\overleftharpoon` | stretchy ↼ over |
+| `\utilde` | wide ~ **below** | | |
 | `\overline` | over-bar | `\underline` | under-bar |
 
 ## Over / under decorations

@@ -18,6 +18,10 @@ identically on all targets through the `VDL1` seam).
   merged blocks). Content overflowing the span grows its last column. New
   `MathNode.spanned` case; the no-span path is byte-identical, so existing matrices
   are unchanged. (Gap analysis Tier 0 #2.)
+- **Harpoon accents & `\utilde`** — `\overrightharpoon`/`\overleftharpoon` (stretchy
+  harpoons over the base) and `\utilde` (a wide tilde *below* the base, stretchy).
+  New `MathAccent` cases with an under-accent layout branch; both round-trip exactly.
+  (Gap analysis Tier 0 #4.)
 
 ## 2.0.0 — 2026-07-21
 

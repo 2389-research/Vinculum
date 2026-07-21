@@ -293,6 +293,9 @@ extension MathNode {
         case .widehat: return "widehat"
         case .widetilde: return "widetilde"
         case .widecheck: return "widecheck"
+        case .overrightharpoon: return "overrightharpoon"
+        case .overleftharpoon: return "overleftharpoon"
+        case .utilde: return "utilde"
         case .overline: return "overline"
         case .underline: return "underline"
         }

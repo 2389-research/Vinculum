@@ -184,6 +184,8 @@ public enum MathOverUnder: Hashable, Sendable {
 public enum MathAccent: Hashable, Sendable {
     case hat, check, tilde, bar, vec, dot, ddot, breve, mathring, acute, grave
     case widehat, widetilde, widecheck   // stretchy variants
+    case overrightharpoon, overleftharpoon   // stretchy harpoon accents (mathtools)
+    case utilde                              // \utilde — a wide tilde BELOW the base
     case overline, underline  // drawn rules, not glyphs
 
     /// The glyph drawn above the base (nil for the rule accents).
@@ -200,11 +202,22 @@ public enum MathAccent: Hashable, Sendable {
         case .mathring: return "˚"
         case .acute: return "´"
         case .grave: return "`"
+        case .overrightharpoon: return "⇀"
+        case .overleftharpoon: return "↼"
+        case .utilde: return "~"
         case .overline, .underline: return nil
         }
     }
 
-    public var isStretchy: Bool { self == .widehat || self == .widetilde || self == .widecheck }
+    public var isStretchy: Bool {
+        switch self {
+        case .widehat, .widetilde, .widecheck, .overrightharpoon, .overleftharpoon, .utilde: return true
+        default: return false
+        }
+    }
+
+    /// Accents drawn *below* the base rather than above (`\utilde`).
+    public var isUnder: Bool { self == .utilde }
 
     /// Accents whose ONLY spelling is a combining mark (no spacing form).
     /// A lone combining mark drawn as a string gets shaping-dependent ink
@@ -219,9 +232,11 @@ public enum MathAccent: Hashable, Sendable {
     /// MATH-table horizontal variants provide the wider drawn cuts.
     public var stretchyGlyph: String? {
         switch self {
-        case .widehat: return "\u{0302}"     // combining circumflex
-        case .widetilde: return "\u{0303}"   // combining tilde
-        case .widecheck: return "\u{030C}"   // combining caron
+        case .widehat: return "\u{0302}"          // combining circumflex
+        case .widetilde, .utilde: return "\u{0303}" // combining tilde (utilde draws it below)
+        case .widecheck: return "\u{030C}"        // combining caron
+        case .overrightharpoon: return "\u{20D1}" // combining right harpoon above
+        case .overleftharpoon: return "\u{20D0}"  // combining left harpoon above
         default: return nil
         }
     }
@@ -242,6 +257,9 @@ public enum MathAccent: Hashable, Sendable {
         case "widehat": self = .widehat
         case "widetilde": self = .widetilde
         case "widecheck": self = .widecheck
+        case "overrightharpoon": self = .overrightharpoon
+        case "overleftharpoon": self = .overleftharpoon
+        case "utilde": self = .utilde
         case "overline": self = .overline
         case "underline": self = .underline
         default: return nil

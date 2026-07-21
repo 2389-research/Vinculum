@@ -438,9 +438,11 @@ final class MathParserTests: XCTestCase {
     // MARK: - Diagnostics (Phase 0)
 
     func testUnsupportedCommandsNamesTheCulprit() {
-        let node = MathParser.parse("\\utilde{x}")   // \utilde is genuinely unsupported
+        // A deliberately non-existent command, so this stays valid as real commands
+        // graduate from unsupported to supported.
+        let node = MathParser.parse("\\notarealcommand{x}")
         XCTAssertFalse(MathParser.isFullySupported(node))
-        XCTAssertEqual(MathParser.unsupportedCommands(in: node), ["\\utilde"])
+        XCTAssertEqual(MathParser.unsupportedCommands(in: node), ["\\notarealcommand"])
     }
 
     func testUnsupportedCommandsDedupesAndPreservesOrder() {
