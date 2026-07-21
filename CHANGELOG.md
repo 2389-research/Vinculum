@@ -7,6 +7,13 @@ each with docs + a specimen figure. Every feature is platform-free (renders
 identically on all targets through the `VDL1` seam).
 
 ### Added
+- **Presentation MathML export** — `MathMLExporter.export(node, display:)` (and
+  `MathNode.toMathML()`) serializes the parse tree to `<math>…</math>`: `<mi>`/`<mn>`/
+  `<mo>` by atom class, `<mfrac>`, `<msqrt>`/`<mroot>`, `<msub>`/`<msup>`/`<msubsup>`,
+  `<mmultiscripts>` (prescripts), `<mtable>`, `<mover accent="true">`, `<menclose>`.
+  XML-escaped and always well-formed (verified with `XMLParser`); unknown input →
+  `<merror>`. For accessibility trees, copy-as-MathML, and interop. (Gap analysis
+  Tier 1 — a second serializer off the tree, no rendering.)
 - **Prescripts & multiscripts** — `\prescript{sup}{sub}{base}` (mathtools) and
   `\sideset{_l^l}{_r^r}{base}` (amsmath). Scripts at all four corners of a base:
   isotopes (`\prescript{14}{6}{C}` → ¹⁴₆C), tensors, left indices. Pre- and
