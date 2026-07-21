@@ -22,6 +22,11 @@ identically on all targets through the `VDL1` seam).
   harpoons over the base) and `\utilde` (a wide tilde *below* the base, stretchy).
   New `MathAccent` cases with an under-accent layout branch; both round-trip exactly.
   (Gap analysis Tier 0 #4.)
+- **`\DeclareMathOperator` & `\mathchoice`** — `\DeclareMathOperator{\name}{text}`
+  (and the `*` limits form) registers a document-scoped operator that renders like
+  `\operatorname{text}`, via the existing macro processor. `\mathchoice{D}{T}{S}{SS}`
+  selects one of four branches by the current math style (new `MathNode.mathChoice`).
+  (Gap analysis Tier 0 #3.)
 
 ## 2.0.0 — 2026-07-21
 

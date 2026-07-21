@@ -540,6 +540,14 @@ public enum MathParser {
             let align: ArraySpec.Align = spec.contains("r") ? .right : spec.contains("l") ? .left : .center
             return .spanned(columns: n, alignment: align, content: content)
 
+        case "mathchoice":
+            // \mathchoice{D}{T}{S}{SS} — branch chosen by the current math style.
+            let d = parseAtom(&tokens) ?? .row([])
+            let t = parseAtom(&tokens) ?? .row([])
+            let s = parseAtom(&tokens) ?? .row([])
+            let ss = parseAtom(&tokens) ?? .row([])
+            return .mathChoice(display: d, text: t, script: s, scriptScript: ss)
+
         case "overrightarrow", "overleftarrow", "overleftrightarrow",
              "underrightarrow", "underleftarrow", "underleftrightarrow":
             let kind: MathOverUnder

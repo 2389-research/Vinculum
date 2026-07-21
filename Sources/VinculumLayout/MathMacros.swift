@@ -52,7 +52,7 @@ public enum MathMacros {
     /// (they produce no output). Bounded by `limit` total expansions.
     public static func expand(_ latex: String, with table: MathMacroTable, limit: Int = 2000) -> String {
         guard !table.isEmpty || latex.contains("\\newcommand") || latex.contains("\\def")
-                || latex.contains("\\renewcommand") else { return latex }
+                || latex.contains("\\renewcommand") || latex.contains("\\DeclareMathOperator") else { return latex }
         let stripped = stripDefinitions(from: latex)
         guard !table.isEmpty else { return stripped }
         var budget = limit
@@ -86,9 +86,37 @@ public enum MathMacros {
                     i = next
                     continue
                 }
+            } else if command == "DeclareMathOperator" {
+                if let (name, macro, next) = parseDeclareMathOperator(chars, afterCommand) {
+                    table.macros[name] = macro
+                    i = next
+                    continue
+                }
             }
             i = max(afterCommand, i + 1)
         }
+    }
+
+    /// `\DeclareMathOperator{\name}{text}` (amsmath) — registered as a 0-arg macro
+    /// expanding to `\operatorname{text}`; the starred form takes stacked limits.
+    private static func parseDeclareMathOperator(_ chars: [Character], _ start: Int) -> (String, MathMacro, Int)? {
+        var i = skipSpaces(chars, start)
+        var star = false
+        if i < chars.count, chars[i] == "*" { star = true; i = skipSpaces(chars, i + 1) }
+        // Name: `{\name}` or bare `\name`.
+        var name: String
+        if i < chars.count, chars[i] == "{" {
+            guard let (inner, after) = readBraceGroup(chars, i), inner.first == "\\" else { return nil }
+            name = String(inner.dropFirst()); i = after
+        } else if i < chars.count, chars[i] == "\\" {
+            let (cmd, after) = readCommandName(chars, i + 1); name = cmd; i = after
+        } else {
+            return nil
+        }
+        i = skipSpaces(chars, i)
+        guard i < chars.count, chars[i] == "{", let (body, after) = readBraceGroup(chars, i) else { return nil }
+        let expansion = "\\operatorname\(star ? "*" : ""){\(body)}"
+        return (name, MathMacro(argCount: 0, body: expansion), after)
     }
 
     /// `\newcommand{\name}[argc]{body}` or `\newcommand\name{body}`.
@@ -152,6 +180,8 @@ public enum MathMacros {
                     if let (_, _, next) = parseNewcommand(chars, afterCommand) { i = next; continue }
                 } else if command == "def" {
                     if let (_, _, next) = parseDef(chars, afterCommand) { i = next; continue }
+                } else if command == "DeclareMathOperator" {
+                    if let (_, _, next) = parseDeclareMathOperator(chars, afterCommand) { i = next; continue }
                 }
             }
             out.append(chars[i]); i += 1

@@ -66,6 +66,9 @@ public enum MathSpeech {
         case .spanned(_, _, let content):
             return speak(content)
 
+        case .mathChoice(_, let text, _, _):
+            return speak(text)   // the text-style branch reads naturally
+
         case .delimited(let left, let body, let right):
             let name = fenceName(left, right)
             return "open \(name) \(speak(body)) close \(name)"

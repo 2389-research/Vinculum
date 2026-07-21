@@ -190,6 +190,15 @@ public struct MathLayoutEngine: Sendable {
             // The span only matters inside a grid (matrixBox reads it); standalone
             // it renders as its content.
             return box(for: content, size: s, style: style)
+        case .mathChoice(let display, let text, let script, let scriptScript):
+            let pick: MathNode
+            switch style {
+            case .display: pick = display
+            case .text: pick = text
+            case .script: pick = script
+            case .scriptScript: pick = scriptScript
+            }
+            return box(for: pick, size: s, style: style)
 
         case .delimited(let left, let body, let right):
             return delimitedBox(left, body, right, size: s, style: style)
@@ -363,6 +372,7 @@ public struct MathLayoutEngine: Sendable {
         case .scripts(let base, _, _): return atomClass(of: base)
         case .multiScripts(let base, _, _, _, _): return atomClass(of: base)
         case .spanned(_, _, let content): return atomClass(of: content)
+        case .mathChoice(_, let text, _, _): return atomClass(of: text)
         case .accent(let base, _): return atomClass(of: base)
         case .genfrac: return .ordinary
         case .overUnder(_, _, _, let kind):
