@@ -239,9 +239,9 @@ jobs:
       - name: Verify package in isolation (toolchain scrubbed from PATH)
         shell: pwsh
         run: |
-          $nupkgs = (Resolve-Path nupkgs).Path
-          dotnet publish windows/PackageSmoke -c Release -r win-x64 --self-contained false -o smoke-out `
-            --source $nupkgs --source https://api.nuget.org/v3/index.json
+          # Feeds come from windows/PackageSmoke/nuget.config (local ../../nupkgs +
+          # nuget.org) — passing them as --source here mis-parses the URL as a local path.
+          dotnet publish windows/PackageSmoke -c Release -r win-x64 --self-contained false -o smoke-out
           # Scrub the Swift toolchain + vcpkg from PATH so ONLY the package's bundled
           # native DLLs can satisfy the load.
           $env:PATH = ($env:PATH -split ';' | Where-Object { $_ -notmatch '\\Swift\\' -and $_ -notmatch 'vcpkg' }) -join ';'
