@@ -437,6 +437,29 @@ a definition in one block applies everywhere; later definitions win (matching
 
 ---
 
+## Output formats
+
+The parsed tree is the single source of truth; three serializers read off it, so
+they never disagree about structure:
+
+- **Native render** — CoreText (Apple), Silica/FreeType (Linux), SkiaSharp (Windows,
+  via the `VDL1` C ABI), Kotlin `Canvas` (Android). One platform-free layout.
+- **SVG** — `MathSVGRenderer` emits self-contained SVG with an embedded font, for
+  server-side / static-site rendering (no bundled font needed at view time).
+- **`MathNode.toLaTeX()`** — a render-equivalent LaTeX round-trip.
+- **Presentation MathML** — `MathMLExporter.export(node, display:)` (or
+  `MathNode.toMathML()`) serializes to `<math>…</math>` for accessibility trees,
+  copy-as-MathML, and interop. `<mi>`/`<mn>`/`<mo>` by atom class, `<mfrac>`,
+  `<msubsup>`, `<mmultiscripts>` (prescripts), `<mtable>`, `<mover accent="true">`,
+  XML-escaped, always well-formed; unknown input degrades to `<merror>`.
+
+```
+MathMLExporter.export(MathParser.parse(#"x^2"#))
+// <math xmlns="http://www.w3.org/1998/Math/MathML"><msup><mi>x</mi><mn>2</mn></msup></math>
+```
+
+---
+
 ## Not yet supported (roadmap gaps)
 
 Honest list of what degrades to a source fallback (or is only partially
