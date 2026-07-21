@@ -89,5 +89,27 @@ final class MathTextTests: XCTestCase {
         }
         return found
     }
+
+    // MARK: - Equation numbering & cross-references
+
+    func testEqrefResolvesInProse() {
+        let doc = #"$$E = mc^2 \label{eq:e}$$ As shown in \eqref{eq:e}, mass is energy."#
+        let out = MathText.attributedString(from: doc, numberEquations: true)
+        XCTAssertTrue(out.string.contains("(1)"), "eqref should resolve to (1): \(out.string)")
+        XCTAssertEqual(attachmentCount(out), 1, "the equation still renders (the \\label was stripped)")
+    }
+
+    func testManualTagReferenceWorksWithoutAutoNumbering() {
+        let doc = #"$$x = y \tag{A} \label{k}$$ see \eqref{k}."#
+        let out = MathText.attributedString(from: doc)   // numberEquations defaults to false
+        XCTAssertTrue(out.string.contains("(A)"), "a manual \\tag resolves \\eqref without auto-numbering")
+    }
+
+    func testUnnumberedByDefault() {
+        // Default: display math is not auto-numbered, and a \label without a tag has no number.
+        let doc = #"$$a = b \label{k}$$ ref \eqref{k}"#
+        let out = MathText.attributedString(from: doc)
+        XCTAssertTrue(out.string.contains("(?)"), "an unnumbered label resolves to (?)")
+    }
 }
 #endif

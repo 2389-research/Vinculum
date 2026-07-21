@@ -478,6 +478,31 @@ wider than the budget) is left intact rather than clipped.
 
 ---
 
+## Equation numbering & cross-references
+
+![Equation numbering](https://raw.githubusercontent.com/2389-research/Vinculum/gallery/alg-numbering.png)
+
+Document-scoped, like macros — `MathText.attributedString(from:numberEquations:)`:
+
+- `\tag{…}` / `\tag*{…}` set an equation's number explicitly (already placed inline).
+- `\label{key}` records the number of the equation it sits in; `\eqref{key}` resolves
+  to `(N)` and `\ref{key}` to `N`, throughout prose **and** math. A dangling key
+  renders `(?)`, so a broken reference is visible.
+- With **`numberEquations: true`**, display equations that neither `\tag` nor `\notag`
+  auto-number sequentially. It's **opt-in**: by default nothing is auto-numbered
+  (so `$$…$$` stays unnumbered, matching LaTeX). `\notag` / `\nonumber` suppress a
+  number; `\label`, `\notag`, `\nonumber` are stripped before the equation renders.
+
+```latex
+\[ E = mc^2 \label{eq:e} \]        % (1) when numberEquations: true
+As shown in \eqref{eq:e}, …        % → As shown in (1), …
+```
+
+The numbering/label logic lives in `MathNumbering` (platform-free, headless-tested);
+`MathText` applies it during document rendering.
+
+---
+
 ## Not yet supported (roadmap gaps)
 
 Honest list of what degrades to a source fallback (or is only partially

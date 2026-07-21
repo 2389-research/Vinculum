@@ -36,9 +36,15 @@ public enum MathText {
         baseFont: PlatformFont = defaultBaseFont,
         textColor: PlatformColor = defaultTextColor,
         mathTheme: MathTheme = .light,
-        mathFont: MathFont = .latinModern
+        mathFont: MathFont = .latinModern,
+        numberEquations: Bool = false
     ) -> NSAttributedString {
         let macros = MathMacros.collectDefinitions(from: source)
+        // Equation numbering / cross-references. `\eqref`/`\ref` always resolve against
+        // whatever numbers are known (manual `\tag` works with numbering off); auto-
+        // numbering of untagged display equations is opt-in via `numberEquations`.
+        let numbers = MathNumbering.number(source, autoNumber: numberEquations)
+        var displayIndex = 0
         let textAttributes: [NSAttributedString.Key: Any] = [
             .font: baseFont, .foregroundColor: textColor,
         ]
@@ -54,11 +60,14 @@ public enum MathText {
         for segment in MathScanner.scan(source) {
             switch segment {
             case .text(let text):
-                // Un-escape the scanner's preserved `\$`.
-                let plain = text.replacingOccurrences(of: "\\$", with: "$")
+                // Un-escape the scanner's preserved `\$`, then resolve \eqref/\ref.
+                let plain = MathNumbering.resolveReferences(
+                    text.replacingOccurrences(of: "\\$", with: "$"), labels: numbers.labels)
                 out.append(NSAttributedString(string: plain, attributes: textAttributes))
 
-            case .inlineMath(let latex):
+            case .inlineMath(let rawLatex):
+                let latex = MathNumbering.stripDirectives(
+                    MathNumbering.resolveReferences(rawLatex, labels: numbers.labels))
                 let expanded = MathMacros.expand(latex, with: macros)
                 if isBlankAfterMacroStripping(expanded) { continue }
                 if let math = MathImageRenderer.attachmentString(
@@ -70,7 +79,14 @@ public enum MathText {
                                                   attributes: fallbackAttributes))
                 }
 
-            case .displayMath(let latex):
+            case .displayMath(let rawLatex):
+                let idx = displayIndex
+                displayIndex += 1
+                // Resolve references, then inject the auto-assigned number as a \tag
+                // (equations that tagged/notag'd themselves aren't in autoTags).
+                var latex = MathNumbering.resolveReferences(rawLatex, labels: numbers.labels)
+                if let number = numbers.autoTags[idx] { latex += " \\tag{\(number)}" }
+                latex = MathNumbering.stripDirectives(latex)   // drop \label/\notag; keep \tag
                 let expanded = MathMacros.expand(latex, with: macros)
                 if isBlankAfterMacroStripping(expanded) { continue }
                 if let math = MathImageRenderer.attachmentString(
