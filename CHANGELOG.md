@@ -1,5 +1,53 @@
 # Changelog
 
+## 2.0.0 — 2026-07-21
+
+**Vinculum goes multi-platform.** The layout engine was always platform-free
+(Foundation-only); 2.0 turns that into shipping renderers on four new targets by
+introducing one portable seam and reusing it everywhere. Apple and Linux are
+unchanged and fully compatible — the major bump reflects the scope, not a break.
+
+### The seam — `VDL1` display-list wire + C ABI
+- A fully-resolved scene serializes to a compact **binary display list** (`VDL1`):
+  fills, rects, and stroked paths with baked geometry and colors — no fonts or
+  measurement needed downstream. Documented in [docs/DISPLAYLIST.md](docs/DISPLAYLIST.md).
+- A C ABI (`vinculum_render_displaylist` / `_free` / `_abi_version` /
+  `_set_font_dir`, `@_cdecl`) renders LaTeX straight to `VDL1` across a language
+  boundary, honoring the never-half-broken contract (unsupported input → null).
+- **Cross-language wire conformance**: Swift, Kotlin, and C# decoders are all gated
+  in CI against one committed fixture, so no platform can drift the format.
+- Measured: CoreText (Apple) and FreeType (Linux/Android/Windows) produce
+  byte-identical layout geometry to three decimals.
+
+### Windows — native rendering, two UI controls, NuGet
+- Native `VinculumAndroid.dll` (the C ABI, cross-linked against vcpkg FreeType),
+  driven from .NET via `[DllImport]` (`VinculumNative`) — no shim.
+- A C# `VDL1` decoder + **SkiaSharp** `SceneRenderer` (same Skia as the Android
+  Canvas, so Windows matches Android by construction; headless-testable).
+- **`VinculumMathView`** as a drop-in control for **both WPF and WinUI 3**
+  (`Latex` / `DisplayMode` / `BaseSize` / `Ink` — themeable ink).
+- **NuGet packages** `Vinculum.Rendering` / `.Windows.Wpf` / `.Windows.WinUI`,
+  self-contained for win-x64: the native engine, its FreeType deps, the Swift
+  runtime redistributables, and the math fonts all travel with the package —
+  verified by a consumer run with the toolchain scrubbed from `PATH`.
+- See [windows/README.md](windows/README.md).
+
+### Android
+- The C ABI built as a dynamic library and called via JNI-in-APK; a Kotlin `VDL1`
+  decoder + `Canvas` `SceneRenderer`. On-device rendering proven. Font loading uses
+  an injectable directory (`Bundle.module` traps inside an APK). See
+  [docs/ANDROID.md](docs/ANDROID.md).
+
+### WebAssembly
+- `VinculumLayout` cross-compiles to `wasm32-unknown-wasip1` and renders SVG under
+  wasmtime, gated in CI. Importing FoundationEssentials (no ICU) shrank the module
+  from ~48 MB to ~9.5 MB.
+
+### Foundation
+- `VinculumLayout` now builds against FoundationEssentials with pure-Swift
+  replacements for the few absent APIs (`PlatformCompat`), proven byte-equivalent —
+  keeping output identical across every platform (the SVG parity gate is the proof).
+
 ## 1.5.0 — 2026-07-16
 
 ### Added

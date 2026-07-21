@@ -9,13 +9,14 @@
 
 # Vinculum
 
-**Native LaTeX math typesetting for Apple platforms. Real glyph shapes, TeX
-metrics from the font's MATH table, a device-independent scene IR — no MathJax,
-no KaTeX, no WebView, zero dependencies.**
+**Native LaTeX math typesetting for Apple, Linux, Windows, Android, and
+WebAssembly. Real glyph shapes, TeX metrics from the font's MATH table, a
+device-independent scene IR — no MathJax, no KaTeX, no WebView, zero dependencies
+on the default build.**
 
 <!-- badges: replace with real shields once CI/tags are public -->
 ![Swift 6.2](https://img.shields.io/badge/swift-6.2%2B-orange)
-![Platforms](https://img.shields.io/badge/platforms-macOS%20·%20iOS%20·%20visionOS%20·%20tvOS%20·%20Linux-blue)
+![Platforms](https://img.shields.io/badge/platforms-Apple%20·%20Linux%20·%20Windows%20·%20Android%20·%20WebAssembly-blue)
 ![SwiftPM](https://img.shields.io/badge/SwiftPM-compatible-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
@@ -73,7 +74,7 @@ Swift Package Manager. Add the dependency:
 ```swift
 // Package.swift
 dependencies: [
-    .package(url: "https://github.com/2389-research/Vinculum.git", from: "1.5.0"),
+    .package(url: "https://github.com/2389-research/Vinculum.git", from: "2.0.0"),
 ]
 ```
 
@@ -440,12 +441,34 @@ per-subtree during layout. That's the whole surface — see
 
 ## Platforms
 
-- **macOS 14+, iOS 17+, visionOS 1+, tvOS 17+** — full package (VinculumRender).
+The layout engine is platform-free (Foundation only), so the same typesetting —
+provably byte-identical geometry — drives every target. What differs is the last
+mile (how pixels get drawn) and how you integrate.
+
+- **macOS 14+, iOS 17+, visionOS 1+, tvOS 17+** — full package (VinculumRender),
+  CoreText/CoreGraphics. SwiftUI `MathView`, `VinculumLabel`, `NSTextAttachment`.
 - **Linux** — full rendering via Silica/Cairo/FreeType (`MathSilicaRenderer`,
   [docs/LINUX.md](docs/LINUX.md)), server-side SVG (`MathSVGRenderer`), or
-  VinculumLayout alone (parsing + geometry; supply your own
-  measurer/renderer).
-- Swift 6.2+ toolchain, Swift 6 language mode, strict concurrency. Zero third-party dependencies.
+  VinculumLayout alone (parsing + geometry; supply your own measurer/renderer).
+- **Windows** — native rendering through the C ABI + FreeType, drawn with
+  SkiaSharp, and a drop-in **`VinculumMathView`** control for **both WPF and
+  WinUI 3**. Ships as self-contained NuGet packages (`Vinculum.Rendering`,
+  `Vinculum.Windows.Wpf`, `Vinculum.Windows.WinUI`). See
+  [windows/README.md](windows/README.md).
+- **Android** — the C ABI as a JNI library with a Kotlin `VDL1` decoder + `Canvas`
+  renderer; on-device rendering proven. See [docs/ANDROID.md](docs/ANDROID.md).
+- **WebAssembly** — `VinculumLayout` cross-compiles to `wasm32-unknown-wasip1` and
+  renders SVG (a ~9.5 MB module on FoundationEssentials).
+
+Windows, Android, and WebAssembly all reuse the one seam — a fully-resolved scene
+crosses the C ABI as the language-neutral **`VDL1`** binary, decoded by
+per-platform renderers whose wire agreement is CI-gated
+([docs/DISPLAYLIST.md](docs/DISPLAYLIST.md)). CoreText and FreeType are measured
+to produce byte-identical geometry.
+
+- Swift 6.2+ toolchain, Swift 6 language mode, strict concurrency. Zero
+  third-party dependencies on the default build (the Linux Cairo backend and the
+  Windows native bundle are opt-in / platform-specific).
 
 > Not Mac Catalyst-tuned: on Catalyst `canImport(AppKit)` is true, so the
 > AppKit path compiles but is untested there.

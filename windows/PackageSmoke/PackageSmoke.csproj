@@ -12,6 +12,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Vinculum.Rendering" Version="2.0.0-preview.1" />
+    <PackageReference Include="Vinculum.Rendering" Version="2.0.0" />
   </ItemGroup>
 </Project>

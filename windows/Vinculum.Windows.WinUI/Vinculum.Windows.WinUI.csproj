@@ -13,7 +13,7 @@
 
     <!-- NuGet metadata. The ProjectReference becomes a package dependency at pack time. -->
     <PackageId>Vinculum.Windows.WinUI</PackageId>
-    <Version>2.0.0-preview.1</Version>
+    <Version>2.0.0</Version>
     <Authors>Clint Ecker</Authors>
     <Description>A drop-in WinUI 3 control (VinculumMathView) that renders LaTeX math via SkiaSharp. Set the Latex property and it paints. Depends on Vinculum.Rendering, which carries the native Windows engine.</Description>
     <PackageTags>latex;math;winui;windowsappsdk;control;skiasharp</PackageTags>
