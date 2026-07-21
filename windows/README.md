@@ -102,9 +102,22 @@ toolchain and vcpkg scrubbed from `PATH`** — so only the package's own bundled
 satisfy the load. If it renders, the closure is complete for a real (toolchain-free)
 user machine. The nupkgs upload as build artifacts.
 
-## Still pending (the road to 2.0.0 "full Windows")
-- **WinUI 3 control** (fast-follow: same `SceneRenderer`, `SKXamlCanvas` instead of
-  `SKElement`; needs the Windows App SDK workload in CI).
+## 5. The WinUI 3 control — `Vinculum.Windows.WinUI` (`VinculumMathView`)
+The modern-stack twin of the WPF control, so Windows apps on **either** UI framework get
+a drop-in view. Same API shape (`Latex` / `DisplayMode` / `BaseSize` / `Ink` dependency
+properties), painted on an `SKXamlCanvas` (Windows App SDK) instead of a WPF `SKElement`.
+Identical seam underneath — native ABI → `VDL1` → `VinculumWire.Decode` → `SceneRenderer` —
+so WPF and WinUI render byte-for-byte alike, and match Android.
+
+Compile-verified on the `windows-winui` CI job. Two Windows-toolchain notes encoded there:
+- `Size` is `Windows.Foundation.Size` in WinUI (not WPF's `System.Windows.Size`).
+- The Appx/PRI MSBuild tasks WindowsAppSDK needs (`MrtCore.PriGen`) ship with **Visual
+  Studio, not the .NET SDK** — so it builds with **VS MSBuild** (`setup-msbuild`), not
+  `dotnet build` (which fails on any SDK version), with `global.json` pinning the .NET 8
+  SDK MSBuild resolves for the `net8.0-windows` target.
+
+## Still pending (post-2.0.0)
 - Threading the device-font **measure callback** through P/Invoke (the #62 lesson) —
   lower priority on Windows since math glyphs come from the bundled fonts, not device
   fonts.
+- Publishing the packages to nuget.org (they build as CI artifacts at `2.0.0-preview.1`).

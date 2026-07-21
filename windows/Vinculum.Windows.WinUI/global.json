@@ -1,0 +1,7 @@
+{
+  "//": "Pin the WinUI build to the .NET 8 SDK. The runner also has a .NET 10 SDK whose reorganized layout lacks the Appx/PRI MSBuild tasks WindowsAppSDK 1.6 expects (MrtCore.PriGen). 8.0 is the SDK contemporaneous with WindowsAppSDK 1.6 and ships those tasks. Scoped to this dir (CI cd's here), so no other job's SDK selection changes.",
+  "sdk": {
+    "version": "8.0.100",
+    "rollForward": "latestFeature"
+  }
+}
