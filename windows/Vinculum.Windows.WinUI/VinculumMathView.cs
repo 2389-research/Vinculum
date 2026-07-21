@@ -2,6 +2,7 @@ using Microsoft.UI.Xaml;
 using SkiaSharp;
 using SkiaSharp.Views.Windows;
 using Vinculum.Rendering;
+using Windows.Foundation;   // Size (WinUI uses Windows.Foundation.Size, not System.Windows.Size)
 using WinColor = Windows.UI.Color;
 
 namespace Vinculum.Windows.WinUI;
