@@ -28,6 +28,12 @@ identically on all targets through the `VDL1` seam).
   selects one of four branches by the current math style (new `MathNode.mathChoice`).
   (Gap analysis Tier 0 #3.)
 
+### Fixed
+- **Spacing commands inside `\text`/`\mathrm`/`\operatorname`** now resolve instead
+  of printing literally: `\operatorname{arg\,max}` renders "arg max" (thin space),
+  not "arg\,max". `\,` `\:` `\;` `\quad` `\qquad` `\ ` map to the matching space, and
+  `\&` `\%` `\_` `\#` `\$` to their literal character. Embedded `$…$` math still works.
+
 ## 2.0.0 — 2026-07-21
 
 **Vinculum goes multi-platform.** The layout engine was always platform-free
