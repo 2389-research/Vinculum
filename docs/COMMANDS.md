@@ -132,6 +132,9 @@ Use `\begin{env} … \end{env}`; cells split on `&`, rows on `\\`.
 | `axis` (pgfplots subset) | `\begin{axis}[domain=-3:3] \addplot{x^2}; \end{axis}` | Function plot: sampled `\addplot{expr}` curves, auto-ranged axes, ticks, gridlines |
 | `\inferrule[…]{…}{…}` (also `\infer`, `\prftree`) | `\inferrule[T\text{-}App]{A \\ B}{C}` | Inference rule / proof tree: premises (`\\`-separated) over a bar over the conclusion, optional label to the right; empty premises = axiom; rules nest |
 | `\num` `\ang` `\si`/`\unit` `\SI`/`\qty` (siunitx) | `\SI{9.8}{m/s^2}`, `\num{1.5e3}`, `\ang{45;30;15}` | Units: number formatting (sci-notation, digit grouping), angles (d°m′s″), unit symbols/macros (`\kilo\gram`, `\per`, `\squared`), quantity = number + unit |
+| `\bra` `\ket` `\braket` `\ketbra` `\expval` `\mel` (physics) | `\braket{\phi}{\psi}`, `\ket{\psi}`, `\mel{\phi}{\hat A}{\psi}` | Dirac notation: bras, kets, inner/outer products, expectation values, matrix elements (auto-sized ⟨ \| ⟩) |
+| `\dd` `\dv` `\pdv` (physics) | `\dv{f}{x}`, `\dv[2]{f}{x}`, `\pdv{f}{x}{y}` | Derivatives: differential dx, ordinary df/dx (with order), partial ∂f/∂x and mixed ∂²f/∂x∂y |
+| `\abs` `\norm` `\comm` `\acomm` `\order` `\grad` `\curl` `\laplacian` (physics) | `\comm{A}{B}`, `\norm{v}`, `\grad\phi` | Brackets & operators: \|x\|, ‖v‖, [A,B], {A,B}, O(x); vector ∇, ∇×, ∇² |
 
 A bare `\\` **outside** any environment (an inline line break) is a no-op —
 inline math is a single line; multi-line splitting is a host concern.

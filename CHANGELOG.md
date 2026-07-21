@@ -7,6 +7,15 @@ each with docs + a specimen figure. Every feature is platform-free (renders
 identically on all targets through the `VDL1` seam).
 
 ### Added
+- **Physics package — Dirac notation, derivatives, brackets** — the most-used `physics`
+  macros, a transpiler to LaTeX (`Physics`) reusing the whole engine. Dirac notation
+  (`\bra`, `\ket`, `\braket{ϕ}{ψ}` → ⟨ϕ\|ψ⟩, `\ketbra`, `\expval{A}{ψ}` → ⟨ψ\|A\|ψ⟩,
+  `\mel{ϕ}{A}{ψ}`, with aliases `\ip`/`\op`/`\ev`/`\matrixel`); derivatives (`\dd{x}` → dx,
+  `\dv{f}{x}` → df/dx, `\dv[n]`, `\pdv{f}{x}` → ∂f/∂x, `\pdv{f}{x}{y}` mixed); brackets
+  (`\abs`, `\norm`, `\comm{A}{B}` → [A,B], `\acomm` → {A,B}, `\order` → O(x)); and vector
+  operators (`\grad`, `\curl`, `\laplacian`, `\Tr`/`\tr`, `\rank` — `\div` left as ÷). Also
+  fixes a latent bug: `\left\|…\right\|` now parses to the ‖ norm delimiter instead of
+  falling back to parens. (Gap analysis — quantum mechanics / vector calculus.)
 - **Units — siunitx `\num` / `\ang` / `\si` / `\unit` / `\SI` / `\qty`** — physical
   quantities and units, a transpiler to LaTeX (`SIUnitx`) reusing the whole engine like
   mhchem. `\num` formats numbers (scientific notation `1.5e3` → 1.5×10³, thin-space digit

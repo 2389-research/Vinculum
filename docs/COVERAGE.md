@@ -594,6 +594,32 @@ Unknown unit macros pass through as real commands, so nothing is silently droppe
 
 ---
 
+## Physics (Dirac notation, derivatives)
+
+![Physics](https://raw.githubusercontent.com/2389-research/Vinculum/gallery/cmd-physics.png)
+
+The `physics` package's most-used macros, again a **transpiler** (`Physics`): each
+expands to LaTeX (auto-sizing `\left…\right`, fractions, upright `\mathrm`) and reuses
+the whole engine.
+
+- **Dirac notation** — `\bra{ϕ}` → ⟨ϕ|, `\ket{ψ}` → |ψ⟩, `\braket{ϕ}{ψ}` → ⟨ϕ|ψ⟩
+  (single-argument `\braket{ψ}` → ⟨ψ|ψ⟩), `\ketbra{ϕ}{ψ}` → |ϕ⟩⟨ψ|, `\expval{A}{ψ}` →
+  ⟨ψ|A|ψ⟩, `\mel{ϕ}{A}{ψ}` → ⟨ϕ|A|ψ⟩. Aliases: `\ip`/`\innerproduct`, `\op`/`\outerproduct`,
+  `\ev`, `\matrixel`.
+- **Derivatives** — `\dd{x}` → dx (upright d), `\dv{f}{x}` → df/dx, `\dv[2]{f}{x}` → d²f/dx²,
+  `\pdv{f}{x}` → ∂f/∂x, `\pdv{f}{x}{y}` → ∂²f/∂x∂y (mixed).
+- **Brackets** — `\abs{x}` → |x|, `\norm{v}` → ‖v‖, `\comm{A}{B}` → [A, B],
+  `\acomm{A}{B}` → {A, B}, `\order{x}` → O(x).
+- **Vector operators** — `\grad` → ∇, `\curl` → ∇×, `\laplacian` → ∇², `\Tr`/`\tr`, `\rank`.
+  (`\div` is deliberately left as the core division sign ÷.)
+
+```latex
+\comm{\hat{A}}{\hat{B}} = \hat{A}\hat{B} - \hat{B}\hat{A} \qquad
+\pdv{f}{x}{y} \qquad \braket{\phi}{\psi}
+```
+
+---
+
 ## Commutative diagrams
 
 ![Commutative diagrams](https://raw.githubusercontent.com/2389-research/Vinculum/gallery/cmd-diagrams.png)
