@@ -128,6 +128,7 @@ Use `\begin{env} … \end{env}`; cells split on `&`, rows on `\\`.
 | `substack` | `\sum_{\substack{0<i<n \\ i\ \text{odd}}}` | Tight vertical stack for limits |
 | `CD` (amscd) | `\begin{CD} A @>f>> B \\ @VgVV @VVhV \\ C @>>k> D \end{CD}` | Commutative diagram: objects joined by labelled `@`-arrows (`@>`, `@<`, `@V`, `@A`, `@=`, `@\|`, `@.`) |
 | `\ce{…}` (mhchem) | `\ce{2H2 + O2 -> 2H2O}` | Chemistry: auto-subscripts, `^` charges, coefficients, arrows (`->`, `<=>`, `->[cond]`), states `(s)(l)(g)(aq)`, `*` hydrate |
+| `\ydiagram{…}` / `\ytableaushort{…}` | `\ydiagram{3,2,1}`, `\ytableaushort{13,2}` | Young diagram (empty boxes from a partition) / filled tableau |
 
 A bare `\\` **outside** any environment (an inline line break) is a no-op —
 inline math is a single line; multi-line splitting is a host concern.

@@ -110,6 +110,50 @@ extension MathLayoutEngine {
         return MathBox(width: totalWidth, ascent: ascent, descent: descent, elements: elements)
     }
 
+    /// Lays out a Young diagram / tableau: a grid of equal square cells with drawn
+    /// borders, rows left-aligned and stacked top-down, centred on the math axis.
+    /// Empty cells (`nil`) are bordered blanks; filled cells centre their content.
+    func youngTableauBox(_ rows: [[MathNode?]], size: CGFloat, style: MathStyle) -> MathBox {
+        let numRows = rows.count
+        let maxCols = rows.map(\.count).max() ?? 0
+        guard numRows > 0, maxCols > 0 else { return .empty }
+
+        let content = rows.map { row in row.map { $0.map { box(for: $0, size: size, style: .text) } } }
+        var side = size * MathLayout.Young.minCell
+        for row in content {
+            for cell in row {
+                if let b = cell { side = max(side, max(b.width, b.ascent + b.descent) + size * MathLayout.Young.pad) }
+            }
+        }
+
+        let totalW = CGFloat(maxCols) * side
+        let totalH = CGFloat(numRows) * side
+        let axis = size * constants.axisHeight
+        let ascent = totalH / 2 + axis
+        let descent = totalH / 2 - axis
+        let w = max(0.6, size * constants.defaultRuleThickness)
+
+        var elements: [MathElement] = []
+        for (r, row) in rows.enumerated() {
+            let cellTop = ascent - CGFloat(r) * side
+            let cellBottom = cellTop - side
+            for c in 0..<row.count {
+                let x0 = CGFloat(c) * side, x1 = x0 + side
+                elements.append(.stroke(path: [.move(CGPoint(x: x0, y: cellTop)),
+                                               .line(CGPoint(x: x1, y: cellTop)),
+                                               .line(CGPoint(x: x1, y: cellBottom)),
+                                               .line(CGPoint(x: x0, y: cellBottom)), .close],
+                                        width: w, cap: .butt, join: .miter, color: colorOverride))
+                if let b = content[r][c] {
+                    let cx = x0 + side / 2 - b.width / 2
+                    let cy = (cellTop + cellBottom) / 2 - (b.ascent - b.descent) / 2
+                    elements += b.placed(at: CGPoint(x: cx, y: cy))
+                }
+            }
+        }
+        return MathBox(width: totalW, ascent: ascent, descent: descent, elements: elements)
+    }
+
     // MARK: - Arrow drawing
 
     private func strokeWidth(_ size: CGFloat) -> CGFloat { max(0.6, size * constants.defaultRuleThickness) }

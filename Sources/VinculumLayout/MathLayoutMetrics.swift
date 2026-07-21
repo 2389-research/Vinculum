@@ -44,6 +44,12 @@ package enum MathLayout {
         public static let headWidth: CGFloat = 0.22  // arrowhead half-width
         public static let labelGap: CGFloat = 0.12   // gap between the shaft and its label
     }
+
+    /// Young diagrams / tableaux.
+    public enum Young {
+        public static let minCell: CGFloat = 1.4   // minimum square cell side
+        public static let pad: CGFloat = 0.4       // padding a filled cell adds around its content
+    }
     /// Big operator (∑, ∫) enlargement when it takes stacked limits. TeX
     /// swaps in the display-size glyph from family 3; we scale instead.
     public static let displayOperatorScale: CGFloat = 1.35

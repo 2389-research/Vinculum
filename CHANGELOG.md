@@ -7,6 +7,10 @@ each with docs + a specimen figure. Every feature is platform-free (renders
 identically on all targets through the `VDL1` seam).
 
 ### Added
+- **Young tableaux** — `\ydiagram{4,2,1}` (empty Young diagram from a partition) and
+  `\ytableaushort{134,25,6}` / `\young(…)` (filled tableau). A grid of bordered square
+  cells (stroked paths), left-aligned and stacked top-down, usable inline in an
+  expression. New `MathNode.youngTableau`; round-trips verbatim. (Gap analysis Tier 3.)
 - **Chemistry — mhchem `\ce{…}`** — chemical formulas and equations. Implemented as
   a transpiler to LaTeX (`MHChem.transpile`), reusing the whole engine (no chemistry-
   specific layout): auto-subscripts (`H2O` → H₂O), groups (`Ca(OH)2`), `^` charges

@@ -91,6 +91,11 @@ public enum MathMLExporter {
             }
             return "<mrow>\(inner)</mrow>"
 
+        case .youngTableau(let rows):
+            return "<mtable frame=\"solid\" rowlines=\"solid\" columnlines=\"solid\">" + rows.map { row in
+                "<mtr>" + row.map { "<mtd>\($0.map(mathml) ?? "")</mtd>" }.joined() + "</mtr>"
+            }.joined() + "</mtable>"
+
         case .commutativeDiagram(let grid):
             // No CD element in Presentation MathML; approximate as a table whose cells
             // are objects or arrow glyphs — structure a reader/consumer can still walk.
