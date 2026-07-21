@@ -272,7 +272,13 @@ jobs:
           dotnet-version: '8.0.x'
       - name: Build WinUI 3 control
         shell: pwsh
-        run: dotnet build windows/Vinculum.Windows.WinUI -c Release
+        # Build from the project dir so its global.json (pinning the .NET 8 SDK) is
+        # discovered — the runner's default .NET 10 SDK lacks the Appx/PRI build tasks
+        # WindowsAppSDK 1.6 needs.
+        run: |
+          cd windows/Vinculum.Windows.WinUI
+          dotnet --version
+          dotnet build -c Release
 
   # WebAssembly: VinculumLayout is Foundation-only, so it cross-compiles to
   # wasm32-unknown-wasip1 (one guarded line for WASI's missing Thread — #96). This
