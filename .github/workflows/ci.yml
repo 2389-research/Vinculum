@@ -108,13 +108,17 @@ jobs:
         run: |
           $out = (swift test 2>&1 | Out-String)
           Write-Host $out
+          # `swift test` leaves $LASTEXITCODE = 1 at teardown even on success, and
+          # GitHub's pwsh wrapper propagates it — so decide from the reported results
+          # and END WITH AN EXPLICIT exit to override that stray code.
           if ($out -match 'and [1-9]\d* failure' -or $out -match 'error: -\[' -or $out -match ': Fatal error') {
-            throw 'real test failures on Windows'
+            Write-Host '::error::real test failures on Windows'; exit 1
           }
           if ($out -notmatch 'Executed \d+ test') {
-            throw 'no test summary — the suite did not run to completion'
+            Write-Host '::error::no test summary — the suite did not run to completion'; exit 1
           }
           Write-Host 'Windows: all tests passed (ignoring the SwiftPM teardown exit-code quirk).'
+          exit 0
 
   # ── Windows NATIVE render path (MermaidKit-pattern piece 2) ──
   # The `windows` job above proves the Foundation-only LAYOUT core builds. This
