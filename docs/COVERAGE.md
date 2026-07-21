@@ -478,6 +478,20 @@ wider than the budget) is left intact rather than clipped.
 
 ---
 
+## Young tableaux
+
+![Young tableaux](https://raw.githubusercontent.com/2389-research/Vinculum/gallery/cmd-young.png)
+
+- `\ydiagram{4,2,1}` — an empty Young **diagram**; the partition gives each row's length.
+- `\ytableaushort{134,25,6}` (also `\young(…)`) — a **filled** tableau; each atom is a
+  cell, `,` starts a new row, `{…}` is a multi-token cell.
+
+A grid of bordered square cells (drawn as stroked paths), left-aligned and stacked
+top-down — usable inline in an expression (`\dim V_\lambda = \ydiagram{2,1}`). Renders
+on every platform through `VDL1`; round-trips through `toLaTeX`.
+
+---
+
 ## Chemistry (mhchem)
 
 ![Chemistry](https://raw.githubusercontent.com/2389-research/Vinculum/gallery/cmd-chem.png)

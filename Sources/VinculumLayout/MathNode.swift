@@ -47,6 +47,9 @@ public indirect enum MathNode: Hashable, Sendable {
     /// joined by labelled arrows. Rows alternate object rows and vertical-arrow
     /// rows; within an object row, cells alternate objects and horizontal arrows.
     case commutativeDiagram(grid: [[CDCell]])
+    /// A Young diagram / tableau (`\ydiagram`, `\ytableaushort`): rows of bordered
+    /// square cells, left-aligned and stacked top-down. `nil` is an empty cell.
+    case youngTableau(rows: [[MathNode?]])
     /// Upright function name (sin, log …).
     case functionName(String)
     /// A `\operatorname*`-style operator that takes stacked limits in display
@@ -134,6 +137,8 @@ extension MathNode {
             return segments
         case .matrix(let rows, _, _, _):
             return rows.flatMap { $0 }
+        case .youngTableau(let rows):
+            return rows.flatMap { $0 }.compactMap { $0 }
         case .commutativeDiagram(let grid):
             return grid.flatMap { $0 }.flatMap { cell -> [MathNode] in
                 switch cell {

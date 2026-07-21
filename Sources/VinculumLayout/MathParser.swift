@@ -451,6 +451,19 @@ public enum MathParser {
             tokens.removeFirst()
             return parse(MHChem.transpile(body))
 
+        case "ydiagram":
+            // \ydiagram{3,2,1} — empty boxes; the partition gives each row's length.
+            let spec = readBraceName(&tokens)
+            let rows = spec.split(separator: ",", omittingEmptySubsequences: false).map { part -> [MathNode?] in
+                let n = Int(part.vTrimmingWhitespace()) ?? 0
+                return [MathNode?](repeating: nil, count: max(0, n))
+            }
+            return .youngTableau(rows: rows)
+
+        case "ytableaushort", "young":
+            // \ytableaushort{abc,de} — filled cells; each atom is a cell, `,` a new row.
+            return .youngTableau(rows: parseYoungRows(&tokens))
+
         case "text", "mathrm", "operatorname", "textrm":
             // \operatorname* takes stacked limits — capture the star and wrap.
             var starred = false
@@ -839,6 +852,21 @@ public enum MathParser {
         }
         if tokens.first == .groupClose { tokens.removeFirst() }
         return name
+    }
+
+    /// `\ytableaushort{abc,de}` — each atom is a cell, `,` starts a new row.
+    private static func parseYoungRows(_ tokens: inout ArraySlice<Token>) -> [[MathNode?]] {
+        guard tokens.first == .groupOpen else { return [] }
+        tokens.removeFirst()
+        var rows: [[MathNode?]] = [[]]
+        while let t = tokens.first, t != .groupClose {
+            if t == .character(",") { tokens.removeFirst(); rows.append([]); continue }
+            if let cell = parseAtom(&tokens) { rows[rows.count - 1].append(cell) }
+            else { tokens.removeFirst() }
+        }
+        if tokens.first == .groupClose { tokens.removeFirst() }
+        if let last = rows.last, last.isEmpty { rows.removeLast() }
+        return rows
     }
 
     // MARK: - Commutative diagrams (amscd)

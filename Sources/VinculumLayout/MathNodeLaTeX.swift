@@ -84,6 +84,14 @@ extension MathNode {
             }
             return s
 
+        case .youngTableau(let rows):
+            // If every cell is empty, it's a \ydiagram{partition}; else \ytableaushort.
+            if rows.allSatisfy({ $0.allSatisfy { $0 == nil } }) {
+                return "\\ydiagram{" + rows.map { "\($0.count)" }.joined(separator: ",") + "}"
+            }
+            let body = rows.map { row in row.map { $0?.toLaTeX() ?? "\\none" }.joined() }.joined(separator: ",")
+            return "\\ytableaushort{\(body)}"
+
         case .commutativeDiagram(let grid):
             var rowsOut: [String] = []
             for row in grid {
