@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (2.1.0) — math-feature expansion
+## 2.1.0 — 2026-07-21 — math-feature expansion
 
 Closing the coverage gaps identified in the July 2026 gap analysis, one at a time,
 each with docs + a specimen figure. Every feature is platform-free (renders
