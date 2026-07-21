@@ -18,6 +18,14 @@ public indirect enum MathNode: Hashable, Sendable {
     case cfrac(numerator: MathNode, denominator: MathNode, align: CfracAlign)
     case radical(degree: MathNode?, radicand: MathNode)
     case scripts(base: MathNode, subscript: MathNode?, superscript: MathNode?)
+    /// Prescripts and multiscripts — scripts on *both* sides of a base:
+    /// `\prescript{sup}{sub}{base}`, `\sideset{_l^l}{_r^r}\op`, tensor/isotope
+    /// notation. Any of the four slots may be nil; a side's super and sub share
+    /// one pair of baseline shifts so they align, and the two sides align with
+    /// each other. Post scripts get italic correction; pre scripts hug the base's
+    /// left edge (right-aligned into the pre-cluster).
+    case multiScripts(base: MathNode, preSub: MathNode?, preSuper: MathNode?,
+                      postSub: MathNode?, postSuper: MathNode?)
     /// Auto-sized fences around a body: ( ) [ ] { } | ‖.
     case delimited(left: String, body: MathNode, right: String)
     /// `\left … \middle| … \right`: fences with interior `\middle` delimiters,
@@ -103,6 +111,8 @@ extension MathNode {
             return (degree.map { [$0] } ?? []) + [radicand]
         case .scripts(let base, let sub, let sup):
             return [base] + (sub.map { [$0] } ?? []) + (sup.map { [$0] } ?? [])
+        case .multiScripts(let base, let preSub, let preSuper, let postSub, let postSuper):
+            return [base] + [preSub, preSuper, postSub, postSuper].compactMap { $0 }
         case .delimited(_, let body, _):
             return [body]
         case .fenced(_, let segments):

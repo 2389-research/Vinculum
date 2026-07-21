@@ -49,6 +49,20 @@ extension MathNode {
             if let sup { s += "^{\(sup.toLaTeX())}" }
             return s
 
+        case .multiScripts(let base, let preSub, let preSuper, let postSub, let postSuper):
+            // Round-trip through \sideset when there are post scripts, else the
+            // simpler \prescript. Both are render-equivalent to the layout.
+            func cluster(_ sub: MathNode?, _ sup: MathNode?) -> String {
+                var s = ""
+                if let sub { s += "_{\(sub.toLaTeX())}" }
+                if let sup { s += "^{\(sup.toLaTeX())}" }
+                return s
+            }
+            if postSub != nil || postSuper != nil {
+                return "\\sideset{\(cluster(preSub, preSuper))}{\(cluster(postSub, postSuper))}{\(base.toLaTeX())}"
+            }
+            return "\\prescript{\(preSuper?.toLaTeX() ?? "")}{\(preSub?.toLaTeX() ?? "")}{\(base.toLaTeX())}"
+
         case .delimited(let left, let body, let right):
             return "\\left\(Self.fence(left)) \(body.toLaTeX()) \\right\(Self.fence(right))"
 
