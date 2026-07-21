@@ -7,6 +7,14 @@ each with docs + a specimen figure. Every feature is platform-free (renders
 identically on all targets through the `VDL1` seam).
 
 ### Added
+- **Units — siunitx `\num` / `\ang` / `\si` / `\unit` / `\SI` / `\qty`** — physical
+  quantities and units, a transpiler to LaTeX (`SIUnitx`) reusing the whole engine like
+  mhchem. `\num` formats numbers (scientific notation `1.5e3` → 1.5×10³, thin-space digit
+  grouping from five digits), `\ang` renders angles (`45;30;15` → 45°30′15″), `\si`/`\unit`
+  typeset unit bodies (literal `kg.m.s^{-1}` or macros `\kilo\gram\per\second\squared`,
+  with `.`/`~` thin spaces, `/` solidus, `\per`/`\squared`/`\cubed`, and SI prefixes/units
+  with µ/Ω/Å/°C upright), and `\SI`/`\qty` combine a number and a unit. Both siunitx v2 and
+  v3 spellings; unknown unit macros pass through as real commands. (Gap analysis — metrology.)
 - **Inference rules / proof trees** — `\inferrule[label]{premises}{conclusion}`
   (aliases `\infer`, `\prftree`), the mathpartir/natural-deduction notation. Premises
   (`\\`-separated) are centered over a horizontal bar sitting on the math axis; the
