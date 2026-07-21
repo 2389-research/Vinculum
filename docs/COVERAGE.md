@@ -566,6 +566,34 @@ layout. Covers:
 
 ---
 
+## Units (siunitx)
+
+![Units](https://raw.githubusercontent.com/2389-research/Vinculum/gallery/cmd-units.png)
+
+Physical quantities and units, the same **transpiler** approach as mhchem
+(`SIUnitx`): each command expands to LaTeX and reuses the whole engine — no
+units-specific layout. Both siunitx v2 and v3 spellings are accepted.
+
+- **`\num{…}`** — a number: `\num{1.5e3}` → 1.5×10³ (scientific notation), `\num{-3.2e-4}`,
+  and thin-space **digit grouping** every three digits once a part has ≥5 digits
+  (`\num{299792458}` → 299 792 458).
+- **`\ang{…}`** — an angle: `\ang{45}` → 45°, `\ang{45;30;15}` → 45°30′15″ (degrees;
+  minutes; seconds).
+- **`\si{…}`** / **`\unit{…}`** — units only. Literal symbols (`kg.m.s^{-1}`) or macros
+  (`\kilo\gram`, `\metre\per\second\squared`); `.`/`~` are inter-unit thin spaces, `/`
+  a solidus, `^` a power, `\per`/`\squared`/`\cubed` the usual operators. Recognizes SI
+  prefixes and base/derived units, with special glyphs upright (µ, Ω, Å, °C).
+- **`\SI{…}{…}`** / **`\qty{…}{…}`** — a number and a unit, thin-spaced:
+  `\SI{9.8}{m/s^2}`, `\qty{1.38e-23}{J/K}`.
+
+Unknown unit macros pass through as real commands, so nothing is silently dropped.
+
+```latex
+\SI{9.8}{m/s^2} \qquad \qty{1.38e-23}{J/K} \qquad \ang{45;30;15}
+```
+
+---
+
 ## Commutative diagrams
 
 ![Commutative diagrams](https://raw.githubusercontent.com/2389-research/Vinculum/gallery/cmd-diagrams.png)

@@ -451,6 +451,29 @@ public enum MathParser {
             tokens.removeFirst()
             return parse(MHChem.transpile(body))
 
+        case "num":
+            guard case .rawText(let body)? = tokens.first else { return .row([]) }
+            tokens.removeFirst()
+            return parse(SIUnitx.number(body))
+
+        case "ang":
+            guard case .rawText(let body)? = tokens.first else { return .row([]) }
+            tokens.removeFirst()
+            return parse(SIUnitx.angle(body))
+
+        case "si", "unit":
+            guard case .rawText(let body)? = tokens.first else { return .row([]) }
+            tokens.removeFirst()
+            return parse(SIUnitx.units(body))
+
+        case "SI", "qty":
+            // siunitx \SI{value}{unit} — two verbatim bodies (captured by the tokenizer).
+            guard case .rawText(let value)? = tokens.first else { return .row([]) }
+            tokens.removeFirst()
+            guard case .rawText(let unit)? = tokens.first else { return parse(SIUnitx.number(value)) }
+            tokens.removeFirst()
+            return parse(SIUnitx.quantity(value, unit))
+
         case "inferrule", "infer", "prftree":
             // mathpartir \inferrule[label]{premises}{conclusion}; premises split on \\.
             if tokens.first == .character("*") { tokens.removeFirst() }

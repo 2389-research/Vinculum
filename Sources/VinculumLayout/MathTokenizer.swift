@@ -20,7 +20,12 @@ extension MathParser {
     /// Commands whose brace body is upright TEXT, not math — their interior
     /// spaces must survive the whitespace-stripping tokenizer, so the group is
     /// captured verbatim here rather than re-tokenized.
-    static let rawTextCommands: Set<String> = ["text", "mathrm", "operatorname", "textrm", "ce", "addplot"]
+    static let rawTextCommands: Set<String> = ["text", "mathrm", "operatorname", "textrm", "ce", "addplot",
+                                               "num", "ang", "si", "unit", "SI", "qty"]
+
+    /// Commands whose *two* consecutive brace bodies are captured verbatim
+    /// (siunitx `\SI{value}{unit}`, `\qty{value}{unit}`).
+    static let rawText2Commands: Set<String> = ["SI", "qty"]
 
     struct Tokenizer {
         let input: [Character]
@@ -53,20 +58,28 @@ extension MathParser {
                     if MathParser.rawTextCommands.contains(name) {
                         if i < input.count, input[i] == "*" { tokens.append(.character("*")); i += 1 }
                     }
-                    if MathParser.rawTextCommands.contains(name), i < input.count, input[i] == "{" {
-                        var depth = 0, raw = ""
-                        while i < input.count {
-                            let c = input[i]
-                            if c == "{" {
-                                depth += 1
-                                if depth == 1 { i += 1; continue }   // drop the outer opener
-                            } else if c == "}" {
-                                depth -= 1
-                                if depth == 0 { i += 1; break }       // consume the outer closer
+                    if MathParser.rawTextCommands.contains(name) {
+                        // Read one verbatim brace body (nested braces preserved).
+                        func readVerbatimBody() -> Bool {
+                            guard i < input.count, input[i] == "{" else { return false }
+                            var depth = 0, raw = ""
+                            while i < input.count {
+                                let c = input[i]
+                                if c == "{" {
+                                    depth += 1
+                                    if depth == 1 { i += 1; continue }   // drop the outer opener
+                                } else if c == "}" {
+                                    depth -= 1
+                                    if depth == 0 { i += 1; break }       // consume the outer closer
+                                }
+                                raw.append(c); i += 1
                             }
-                            raw.append(c); i += 1
+                            tokens.append(.rawText(raw))
+                            return true
                         }
-                        tokens.append(.rawText(raw))
+                        if readVerbatimBody(), MathParser.rawText2Commands.contains(name) {
+                            _ = readVerbatimBody()   // second body: \SI{value}{unit}
+                        }
                     }
                 case "{": tokens.append(.groupOpen); i += 1
                 case "}": tokens.append(.groupClose); i += 1
