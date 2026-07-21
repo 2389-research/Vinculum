@@ -1,7 +1,16 @@
-#if os(WASI)
-import FoundationEssentials
-#else
-import Foundation
+// The C math functions (pow, sin, log …) live in the platform C library, not in
+// Foundation/FoundationEssentials — import it directly so this builds on wasm and
+// Windows too.
+#if canImport(Darwin)
+import Darwin
+#elseif canImport(Glibc)
+import Glibc
+#elseif canImport(Musl)
+import Musl
+#elseif canImport(WASILibc)
+import WASILibc
+#elseif canImport(ucrt)
+import ucrt
 #endif
 
 /// A tiny arithmetic expression evaluator for function plots — parses a formula in
@@ -49,25 +58,25 @@ public struct MathExpression {
                 case .sub: return l - r
                 case .mul: return l * r
                 case .div: return l / r
-                case .pow: return Foundation.pow(l, r)
+                case .pow: return pow(l, r)
                 }
             case .call(let f, let arg):
                 let v = arg.eval(x)
                 switch f {
-                case "sin": return Foundation.sin(v)
-                case "cos": return Foundation.cos(v)
-                case "tan": return Foundation.tan(v)
-                case "exp": return Foundation.exp(v)
-                case "ln", "log": return Foundation.log(v)
-                case "log10": return Foundation.log10(v)
-                case "sqrt": return Foundation.sqrt(v)
+                case "sin": return sin(v)
+                case "cos": return cos(v)
+                case "tan": return tan(v)
+                case "exp": return exp(v)
+                case "ln", "log": return log(v)
+                case "log10": return log10(v)
+                case "sqrt": return sqrt(v)
                 case "abs": return Swift.abs(v)
-                case "sinh": return Foundation.sinh(v)
-                case "cosh": return Foundation.cosh(v)
-                case "tanh": return Foundation.tanh(v)
-                case "atan": return Foundation.atan(v)
-                case "floor": return Foundation.floor(v)
-                case "ceil": return Foundation.ceil(v)
+                case "sinh": return sinh(v)
+                case "cosh": return cosh(v)
+                case "tanh": return tanh(v)
+                case "atan": return atan(v)
+                case "floor": return floor(v)
+                case "ceil": return ceil(v)
                 default: return .nan
                 }
             }
@@ -148,7 +157,7 @@ public struct MathExpression {
                 switch name {
                 case "x": return .variable
                 case "pi": return .constant(Double.pi)
-                case "e": return .constant(M_E)
+                case "e": return .constant(2.718281828459045)
                 default: return .variable   // unknown bare name → treat as x, don't fail the plot
                 }
             }

@@ -3,6 +3,18 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
+// Platform C math (pow, log10) — not in Foundation/FoundationEssentials.
+#if canImport(Darwin)
+import Darwin
+#elseif canImport(Glibc)
+import Glibc
+#elseif canImport(Musl)
+import Musl
+#elseif canImport(WASILibc)
+import WASILibc
+#elseif canImport(ucrt)
+import ucrt
+#endif
 
 extension MathLayoutEngine {
 
@@ -126,10 +138,11 @@ extension MathLayoutEngine {
         return step * mag
     }
 
-    /// Compact tick label: trims trailing zeros, drops "-0".
+    /// Compact tick label: trims trailing zeros, drops "-0". Uses `vFormat2`
+    /// (pure-Swift, wasm-safe) rather than `String(format:)` which FoundationEssentials lacks.
     static func fmt(_ v: Double) -> String {
         if abs(v) < 1e-9 { return "0" }
-        var s = String(format: "%.2f", v)
+        var s = vFormat2(v)
         while s.contains(".") && (s.hasSuffix("0") || s.hasSuffix(".")) { s.removeLast() }
         return s
     }
