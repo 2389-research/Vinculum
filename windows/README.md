@@ -82,9 +82,27 @@ ink override) in the cross-platform `dotnet` job. Requires the native
 `VinculumAndroid.dll` + FreeType deps on the load path at runtime (the NuGet package
 will ship them as native assets).
 
+## 4. NuGet packages — `Vinculum.Rendering` + `Vinculum.Windows.Wpf`
+`dotnet add package Vinculum.Rendering` (headless) or `Vinculum.Windows.Wpf` (the
+control) — no toolchain, no font files, no native-DLL wrangling on the consuming side.
+
+The `Vinculum.Rendering` package carries, for `win-x64`, the **entire native runtime
+closure** under `runtimes/win-x64/native/`: `VinculumAndroid.dll` + its FreeType deps
+(vcpkg) **+ the Swift runtime redistributables** (`swiftCore`, `Foundation`, ICU, …).
+That last part is the non-obvious bit — a Swift-built DLL needs the Swift runtime, so
+a package that shipped only the DLL would fail to load on a machine without the
+toolchain. The math fonts ride along too, embedded in the managed assembly and
+self-provisioned on first render (`VinculumNative.EnsureFonts`), so there are no loose
+files to deploy. `.NET`'s native-asset resolver loads it all for
+`[DllImport("VinculumAndroid")]` automatically.
+
+**Verified how?** The `windows-latest` job packs the nupkg, then publishes the
+committed `PackageSmoke` consumer against it for `win-x64` and runs it **with the Swift
+toolchain and vcpkg scrubbed from `PATH`** — so only the package's own bundled DLLs can
+satisfy the load. If it renders, the closure is complete for a real (toolchain-free)
+user machine. The nupkgs upload as build artifacts.
+
 ## Still pending (the road to 2.0.0 "full Windows")
-- **NuGet package** bundling `Vinculum.Rendering` + `VinculumNative` + the native DLL
-  and its FreeType deps as native assets, so a Windows dev just adds a package ref.
 - **WinUI 3 control** (fast-follow: same `SceneRenderer`, `SKXamlCanvas` instead of
   `SKElement`; needs the Windows App SDK workload in CI).
 - Threading the device-font **measure callback** through P/Invoke (the #62 lesson) —

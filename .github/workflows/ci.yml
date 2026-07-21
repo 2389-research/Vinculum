@@ -214,6 +214,45 @@ jobs:
       - name: Build WPF control (VinculumMathView)
         shell: pwsh
         run: dotnet build windows/Vinculum.Windows.Wpf -c Release
+      # Pack the NuGet packages, bundling the native runtime closure for win-x64:
+      # VinculumAndroid.dll + its FreeType deps (vcpkg bin) + the Swift runtime
+      # redistributables (swiftCore/Foundation/ICU/…). Without the Swift runtime a
+      # consumer on a toolchain-free machine can't load the DLL — that's the whole
+      # reason this must be bundled and then verified in isolation below.
+      - name: Pack NuGet (with native runtime assets)
+        shell: pwsh
+        run: |
+          $stage = "$PWD\nuget-native"
+          New-Item -ItemType Directory -Force -Path $stage | Out-Null
+          Copy-Item "$env:VINC_DLL_DIR\VinculumAndroid.dll" $stage
+          Copy-Item "$env:VCPKG_BIN\*.dll" $stage                       # freetype, brotli, bz2, png, z
+          $rt = Get-ChildItem "$env:LOCALAPPDATA\Programs\Swift\Runtimes" -Directory | Select-Object -First 1
+          Copy-Item "$($rt.FullName)\usr\bin\*.dll" $stage              # Swift runtime redistributables
+          Write-Host "Staged $((Get-ChildItem $stage -Filter *.dll).Count) native DLLs into the package"
+          dotnet pack windows/Vinculum.Rendering  -c Release -p:NativeRuntimeDir="$stage" -o nupkgs
+          dotnet pack windows/Vinculum.Windows.Wpf -c Release -o nupkgs
+          Get-ChildItem nupkgs
+      # THE proof the package is self-contained: publish the committed PackageSmoke
+      # consumer (references ONLY the packed nupkg) for win-x64, then run it with the
+      # Swift toolchain and vcpkg SCRUBBED from PATH. If it still renders, the bundled
+      # runtime closure is complete — a real user's machine (no toolchain) will work.
+      - name: Verify package in isolation (toolchain scrubbed from PATH)
+        shell: pwsh
+        run: |
+          # Feeds come from windows/PackageSmoke/nuget.config (local ../../nupkgs +
+          # nuget.org) — passing them as --source here mis-parses the URL as a local path.
+          dotnet publish windows/PackageSmoke -c Release -r win-x64 --self-contained false -o smoke-out
+          # Scrub the Swift toolchain + vcpkg from PATH so ONLY the package's bundled
+          # native DLLs can satisfy the load.
+          $env:PATH = ($env:PATH -split ';' | Where-Object { $_ -notmatch '\\Swift\\' -and $_ -notmatch 'vcpkg' }) -join ';'
+          Write-Host "Running PackageSmoke with Swift/vcpkg scrubbed from PATH..."
+          & ".\smoke-out\PackageSmoke.exe"
+          if ($LASTEXITCODE -ne 0) { throw "isolated consumer failed (exit $LASTEXITCODE) — package is NOT self-contained" }
+          Write-Host "Package renders on a toolchain-free win-x64 host."
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nupkgs
+          path: nupkgs/*.nupkg
 
   # WebAssembly: VinculumLayout is Foundation-only, so it cross-compiles to
   # wasm32-unknown-wasip1 (one guarded line for WASI's missing Thread — #96). This

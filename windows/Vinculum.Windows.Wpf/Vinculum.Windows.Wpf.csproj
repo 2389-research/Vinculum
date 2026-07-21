@@ -7,6 +7,17 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>Vinculum.Windows.Wpf</RootNamespace>
+
+    <!-- NuGet metadata. The ProjectReference below becomes a package dependency on
+         Vinculum.Rendering at pack time, so consumers get the native assets transitively. -->
+    <PackageId>Vinculum.Windows.Wpf</PackageId>
+    <Version>2.0.0-preview.1</Version>
+    <Authors>Clint Ecker</Authors>
+    <Description>A drop-in WPF control (VinculumMathView) that renders LaTeX math. Set the Latex property and it paints via SkiaSharp. Depends on Vinculum.Rendering, which carries the native Windows engine.</Description>
+    <PackageTags>latex;math;wpf;control;skiasharp;equation</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/2389-research/Vinculum</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/2389-research/Vinculum</PackageProjectUrl>
   </PropertyGroup>
   <ItemGroup>
     <!-- SKElement (a WPF control that paints an SKCanvas) — same Skia the renderer uses. -->
