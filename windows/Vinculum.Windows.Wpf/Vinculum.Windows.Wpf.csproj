@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- WPF is Windows-only; this project builds only on windows-latest CI. The core
+         Vinculum.Rendering it references is cross-platform (the ubuntu dotnet job). -->
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Vinculum.Windows.Wpf</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- SKElement (a WPF control that paints an SKCanvas) — same Skia the renderer uses. -->
+    <PackageReference Include="SkiaSharp.Views.WPF" Version="2.88.8" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Vinculum.Rendering/Vinculum.Rendering.csproj" />
+  </ItemGroup>
+</Project>

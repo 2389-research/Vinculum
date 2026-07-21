@@ -77,4 +77,26 @@ public class ConformanceTests
                 if (bmp.GetPixel(x, y) != SKColors.White) { anyInk = true; break; }
         Assert.True(anyInk, "the SkiaSharp render produced no ink");
     }
+
+    // The ink override (what a control's Foreground / light-dark theme rides on): the
+    // fixture's ink is black/red/blue, so forcing red must leave RED ink and NO pure
+    // blacks, while preserving each op's alpha.
+    [Fact]
+    public void InkOverrideRecolorsEveryOp()
+    {
+        var dl = VinculumWire.Decode(Fixture())!;
+        var red = new SKColor(0xFF, 0, 0);
+        using var bmp = SceneRenderer.ToBitmap(dl, pad: 4f, background: SKColors.White, ink: red);
+        bool sawRed = false, sawBlackInk = false;
+        for (int y = 0; y < bmp.Height; y++)
+            for (int x = 0; x < bmp.Width; x++)
+            {
+                var px = bmp.GetPixel(x, y);
+                if (px.Red > 200 && px.Green < 80 && px.Blue < 80) sawRed = true;
+                // fully-covered non-white, non-red pixels would mean an op escaped the ink.
+                if (px != SKColors.White && px.Red < 40 && px.Green < 40 && px.Blue < 40) sawBlackInk = true;
+            }
+        Assert.True(sawRed, "ink override produced no red pixels");
+        Assert.False(sawBlackInk, "an op escaped the ink override (found black ink)");
+    }
 }
