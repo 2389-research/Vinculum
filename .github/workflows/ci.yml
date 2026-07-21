@@ -467,6 +467,14 @@ jobs:
           # Algorithm-doc figures: one poster per Appendix G rule cluster.
           VINCULUM_GALLERY_DIR=/tmp/vinc-gallery \
             swift test --filter AlgorithmGalleryGenerator || true
+          # Domain-feature specimens referenced in COVERAGE.md / COMMANDS.md:
+          # chemistry, commutative diagrams, Young tableaux, plots, inference rules,
+          # units (siunitx), physics (Dirac/derivatives), syntax trees.
+          for gen in MHChemGalleryGenerator CDGalleryGenerator YoungGalleryGenerator \
+                     PlotGalleryGenerator InferenceGalleryGenerator SIUnitxGalleryGenerator \
+                     PhysicsGalleryGenerator TreeGalleryGenerator; do
+            VINCULUM_GALLERY_DIR=/tmp/vinc-gallery swift test --filter "$gen" || true
+          done
           ls -la /tmp/vinc-gallery || true
 
       - name: Upload gallery
