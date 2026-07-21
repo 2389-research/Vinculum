@@ -227,7 +227,7 @@ through STIX Two / Apple Symbols (no bundled font needed). The pre-Unicode
 | `\mathfrak` | fraktur 𝔞 | ❌ | Holes: ℭ ℌ ℑ ℜ ℨ |
 | `\mathsf` | sans-serif 𝖠 | ✅ | |
 | `\mathtt` | monospace 𝙰 | ✅ | |
-| `\mathbf` | bold | — | Rendered with a **bold system font**, not a codepoint |
+| `\mathbf` | bold 𝐀 | ✅ | Codepoint-mapped: bold letters 𝐀…𝐳, bold Greek 𝚨…𝛚, bold digits 𝟎…𝟗 |
 | `\boldsymbol` / `\bm` | bold-italic 𝑨 | bold digits | Codepoint-mapped |
 | `\pmb` | ≈ bold | — | "Poor-man bold" approximated as `\mathbf` |
 
@@ -447,8 +447,6 @@ honored):
   siunitx, `\verb`.
 - `\mathcal` / `\mathfrak` / `\mathscr` render **letters only** (no digit
   variants exist in Unicode).
-- `\mathbf` uses a bold **system font**, not a Mathematical-Alphanumeric
-  codepoint.
 - Old-style `\rm`/`\it`/`\sl`/`\mit` switches render, but round-trip through
   `\mathrm`/italic so their exact spacing may shift on re-serialization; the
   alphabet switches (`\bf`/`\cal`/`\frak`/`\bb`/`\scr`/`\sf`/`\tt`) round-trip

@@ -317,6 +317,9 @@ public struct MathLayoutEngine: Sendable {
             if italic { return v == 0x68 ? "\u{210E}" : s((upper ? 0x1D434 : 0x1D44E) + i) } // ℎ hole
             return text
         }
+        // Bold digits (𝟎–𝟗). There is no italic digit block, so bold+italic also
+        // maps here — \mathbf{2025} renders as bold figures, not plain ASCII.
+        if bold, (0x30...0x39).contains(v) { return s(0x1D7CE + (v - 0x30)) }
         if (0x3B1...0x3C9).contains(v) { return s((bold ? 0x1D6C2 : 0x1D6FC) + (v - 0x3B1)) }
         if bold, (0x391...0x3A9).contains(v) { return s(0x1D6A8 + (v - 0x391)) }
         return text

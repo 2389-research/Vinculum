@@ -1139,15 +1139,15 @@ public enum MathParser {
         }
     }
 
-    /// Math font commands. `\mathbf` stays a system-font bold style;
-    /// `\boldsymbol`/`\bm` are bold-italic; the rest map each letter/digit
-    /// to its Mathematical-Alphanumeric-Symbols codepoint (𝔸 𝒜 𝔞 𝗔 𝚊 …),
-    /// which CoreText resolves through STIX/Apple Symbols. The mapped glyph
-    /// already encodes the styling, so it carries `.roman` to avoid a
-    /// synthetic italic slant on top of it.
+    /// Math font commands. `\mathbf` carries the upright-bold symbol style, which
+    /// `mathVariant` maps to the Mathematical-Alphanumeric **bold** codepoints
+    /// (𝐀…𝐳, bold Greek 𝚨…𝛚, bold digits 𝟎…𝟗). `\boldsymbol`/`\bm` are bold-italic;
+    /// the rest map each letter/digit to its own codepoint block (𝔸 𝒜 𝔞 𝗔 𝚊 …),
+    /// which the math font resolves. The mapped glyph already encodes the styling,
+    /// so it carries `.roman` to avoid a synthetic italic slant on top of it.
     private static func styledLetters(_ node: MathNode, command: String) -> MathNode {
-        // `\mathbf` is the one command we render with a real bold system
-        // font rather than a codepoint (matches long-standing behavior).
+        // `\mathbf` keeps the `.bold` symbol style; the layout's `mathVariant`
+        // resolves it to the bold Math-Alphanumeric codepoint per glyph.
         if command == "mathbf" {
             switch node {
             case .symbol(let s, let cls, _):
