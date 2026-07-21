@@ -7,6 +7,13 @@ each with docs + a specimen figure. Every feature is platform-free (renders
 identically on all targets through the `VDL1` seam).
 
 ### Added
+- **Equation numbering & cross-references** — document-scoped (like macros).
+  `\label{key}` records an equation's number; `\eqref{key}` → `(N)` and `\ref{key}`
+  → `N` resolve throughout prose and math (dangling key → `(?)`). `MathText`'s new
+  `numberEquations:` flag auto-numbers display equations that neither `\tag` nor
+  `\notag` — opt-in, so default output is unchanged. `\label`/`\notag`/`\nonumber`
+  are stripped before rendering; `\tag` still places the number. New platform-free
+  `MathNumbering` engine (headless-tested). (Gap analysis Tier 1.)
 - **Automatic line breaking** — `layout(node, display:, maxWidth:)` wraps an
   over-wide equation across lines at TeX's break points (after a binary operator or
   relation), stacking the lines baseline-aligned. Top-level only (nested subformulas
