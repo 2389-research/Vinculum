@@ -1,5 +1,8 @@
 import XCTest
 import Foundation
+#if canImport(FoundationXML)
+import FoundationXML   // On Linux, XMLParser lives here, not in base Foundation.
+#endif
 @testable import VinculumLayout
 
 /// Presentation MathML export. Platform-free string building; tests verify both the
