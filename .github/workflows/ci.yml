@@ -270,15 +270,17 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
-      - name: Build WinUI 3 control
+      # The Appx/PRI MSBuild tasks WindowsAppSDK needs (MrtCore.PriGen) ship with Visual
+      # Studio, NOT the .NET SDK — so `dotnet build` can't run them regardless of SDK
+      # version. Build with VS MSBuild, which has them. global.json still pins the .NET 8
+      # SDK that MSBuild resolves for the net8.0-windows target.
+      - uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce  # v2
+      - name: Restore + build WinUI 3 control (VS MSBuild)
         shell: pwsh
-        # Build from the project dir so its global.json (pinning the .NET 8 SDK) is
-        # discovered — the runner's default .NET 10 SDK lacks the Appx/PRI build tasks
-        # WindowsAppSDK 1.6 needs.
         run: |
           cd windows/Vinculum.Windows.WinUI
           dotnet --version
-          dotnet build -c Release
+          msbuild Vinculum.Windows.WinUI.csproj /t:Restore,Build /p:Configuration=Release
 
   # WebAssembly: VinculumLayout is Foundation-only, so it cross-compiles to
   # wasm32-unknown-wasip1 (one guarded line for WASI's missing Thread — #96). This
