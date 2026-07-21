@@ -54,6 +54,15 @@ public enum MathSpeech {
             }
             return s
 
+        case .multiScripts(let base, let preSub, let preSuper, let postSub, let postSuper):
+            var s = ""
+            if let preSuper { s += "pre-superscript \(speak(preSuper)) " }
+            if let preSub { s += "pre-subscript \(speak(preSub)) " }
+            s += speak(base)
+            if let postSub { s += " sub \(speak(postSub))" }
+            if let postSuper { s += " to the power \(speak(postSuper))" }
+            return s
+
         case .delimited(let left, let body, let right):
             let name = fenceName(left, right)
             return "open \(name) \(speak(body)) close \(name)"

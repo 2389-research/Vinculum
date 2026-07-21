@@ -95,6 +95,9 @@ final class AlgorithmGalleryGenerator: XCTestCase {
             ("Primes are superscripts and bind before an explicit ^", [
                 #"f' \quad f'' \quad f'^{2} \quad (g \circ f)'"#,
             ]),
+            ("Prescripts & multiscripts: corners aligned across the base", [
+                #"\prescript{14}{6}{C} \quad \prescript{n}{}{\mathbf{F}} \quad \sideset{_a^b}{_c^d}{X} \quad \sideset{}{^{*}}{\prod}"#,
+            ]),
         ])
 
         // Rules 9/10 + decorations — over/underlines, braces, boxes.

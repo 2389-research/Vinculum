@@ -74,6 +74,8 @@ before the operator is the numerator, everything after is the denominator.
 | `\overset{o}{b}` | `\overset{!}{=}` | `o` set above base `b` |
 | `\underset{u}{b}` | `\underset{n\to\infty}{\lim}` | `u` set below base `b` |
 | `\stackrel{o}{b}` | `\stackrel{\text{def}}{=}` | Like `\overset` with a relation base |
+| `\prescript{sup}{sub}{b}` | `\prescript{14}{6}{C}` | mathtools left scripts (isotopes, tensors); empty groups drop out |
+| `\sideset{_l^l}{_r^r}{b}` | `\sideset{}{'}{\sum}` | amsmath scripts at all four corners; the base keeps its own limits |
 
 Big-operator limits are automatic: ∑-class stacks limits above/below in display,
 ∫-class keeps them to the side, and the `\lim`-family stacks. `\operatorname*`

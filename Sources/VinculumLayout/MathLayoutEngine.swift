@@ -183,6 +183,9 @@ public struct MathLayoutEngine: Sendable {
                 return accentBox(inner, accent: acc, size: s, style: style, scripts: (sub, sup))
             }
             return scriptsBox(base, sub: sub, sup: sup, size: s, style: style)
+        case .multiScripts(let base, let preSub, let preSuper, let postSub, let postSuper):
+            return multiScriptsBox(base, preSub: preSub, preSuper: preSuper,
+                                   postSub: postSub, postSuper: postSuper, size: s, style: style)
 
         case .delimited(let left, let body, let right):
             return delimitedBox(left, body, right, size: s, style: style)
@@ -354,6 +357,7 @@ public struct MathLayoutEngine: Sendable {
             return (!left.isEmpty || !right.isEmpty) ? .inner : .ordinary
         case .radical, .row, .ruleBox, .colorbox: return .ordinary
         case .scripts(let base, _, _): return atomClass(of: base)
+        case .multiScripts(let base, _, _, _, _): return atomClass(of: base)
         case .accent(let base, _): return atomClass(of: base)
         case .genfrac: return .ordinary
         case .overUnder(_, _, _, let kind):

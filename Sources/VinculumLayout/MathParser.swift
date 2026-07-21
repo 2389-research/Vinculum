@@ -194,6 +194,28 @@ public enum MathParser {
     /// any legitimate formula's atom-argument nesting (~30 worst case).
     static let maxRuntimeDepth = 48
 
+    /// An empty braced group `{}` parses to `.row([])`; treat it as "no script".
+    private static func nonEmptyNode(_ n: MathNode?) -> MathNode? {
+        if case .row(let r)? = n, r.isEmpty { return nil }
+        return n
+    }
+
+    /// Parses one `{ … }` group that carries `_x`/`^y` script marks (the argument
+    /// shape of `\sideset`), returning the sub/super it found. A missing group
+    /// yields `(nil, nil)`; stray content in the group is consumed and ignored.
+    private static func parseScriptCluster(_ tokens: inout ArraySlice<Token>) -> (sub: MathNode?, sup: MathNode?) {
+        guard tokens.first == .groupOpen else { return (nil, nil) }
+        tokens.removeFirst()
+        var sub: MathNode?, sup: MathNode?
+        while let t = tokens.first, t != .groupClose {
+            if t == .subscriptMark { tokens.removeFirst(); sub = parseAtom(&tokens) }
+            else if t == .superscriptMark { tokens.removeFirst(); sup = parseAtom(&tokens) }
+            else { _ = parseAtom(&tokens) }
+        }
+        if tokens.first == .groupClose { tokens.removeFirst() }
+        return (sub, sup)
+    }
+
     private static func parseAtom(_ tokens: inout ArraySlice<Token>) -> MathNode? {
         // The runtime half of the recursion bound (see maxNestingDepth):
         // groups AND brace-free command arguments both pass through here.
@@ -490,6 +512,24 @@ public enum MathParser {
             let under = parseAtom(&tokens) ?? .row([])
             let base = parseAtom(&tokens) ?? .row([])
             return .overUnder(base: base, over: nil, under: under, kind: .plain)
+
+        case "prescript":
+            // mathtools \prescript{presuper}{presub}{base}. Empty groups drop out.
+            let sup = parseAtom(&tokens)
+            let sub = parseAtom(&tokens)
+            let base = parseAtom(&tokens) ?? .row([])
+            return .multiScripts(base: base, preSub: nonEmptyNode(sub), preSuper: nonEmptyNode(sup),
+                                 postSub: nil, postSuper: nil)
+
+        case "sideset":
+            // amsmath \sideset{_l^l}{_r^r}\op — scripts at the base's four corners.
+            // parseAtomWithScripts on the base keeps an operator's own limits.
+            let (preSub, preSuper) = parseScriptCluster(&tokens)
+            let (postSub, postSuper) = parseScriptCluster(&tokens)
+            let base = parseAtomWithScripts(&tokens) ?? .row([])
+            if preSub == nil && preSuper == nil && postSub == nil && postSuper == nil { return base }
+            return .multiScripts(base: base, preSub: preSub, preSuper: preSuper,
+                                 postSub: postSub, postSuper: postSuper)
 
         case "overrightarrow", "overleftarrow", "overleftrightarrow",
              "underrightarrow", "underleftarrow", "underleftrightarrow":

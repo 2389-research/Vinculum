@@ -117,6 +117,98 @@ extension MathLayoutEngine {
                        inkAscent: baseBox.inkAscent, elements: elements)
     }
 
+    /// Prescripts + postscripts at the four corners — `\prescript`, `\sideset`,
+    /// tensor/isotope notation. Unlike `scriptsBox` this never stacks limits;
+    /// sidescripts always sit at the corners. Pre and post share one pair of
+    /// baseline shifts so every script aligns across the base; only the
+    /// post-superscript gets the italic-correction nudge, and the pre-scripts
+    /// hug the base's left edge (right-aligned into the pre-cluster).
+    func multiScriptsBox(_ base: MathNode,
+                         preSub: MathNode?, preSuper: MathNode?,
+                         postSub: MathNode?, postSuper: MathNode?,
+                         size: CGFloat, style: MathStyle) -> MathBox {
+        let baseBox = box(for: base, size: size, style: style)
+        let scriptSize = size * style.scriptSizeRatio(constants)
+        func lay(_ n: MathNode?, cramped: Bool) -> MathBox? {
+            guard let n else { return nil }
+            var e = self; e.cramped = cramped
+            return e.box(for: n, size: scriptSize, style: style.scriptStyle)
+        }
+        // Superscripts inherit self.cramped (TeX sup_style); subscripts force it.
+        let preSupBox  = lay(preSuper, cramped: cramped)
+        let postSupBox = lay(postSuper, cramped: cramped)
+        let preSubBox  = lay(preSub, cramped: true)
+        let postSubBox = lay(postSub, cramped: true)
+
+        let sups = [preSupBox, postSupBox].compactMap { $0 }
+        let subs = [preSubBox, postSubBox].compactMap { $0 }
+        let maxSupDescent = sups.map(\.descent).max() ?? 0
+        let maxSubAscent  = subs.map(\.ascent).max() ?? 0
+
+        // Shared baseline shifts (Rules 18a-e), computed against the tallest
+        // superscript and deepest subscript so both sides line up.
+        var supRaise = size * (cramped ? constants.superscriptShiftUpCramped
+                                       : constants.superscriptShiftUp)
+        var subDrop  = size * constants.subscriptShiftDown
+        if !sups.isEmpty {
+            supRaise = max(supRaise, maxSupDescent + size * constants.superscriptBottomMin)
+        }
+        if !subs.isEmpty, sups.isEmpty {
+            subDrop = max(subDrop, maxSubAscent - size * constants.subscriptTopMax)
+        }
+        if !sups.isEmpty, !subs.isEmpty {
+            let gapMin = size * constants.subSuperscriptGapMin
+            let gap = (supRaise - maxSupDescent) - (maxSubAscent - subDrop)
+            if gap < gapMin {
+                subDrop += gapMin - gap
+                let bottomMin = size * constants.superscriptBottomMaxWithSubscript
+                let deficit = bottomMin - (supRaise - maxSupDescent)
+                if deficit > 0 { supRaise += deficit; subDrop -= deficit }
+            }
+        }
+
+        let preWidth = max(preSupBox?.width ?? 0, preSubBox?.width ?? 0)
+        let delta = glyphTypography(of: base, size: size)?.italicsCorrection ?? 0
+        let baseX = preWidth
+        let baseRight = baseX + baseBox.width
+
+        var width = baseRight
+        var ascent = baseBox.ascent
+        var descent = baseBox.descent
+        var elements = baseBox.placed(at: CGPoint(x: baseX, y: 0))
+
+        // Pre scripts: right-aligned into the pre-cluster (hug the left edge).
+        if let b = preSuperBoxPlace(preSupBox, preWidth: preWidth, raise: supRaise) {
+            elements += b; ascent = max(ascent, supRaise + (preSupBox!.ascent))
+        }
+        if let b = preSubBoxPlace(preSubBox, preWidth: preWidth, drop: subDrop) {
+            elements += b; descent = max(descent, subDrop + (preSubBox!.descent))
+        }
+        // Post scripts: to the right; only the superscript rides δ.
+        if let box = postSupBox {
+            let x = baseRight + delta
+            elements += box.placed(at: CGPoint(x: x, y: supRaise))
+            width = max(width, x + box.width); ascent = max(ascent, supRaise + box.ascent)
+        }
+        if let box = postSubBox {
+            let x = baseRight
+            elements += box.placed(at: CGPoint(x: x, y: -subDrop))
+            width = max(width, x + box.width); descent = max(descent, subDrop + box.descent)
+        }
+        width += size * constants.spaceAfterScript
+        return MathBox(width: width, ascent: ascent, descent: descent,
+                       inkAscent: baseBox.inkAscent, elements: elements)
+    }
+
+    private func preSuperBoxPlace(_ box: MathBox?, preWidth: CGFloat, raise: CGFloat) -> [MathElement]? {
+        guard let box else { return nil }
+        return box.placed(at: CGPoint(x: preWidth - box.width, y: raise))
+    }
+    private func preSubBoxPlace(_ box: MathBox?, preWidth: CGFloat, drop: CGFloat) -> [MathElement]? {
+        guard let box else { return nil }
+        return box.placed(at: CGPoint(x: preWidth - box.width, y: -drop))
+    }
+
     /// ∑/∫-style stacked limits: the operator enlarged, superscript centered
     /// above, subscript centered below.
     func limitsBox(_ base: MathNode, sub: MathNode?, sup: MathNode?,

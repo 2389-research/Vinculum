@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased (2.1.0) — math-feature expansion
+
+Closing the coverage gaps identified in the July 2026 gap analysis, one at a time,
+each with docs + a specimen figure. Every feature is platform-free (renders
+identically on all targets through the `VDL1` seam).
+
+### Added
+- **Prescripts & multiscripts** — `\prescript{sup}{sub}{base}` (mathtools) and
+  `\sideset{_l^l}{_r^r}{base}` (amsmath). Scripts at all four corners of a base:
+  isotopes (`\prescript{14}{6}{C}` → ¹⁴₆C), tensors, left indices. Pre- and
+  post-scripts share one pair of baseline shifts so every corner aligns; the base
+  keeps its own operator limits. New `MathNode.multiScripts` case; round-trips via
+  `\sideset`/`\prescript`. (Gap analysis Tier 0 #1.)
+
 ## 2.0.0 — 2026-07-21
 
 **Vinculum goes multi-platform.** The layout engine was always platform-free

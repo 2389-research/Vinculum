@@ -69,8 +69,13 @@ spacing class.
 | Nested | ✅ | `x^{2^{n}}` |
 | Stacked limits (display) | ✅ | `\sum_{i=1}^{n}` — symbol operators stack in display |
 | Primes as raised glyphs | ✅ | `f'`, `f''` render as raised, coalesced primes (`′`); `f'^2` merges the primes then the exponent |
+| Prescripts | ✅ | `\prescript{n}{m}{X}` — mathtools left scripts (isotopes ¹⁴₆C, tensors) |
+| Multiscripts | ✅ | `\sideset{_a^b}{_c^d}{X}` — scripts at all four corners; the base keeps its own limits |
 
-Cramped style (denominators, radicands) lowers superscripts per TeX.
+Cramped style (denominators, radicands) lowers superscripts per TeX. Pre- and
+post-scripts share one pair of baseline shifts so every corner aligns across the
+base; the post-superscript rides the italic correction, the pre-scripts hug the
+base's left edge.
 
 ---
 
@@ -430,8 +435,7 @@ a definition in one block applies everywhere; later definitions win (matching
 Honest list of what degrades to a source fallback (or is only partially
 honored):
 
-- `\sideset`, `\mathchoice`, `\DeclareMathOperator` (needs a macro-table
-  branch) — ❌.
+- `\mathchoice`, `\DeclareMathOperator` (needs a macro-table branch) — ❌.
 - `\utilde` and harpoon accents (`\overrightharpoon`, `\overleftharpoon`, …) — ❌.
 - `\begin{CD}` (commutative diagrams — a diagram problem, out of scope).
 - **Out of scope by design:** `\href`, `\includegraphics`, mhchem `\ce`,
