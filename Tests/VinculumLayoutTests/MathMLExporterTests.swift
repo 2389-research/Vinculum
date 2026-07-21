@@ -1,8 +1,5 @@
 import XCTest
 import Foundation
-#if canImport(FoundationXML)
-import FoundationXML   // On Linux, XMLParser lives here, not in base Foundation.
-#endif
 @testable import VinculumLayout
 
 /// Presentation MathML export. Platform-free string building; tests verify both the
@@ -55,17 +52,58 @@ final class MathMLExporterTests: XCTestCase {
         XCTAssertTrue(ml(#"\notarealcommand{x}"#).contains("<merror>"))
     }
 
-    /// Every exported document must be well-formed XML — the whole point of an
-    /// interop/accessibility serializer.
-    func testOutputIsWellFormedXML() {
+    /// Every exported document must be well-formed markup — the whole point of an
+    /// interop/accessibility serializer (a malformed string is silently dropped).
+    /// Checked with a tiny dependency-free scanner, not an XML library, so the test
+    /// suite stays free of the Linux `FoundationXML` split.
+    func testOutputIsWellFormed() {
         let cases = ["x^2", #"\frac{a}{b}"#, #"\sqrt[3]{x+1}"#, #"\sum_{i=1}^{n} i"#,
                      #"\begin{bmatrix}1&0\\0&1\end{bmatrix}"#, "a < b & c",
                      #"\prescript{14}{6}{C}"#, #"\left( \frac{a}{b} \right)"#,
                      #"\hat{x} + \vec{v}"#, #"x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}"#]
         for src in cases {
             let xml = MathMLExporter.export(MathParser.parse(src))
-            let parser = XMLParser(data: Data(xml.utf8))
-            XCTAssertTrue(parser.parse(), "not well-formed XML for \(src): \(xml)  err=\(String(describing: parser.parserError))")
+            XCTAssertNil(wellFormednessError(xml), "malformed for \(src): \(xml)")
         }
+    }
+
+    /// Returns the first well-formedness problem in `xml`, or nil if it's clean:
+    /// every tag balances (nesting order respected), and text between tags carries
+    /// no raw `<`/`&`. Void tags (`<mprescripts/>`, `<none/>`, `<mspace…/>`) self-close.
+    private func wellFormednessError(_ xml: String) -> String? {
+        // Scan UNICODE SCALARS, not Characters: MathML embeds combining marks
+        // (e.g. \vec's U+20D7) that would otherwise cluster with the preceding
+        // '>' and hide a tag boundary.
+        let s = Array(xml.unicodeScalars)
+        func str(_ range: Range<Int>) -> String { String(String.UnicodeScalarView(s[range])) }
+        var i = 0
+        var stack: [String] = []
+        while i < s.count {
+            let c = s[i]
+            if c == "<" {
+                var j = i + 1
+                while j < s.count, s[j] != ">" { j += 1 }
+                guard j < s.count else { return "unterminated tag" }
+                let tag = str((i + 1)..<j)
+                i = j + 1
+                if tag.hasPrefix("/") {                          // closing tag
+                    let name = String(tag.dropFirst())
+                    guard stack.popLast() == name else { return "mismatched </\(name)>" }
+                } else if tag.hasSuffix("/") {                   // self-closing — no push
+                    continue
+                } else {                                         // opening tag
+                    let name = tag.split(whereSeparator: { $0 == " " }).first.map(String.init) ?? tag
+                    stack.append(name)
+                }
+            } else {
+                if c == "&" {                                    // must begin a valid entity
+                    let rest = str(i..<min(i + 6, s.count))
+                    let ok = ["&amp;", "&lt;", "&gt;", "&quot;", "&apos;"].contains { rest.hasPrefix($0) }
+                    if !ok { return "raw & in text" }
+                }
+                i += 1
+            }
+        }
+        return stack.isEmpty ? nil : "unclosed \(stack)"
     }
 }
