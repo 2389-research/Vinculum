@@ -129,6 +129,7 @@ Use `\begin{env} … \end{env}`; cells split on `&`, rows on `\\`.
 | `CD` (amscd) | `\begin{CD} A @>f>> B \\ @VgVV @VVhV \\ C @>>k> D \end{CD}` | Commutative diagram: objects joined by labelled `@`-arrows (`@>`, `@<`, `@V`, `@A`, `@=`, `@\|`, `@.`) |
 | `\ce{…}` (mhchem) | `\ce{2H2 + O2 -> 2H2O}` | Chemistry: auto-subscripts, `^` charges, coefficients, arrows (`->`, `<=>`, `->[cond]`), states `(s)(l)(g)(aq)`, `*` hydrate |
 | `\ydiagram{…}` / `\ytableaushort{…}` | `\ydiagram{3,2,1}`, `\ytableaushort{13,2}` | Young diagram (empty boxes from a partition) / filled tableau |
+| `axis` (pgfplots subset) | `\begin{axis}[domain=-3:3] \addplot{x^2}; \end{axis}` | Function plot: sampled `\addplot{expr}` curves, auto-ranged axes, ticks, gridlines |
 
 A bare `\\` **outside** any environment (an inline line break) is a no-op —
 inline math is a single line; multi-line splitting is a host concern.

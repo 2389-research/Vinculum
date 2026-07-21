@@ -478,6 +478,29 @@ wider than the budget) is left intact rather than clipped.
 
 ---
 
+## Function plots
+
+![Function plots](https://raw.githubusercontent.com/2389-research/Vinculum/gallery/cmd-plot.png)
+
+A **curated pgfplots subset**: `\begin{axis}[domain=a:b, samples=n] \addplot{expr}; …
+\end{axis}` (optionally wrapped in `\begin{tikzpicture}`). Each `\addplot`'s expression
+is sampled and drawn as a stroked curve; the axes auto-range in y, with nice-numbered
+ticks and gridlines.
+
+The expression evaluator (`MathExpression`) handles `+ - * / ^`, unary minus,
+parentheses, the variable `x`, constants `pi`/`e`, and the functions `sin cos tan
+exp ln log sqrt abs sinh cosh tanh atan floor ceil`.
+
+```latex
+\begin{axis}[domain=-3:3, samples=200] \addplot{exp(-x^2)}; \end{axis}
+```
+
+*Scope:* this is a focused plotting feature, not full pgfplots/TikZ — arbitrary TikZ
+graphics remain out of scope. Everything is stroked paths + glyph runs, so a plot
+renders identically on every platform through `VDL1`.
+
+---
+
 ## Young tableaux
 
 ![Young tableaux](https://raw.githubusercontent.com/2389-research/Vinculum/gallery/cmd-young.png)
@@ -571,7 +594,9 @@ The numbering/label logic lives in `MathNumbering` (platform-free, headless-test
 Honest list of what degrades to a source fallback (or is only partially
 honored):
 
-- **Out of scope by design:** `\href`, `\includegraphics`, siunitx, `\verb`.
+- **Out of scope by design:** `\href`, `\includegraphics`, siunitx, `\verb`, and
+  general TikZ graphics (a curated pgfplots *subset* is supported — see "Function
+  plots" above — but arbitrary `\draw`/`\node`/`\path` pictures are not).
 - `\mathcal` / `\mathfrak` / `\mathscr` render **letters only** (no digit
   variants exist in Unicode).
 - Old-style `\rm`/`\it`/`\sl`/`\mit` switches render, but round-trip through

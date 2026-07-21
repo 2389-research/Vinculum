@@ -84,6 +84,10 @@ extension MathNode {
             }
             return s
 
+        case .plot(let curves, let xMin, let xMax):
+            let plots = curves.map { "\\addplot{\($0.expression)};" }.joined(separator: " ")
+            return "\\begin{axis}[domain=\(Self.plotNum(xMin)):\(Self.plotNum(xMax))] \(plots) \\end{axis}"
+
         case .youngTableau(let rows):
             // If every cell is empty, it's a \ydiagram{partition}; else \ytableaushort.
             if rows.allSatisfy({ $0.allSatisfy { $0 == nil } }) {
@@ -327,6 +331,10 @@ extension MathNode {
         case .overline: return "overline"
         case .underline: return "underline"
         }
+    }
+
+    private static func plotNum(_ v: Double) -> String {
+        v == v.rounded() ? String(Int(v)) : vFormat2(v)
     }
 
     /// Reconstructs an amscd arrow: `@>l1>l2>` / `@<…<…<` / `@Vl1Vl2V` / `@A…A…A` / `@=` / `@|`.

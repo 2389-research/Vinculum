@@ -50,6 +50,10 @@ public indirect enum MathNode: Hashable, Sendable {
     /// A Young diagram / tableau (`\ydiagram`, `\ytableaushort`): rows of bordered
     /// square cells, left-aligned and stacked top-down. `nil` is an empty cell.
     case youngTableau(rows: [[MathNode?]])
+    /// A function plot (a curated pgfplots subset: `\begin{axis}…\addplot{expr};…`).
+    /// The expressions are kept as source and sampled at layout time, so the node
+    /// stays a plain value.
+    case plot(curves: [PlotCurve], xMin: Double, xMax: Double)
     /// Upright function name (sin, log …).
     case functionName(String)
     /// A `\operatorname*`-style operator that takes stacked limits in display
@@ -139,6 +143,8 @@ extension MathNode {
             return rows.flatMap { $0 }
         case .youngTableau(let rows):
             return rows.flatMap { $0 }.compactMap { $0 }
+        case .plot:
+            return []
         case .commutativeDiagram(let grid):
             return grid.flatMap { $0 }.flatMap { cell -> [MathNode] in
                 switch cell {
@@ -160,6 +166,15 @@ extension MathNode {
 
 /// `\cfrac` denominator alignment (`\cfrac[l]`/`[r]`/`[c]`).
 public enum CfracAlign: Hashable, Sendable { case left, center, right }
+
+/// One plotted curve: its expression source (evaluated at layout time) and sample count.
+public struct PlotCurve: Hashable, Sendable {
+    public var expression: String
+    public var samples: Int
+    public init(expression: String, samples: Int = 120) {
+        self.expression = expression; self.samples = samples
+    }
+}
 
 /// One cell of a commutative diagram grid (`\begin{CD}`). Objects sit at even
 /// (row, col); horizontal arrows at (even row, odd col); vertical arrows at

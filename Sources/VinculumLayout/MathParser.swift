@@ -869,6 +869,71 @@ public enum MathParser {
         return rows
     }
 
+    // MARK: - Function plots (pgfplots subset)
+
+    /// Parses a `\begin{axis}[domain=a:b, samples=n] \addplot{expr}; … \end{axis}`.
+    private static func parseAxisBody(_ tokens: inout ArraySlice<Token>) -> MathNode {
+        var xMin = -5.0, xMax = 5.0, samples = 120
+        if tokens.first == .character("[") {
+            (xMin, xMax, samples) = parsePlotOptions(readBracketOptions(&tokens), xMin, xMax, samples)
+        }
+        var curves: [PlotCurve] = []
+        while let t = tokens.first {
+            if case .command("end") = t { tokens.removeFirst(); _ = readBraceName(&tokens); break }
+            if case .command("addplot") = t {
+                tokens.removeFirst()
+                var (lo, hi, n) = (xMin, xMax, samples)
+                if tokens.first == .character("[") {
+                    (lo, hi, n) = parsePlotOptions(readBracketOptions(&tokens), xMin, xMax, samples)
+                }
+                _ = (lo, hi)   // per-plot domain currently uses the axis domain for a shared frame
+                if case .rawText(let expr)? = tokens.first {
+                    tokens.removeFirst()
+                    curves.append(PlotCurve(expression: expr, samples: n))
+                }
+                if tokens.first == .character(";") { tokens.removeFirst() }
+                continue
+            }
+            tokens.removeFirst()   // skip legends / unknown axis options
+        }
+        return .plot(curves: curves, xMin: xMin, xMax: xMax)
+    }
+
+    /// Reads a `[ … ]` option list into a string (character tokens only, `_`/`^` mapped).
+    private static func readBracketOptions(_ tokens: inout ArraySlice<Token>) -> String {
+        guard tokens.first == .character("[") else { return "" }
+        tokens.removeFirst()
+        var s = "", depth = 1
+        while let t = tokens.first {
+            tokens.removeFirst()
+            switch t {
+            case .character(let ch):
+                if ch == "[" { depth += 1 } else if ch == "]" { depth -= 1; if depth == 0 { return s } }
+                s.append(ch)
+            case .subscriptMark: s.append("_")
+            case .superscriptMark: s.append("^")
+            default: break
+            }
+        }
+        return s
+    }
+
+    private static func parsePlotOptions(_ opts: String, _ x0: Double, _ x1: Double, _ n: Int) -> (Double, Double, Int) {
+        var xMin = x0, xMax = x1, samples = n
+        for part in opts.split(separator: ",") {
+            let kv = part.split(separator: "=", maxSplits: 1)
+            guard kv.count == 2 else { continue }
+            let key = String(kv[0]).vTrimmingWhitespace(), val = String(kv[1]).vTrimmingWhitespace()
+            if key == "domain" {
+                let r = val.split(separator: ":")
+                if r.count == 2, let a = Double(r[0]), let b = Double(r[1]), a < b { xMin = a; xMax = b }
+            } else if key == "samples", let s = Int(val) {
+                samples = max(2, min(1000, s))
+            }
+        }
+        return (xMin, xMax, samples)
+    }
+
     // MARK: - Commutative diagrams (amscd)
 
     private enum CDItem { case object(MathNode); case arrow(CDArrow); case noArrow }
@@ -988,6 +1053,23 @@ public enum MathParser {
 
         // amscd commutative diagrams parse a different grammar (`@`-arrows).
         if base == "CD" { return parseCDBody(&tokens) }
+        // Function plots (pgfplots subset). tikzpicture is transparent — its body
+        // holds the axis.
+        if base == "axis" { return parseAxisBody(&tokens) }
+        if base == "tikzpicture" {
+            // Transparent: parse atoms until \end{tikzpicture}. The inner \begin{axis}
+            // parses (and consumes through its own \end) into the plot node.
+            var nodes: [MathNode] = []
+            while let t = tokens.first {
+                if case .command("end") = t {
+                    var look = tokens; look.removeFirst()
+                    if readBraceName(&look) == "tikzpicture" { tokens = look; break }
+                }
+                if let atom = parseAtom(&tokens) { nodes.append(atom) }
+                else if tokens.first != nil { tokens.removeFirst() }
+            }
+            return nodes.count == 1 ? nodes[0] : .row(nodes)
+        }
 
         // `array` carries a column spec (l/c/r + `|` rules); `alignedat`/
         // `alignat` a column count we don't need.
