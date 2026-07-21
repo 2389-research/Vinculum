@@ -91,6 +91,21 @@ public enum MathMLExporter {
             }
             return "<mrow>\(inner)</mrow>"
 
+        case .commutativeDiagram(let grid):
+            // No CD element in Presentation MathML; approximate as a table whose cells
+            // are objects or arrow glyphs — structure a reader/consumer can still walk.
+            let table = "<mtable>" + grid.map { row in
+                "<mtr>" + row.map { cell -> String in
+                    switch cell {
+                    case .object(let n): return "<mtd>\(mathml(n))</mtd>"
+                    case .hArrow(let a): return "<mtd><mo>\(cdArrowGlyph(a, horizontal: true))</mo></mtd>"
+                    case .vArrow(let a): return "<mtd><mo>\(cdArrowGlyph(a, horizontal: false))</mo></mtd>"
+                    case .empty: return "<mtd/>"
+                    }
+                }.joined() + "</mtr>"
+            }.joined() + "</mtable>"
+            return table
+
         case .matrix(let rows, let left, let right, _):
             let table = "<mtable>" + rows.map { row in
                 "<mtr>" + row.map { "<mtd>\(mathml($0))</mtd>" }.joined() + "</mtr>"
@@ -131,6 +146,16 @@ public enum MathMLExporter {
     }
 
     // MARK: - Helpers
+
+    private static func cdArrowGlyph(_ a: CDArrow, horizontal: Bool) -> String {
+        switch a.kind {
+        case .right: return "\u{2192}"   // →
+        case .left:  return "\u{2190}"   // ←
+        case .up:    return "\u{2191}"   // ↑
+        case .down:  return "\u{2193}"   // ↓
+        case .equal: return horizontal ? "=" : "\u{2016}"
+        }
+    }
 
     private static func mrow(_ children: [MathNode]) -> String {
         if children.count == 1 { return mathml(children[0]) }

@@ -126,6 +126,7 @@ Use `\begin{env} … \end{env}`; cells split on `&`, rows on `\\`.
 | `multline` | `\begin{multline} … \end{multline}` | Aligned |
 | `eqalign` / `displaylines` | `\begin{eqalign} a &= b \\ c &= d \end{eqalign}` | Legacy plain-TeX aliases for the aligned stack |
 | `substack` | `\sum_{\substack{0<i<n \\ i\ \text{odd}}}` | Tight vertical stack for limits |
+| `CD` (amscd) | `\begin{CD} A @>f>> B \\ @VgVV @VVhV \\ C @>>k> D \end{CD}` | Commutative diagram: objects joined by labelled `@`-arrows (`@>`, `@<`, `@V`, `@A`, `@=`, `@\|`, `@.`) |
 
 A bare `\\` **outside** any environment (an inline line break) is a no-op —
 inline math is a single line; multi-line splitting is a host concern.

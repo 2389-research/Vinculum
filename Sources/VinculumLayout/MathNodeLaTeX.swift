@@ -84,6 +84,23 @@ extension MathNode {
             }
             return s
 
+        case .commutativeDiagram(let grid):
+            var rowsOut: [String] = []
+            for row in grid {
+                let isObjectRow = row.contains { if case .object = $0 { return true }; return false }
+                var parts: [String] = []
+                for cell in row {
+                    switch cell {
+                    case .object(let n): parts.append(n.toLaTeX())
+                    case .hArrow(let a): parts.append(Self.cdArrowLaTeX(a, horizontal: true))
+                    case .vArrow(let a): parts.append(Self.cdArrowLaTeX(a, horizontal: false))
+                    case .empty: if isObjectRow { parts.append("@.") }   // arrow-row gaps are dropped
+                    }
+                }
+                rowsOut.append(parts.joined(separator: " "))
+            }
+            return "\\begin{CD} " + rowsOut.joined(separator: " \\\\ ") + " \\end{CD}"
+
         case .matrix(let rows, let left, let right, let style):
             let body = rows.map { $0.map { $0.toLaTeX() }.joined(separator: " & ") }
                 .joined(separator: " \\\\ ")
@@ -301,6 +318,19 @@ extension MathNode {
         case .utilde: return "utilde"
         case .overline: return "overline"
         case .underline: return "underline"
+        }
+    }
+
+    /// Reconstructs an amscd arrow: `@>l1>l2>` / `@<…<…<` / `@Vl1Vl2V` / `@A…A…A` / `@=` / `@|`.
+    private static func cdArrowLaTeX(_ a: CDArrow, horizontal: Bool) -> String {
+        let l1 = a.label1?.toLaTeX() ?? ""
+        let l2 = a.label2?.toLaTeX() ?? ""
+        switch a.kind {
+        case .equal: return horizontal ? "@=" : "@|"
+        case .right: return "@>\(l1)>\(l2)>"
+        case .left:  return "@<\(l1)<\(l2)<"
+        case .down:  return "@V\(l1)V\(l2)V"
+        case .up:    return "@A\(l1)A\(l2)A"
         }
     }
 
