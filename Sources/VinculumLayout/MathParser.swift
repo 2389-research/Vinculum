@@ -451,6 +451,14 @@ public enum MathParser {
             tokens.removeFirst()
             return parse(MHChem.transpile(body))
 
+        case "inferrule", "infer", "prftree":
+            // mathpartir \inferrule[label]{premises}{conclusion}; premises split on \\.
+            if tokens.first == .character("*") { tokens.removeFirst() }
+            let label = parseOptionalBracketArg(&tokens)
+            let premises = parseRowBreakGroup(&tokens)
+            let conclusion = parseAtom(&tokens) ?? .row([])
+            return .inferenceRule(premises: premises, conclusion: conclusion, label: label)
+
         case "ydiagram":
             // \ydiagram{3,2,1} — empty boxes; the partition gives each row's length.
             let spec = readBraceName(&tokens)
@@ -852,6 +860,49 @@ public enum MathParser {
         }
         if tokens.first == .groupClose { tokens.removeFirst() }
         return name
+    }
+
+    /// An optional `[…]` argument (e.g. the inference-rule label). Strips a leading
+    /// `key=` (mathpartir's `[right=name]`); returns nil if there's no bracket.
+    private static func parseOptionalBracketArg(_ tokens: inout ArraySlice<Token>) -> MathNode? {
+        guard tokens.first == .character("[") else { return nil }
+        tokens.removeFirst()
+        var toks: [Token] = []
+        var depth = 1
+        while let t = tokens.first {
+            tokens.removeFirst()
+            if case .character("[") = t { depth += 1 }
+            if case .character("]") = t { depth -= 1; if depth == 0 { break } }
+            toks.append(t)
+        }
+        if let eq = toks.firstIndex(of: .character("=")) { toks = Array(toks[(eq + 1)...]) }
+        var s = toks[...]
+        let nodes = parseRow(&s, until: nil)
+        return nodes.isEmpty ? nil : (nodes.count == 1 ? nodes[0] : .row(nodes))
+    }
+
+    /// Reads a `{ … }` group and splits it on top-level `\\` into a list of nodes
+    /// (the inference-rule premises). An empty group yields `[]`.
+    private static func parseRowBreakGroup(_ tokens: inout ArraySlice<Token>) -> [MathNode] {
+        guard tokens.first == .groupOpen else { return [] }
+        tokens.removeFirst()
+        var segments: [[Token]] = [[]]
+        var depth = 0
+        while let t = tokens.first {
+            if t == .groupClose, depth == 0 { tokens.removeFirst(); break }
+            tokens.removeFirst()
+            switch t {
+            case .groupOpen: depth += 1; segments[segments.count - 1].append(t)
+            case .groupClose: depth -= 1; segments[segments.count - 1].append(t)
+            case .command("\\") where depth == 0: segments.append([])
+            default: segments[segments.count - 1].append(t)
+            }
+        }
+        return segments.compactMap { seg in
+            var s = seg[...]
+            let nodes = parseRow(&s, until: nil)
+            return nodes.isEmpty ? nil : (nodes.count == 1 ? nodes[0] : .row(nodes))
+        }
     }
 
     /// `\ytableaushort{abc,de}` — each atom is a cell, `,` starts a new row.

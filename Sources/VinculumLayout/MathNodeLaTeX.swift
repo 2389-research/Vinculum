@@ -88,6 +88,11 @@ extension MathNode {
             let plots = curves.map { "\\addplot{\($0.expression)};" }.joined(separator: " ")
             return "\\begin{axis}[domain=\(Self.plotNum(xMin)):\(Self.plotNum(xMax))] \(plots) \\end{axis}"
 
+        case .inferenceRule(let premises, let conclusion, let label):
+            let prem = premises.map { $0.toLaTeX() }.joined(separator: " \\\\ ")
+            let lab = label.map { "[\($0.toLaTeX())]" } ?? ""
+            return "\\inferrule\(lab){\(prem)}{\(conclusion.toLaTeX())}"
+
         case .youngTableau(let rows):
             // If every cell is empty, it's a \ydiagram{partition}; else \ytableaushort.
             if rows.allSatisfy({ $0.allSatisfy { $0 == nil } }) {

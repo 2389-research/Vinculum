@@ -515,6 +515,35 @@ on every platform through `VDL1`; round-trips through `toLaTeX`.
 
 ---
 
+## Inference rules / proof trees
+
+![Inference rules](https://raw.githubusercontent.com/2389-research/Vinculum/gallery/cmd-inference.png)
+
+`\inferrule[label]{premises}{conclusion}` (aliases `\infer`, `\prftree`) typesets a
+natural-deduction rule: the premises are centered in a row above a horizontal bar, the
+conclusion is centered below, and the optional bracketed label sits at the bar's right at
+script size.
+
+- **Premises** are separated by `\\`; an empty group (`\inferrule{ }{A}`) is an **axiom**
+  (bar with nothing above it).
+- **Rules nest** — a premise can itself be an `\inferrule`, so full derivation trees build
+  bottom-up (`\inferrule{\inferrule{A}{B} \\ C}{D}`).
+- **Labels** accept mathpartir's `[left=Name]` spelling; the `key=` is dropped, the value
+  is typeset.
+
+The bar sits on the math axis and spans the wider of the two rows, so rules line up when
+stacked. Drawn as a `rule()` primitive plus centered sub-scenes — renders on every platform
+through `VDL1`, speaks as "from …, and …, infer …", and exports to MathML as a
+zero-numerator `<mfrac>`.
+
+```latex
+\inferrule[\mathsf{T\text{-}App}]
+  {\Gamma \vdash e_1 : \tau_2 \to \tau \\ \Gamma \vdash e_2 : \tau_2}
+  {\Gamma \vdash e_1\ e_2 : \tau}
+```
+
+---
+
 ## Chemistry (mhchem)
 
 ![Chemistry](https://raw.githubusercontent.com/2389-research/Vinculum/gallery/cmd-chem.png)

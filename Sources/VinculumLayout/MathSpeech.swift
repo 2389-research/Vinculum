@@ -76,6 +76,10 @@ public enum MathSpeech {
         case .fenced(_, let segments):
             return "open " + segments.map(speak).joined(separator: ", such that ") + " close"
 
+        case .inferenceRule(let premises, let conclusion, _):
+            if premises.isEmpty { return "axiom \(speak(conclusion))" }
+            return "from \(premises.map(speak).joined(separator: ", and ")), infer \(speak(conclusion))"
+
         case .youngTableau(let rows):
             let shape = rows.map { "\($0.count)" }.joined(separator: ", ")
             return "Young diagram with rows \(shape)"

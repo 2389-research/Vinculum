@@ -54,6 +54,10 @@ public indirect enum MathNode: Hashable, Sendable {
     /// The expressions are kept as source and sampled at layout time, so the node
     /// stays a plain value.
     case plot(curves: [PlotCurve], xMin: Double, xMax: Double)
+    /// An inference rule (`\inferrule[label]{premises}{conclusion}`, mathpartir):
+    /// zero-or-more premises above a horizontal rule, the conclusion below, an
+    /// optional label beside the rule. Recursive — a premise may be another rule.
+    case inferenceRule(premises: [MathNode], conclusion: MathNode, label: MathNode?)
     /// Upright function name (sin, log …).
     case functionName(String)
     /// A `\operatorname*`-style operator that takes stacked limits in display
@@ -145,6 +149,8 @@ extension MathNode {
             return rows.flatMap { $0 }.compactMap { $0 }
         case .plot:
             return []
+        case .inferenceRule(let premises, let conclusion, let label):
+            return premises + [conclusion] + (label.map { [$0] } ?? [])
         case .commutativeDiagram(let grid):
             return grid.flatMap { $0 }.flatMap { cell -> [MathNode] in
                 switch cell {
