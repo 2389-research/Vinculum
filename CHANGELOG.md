@@ -13,6 +13,11 @@ identically on all targets through the `VDL1` seam).
   post-scripts share one pair of baseline shifts so every corner aligns; the base
   keeps its own operator limits. New `MathNode.multiScripts` case; round-trips via
   `\sideset`/`\prescript`. (Gap analysis Tier 0 #1.)
+- **`\multicolumn{n}{align}{content}`** — table cells spanning `n` columns with
+  their own `l`/`c`/`r` alignment, in every grid environment (headers, titles,
+  merged blocks). Content overflowing the span grows its last column. New
+  `MathNode.spanned` case; the no-span path is byte-identical, so existing matrices
+  are unchanged. (Gap analysis Tier 0 #2.)
 
 ## 2.0.0 — 2026-07-21
 

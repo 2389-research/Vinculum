@@ -531,6 +531,14 @@ public enum MathParser {
             return .multiScripts(base: base, preSub: preSub, preSuper: preSuper,
                                  postSub: postSub, postSuper: postSuper)
 
+        case "multicolumn":
+            // \multicolumn{n}{colspec}{content} — a cell spanning n table columns.
+            let n = max(1, Int(readBraceName(&tokens)) ?? 1)
+            let spec = readBraceName(&tokens)
+            let content = parseAtom(&tokens) ?? .row([])
+            let align: ArraySpec.Align = spec.contains("r") ? .right : spec.contains("l") ? .left : .center
+            return .spanned(columns: n, alignment: align, content: content)
+
         case "overrightarrow", "overleftarrow", "overleftrightarrow",
              "underrightarrow", "underleftarrow", "underleftrightarrow":
             let kind: MathOverUnder

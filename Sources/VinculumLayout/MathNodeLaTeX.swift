@@ -63,6 +63,10 @@ extension MathNode {
             }
             return "\\prescript{\(preSuper?.toLaTeX() ?? "")}{\(preSub?.toLaTeX() ?? "")}{\(base.toLaTeX())}"
 
+        case .spanned(let columns, let alignment, let content):
+            let a = alignment == .left ? "l" : alignment == .right ? "r" : "c"
+            return "\\multicolumn{\(columns)}{\(a)}{\(content.toLaTeX())}"
+
         case .delimited(let left, let body, let right):
             return "\\left\(Self.fence(left)) \(body.toLaTeX()) \\right\(Self.fence(right))"
 

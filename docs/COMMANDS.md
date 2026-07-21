@@ -134,6 +134,14 @@ Row rules inside `array`: `\hline` (full-width rule), `\cline{i-j}` (columns
 i…j), `\hdashline`. Unknown environments still lay out as a bare centered grid so
 content survives.
 
+`\multicolumn{n}{align}{content}` makes a cell span `n` columns with its own
+`l`/`c`/`r` alignment — a title over a table, a merged header, an augmented block.
+Content wider than the spanned columns grows the span. Example:
+
+```latex
+\begin{array}{cc} \multicolumn{2}{c}{\text{Header}} \\ a & b \end{array}
+```
+
 ## Accents
 
 Each takes one following atom: `\hat{x}`, `\widehat{AB}`, etc.
