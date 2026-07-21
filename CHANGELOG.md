@@ -7,6 +7,12 @@ each with docs + a specimen figure. Every feature is platform-free (renders
 identically on all targets through the `VDL1` seam).
 
 ### Added
+- **Automatic line breaking** — `layout(node, display:, maxWidth:)` wraps an
+  over-wide equation across lines at TeX's break points (after a binary operator or
+  relation), stacking the lines baseline-aligned. Top-level only (nested subformulas
+  stay whole); greedy fit within the budget; unbreakable runs left intact. Fully
+  opt-in: without `maxWidth` the output is byte-identical to before (zero golden
+  churn). The long-deferred flagship layout gap. (Gap analysis Tier 1.)
 - **Presentation MathML export** — `MathMLExporter.export(node, display:)` (and
   `MathNode.toMathML()`) serializes the parse tree to `<math>…</math>`: `<mi>`/`<mn>`/
   `<mo>` by atom class, `<mfrac>`, `<msqrt>`/`<mroot>`, `<msub>`/`<msup>`/`<msubsup>`,

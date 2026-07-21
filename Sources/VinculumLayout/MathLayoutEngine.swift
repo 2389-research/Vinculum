@@ -97,8 +97,17 @@ public struct MathLayoutEngine: Sendable {
     /// Lays `node` out at the engine's base size into a device-independent
     /// scene. `display` enables display-style conventions (stacked limits,
     /// larger fraction parts).
-    public func layout(_ node: MathNode, display: Bool = false) -> MathScene {
-        let box = box(for: node, size: baseSize, style: display ? .display : .text)
+    /// Lays out `node` into a device-independent scene. When `maxWidth` is given
+    /// and the top-level row overflows it, the equation is broken across lines at
+    /// TeX's break points (after binary operators / relations) — otherwise the
+    /// result is a single line, byte-identical to omitting `maxWidth`.
+    public func layout(_ node: MathNode, display: Bool = false, maxWidth: CGFloat? = nil) -> MathScene {
+        let style: MathStyle = display ? .display : .text
+        var box = box(for: node, size: baseSize, style: style)
+        if let maxWidth, box.width > maxWidth, case .row(let children) = node,
+           let broken = brokenRowBox(children, maxWidth: maxWidth, size: baseSize, style: style) {
+            box = broken
+        }
         return MathScene(width: box.width, ascent: box.ascent, descent: box.descent,
                          elements: box.elements)
     }
