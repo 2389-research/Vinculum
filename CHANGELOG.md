@@ -22,6 +22,17 @@ identically on all targets through the `VDL1` seam).
   harpoons over the base) and `\utilde` (a wide tilde *below* the base, stretchy).
   New `MathAccent` cases with an under-accent layout branch; both round-trip exactly.
   (Gap analysis Tier 0 #4.)
+- **`\DeclareMathOperator` & `\mathchoice`** — `\DeclareMathOperator{\name}{text}`
+  (and the `*` limits form) registers a document-scoped operator that renders like
+  `\operatorname{text}`, via the existing macro processor. `\mathchoice{D}{T}{S}{SS}`
+  selects one of four branches by the current math style (new `MathNode.mathChoice`).
+  (Gap analysis Tier 0 #3.)
+
+### Fixed
+- **Spacing commands inside `\text`/`\mathrm`/`\operatorname`** now resolve instead
+  of printing literally: `\operatorname{arg\,max}` renders "arg max" (thin space),
+  not "arg\,max". `\,` `\:` `\;` `\quad` `\qquad` `\ ` map to the matching space, and
+  `\&` `\%` `\_` `\#` `\$` to their literal character. Embedded `$…$` math still works.
 
 ## 2.0.0 — 2026-07-21
 
@@ -825,8 +836,7 @@ Operator & atom-class machinery (Batch 12).
   current group (`{\color{red} a+b} + c`), in addition to the localized
   `\color{name}{body}` / `\textcolor{name}{body}` forms.
 
-`\DeclareMathOperator` is a planned follow-up (needs a macro-table branch).
-+2 tests (117 total).
++2 tests (117 total). (`\DeclareMathOperator` later shipped — see 2.1.0.)
 
 ## 0.18.0 — 2026-07-12
 

@@ -421,10 +421,14 @@ a *size*, not a fit.
 Document-scoped `\newcommand` / `\renewcommand` / `\def`, expanded before
 typesetting. Supports `#1`…`#9` parameters, an optional `[argc]`, and a hard
 recursion/budget cap so a self-referential macro degrades instead of hanging.
+`\DeclareMathOperator{\name}{text}` (and the `*` limits form) registers a new
+operator that renders like `\operatorname{text}` — `\DeclareMathOperator{\argmax}{arg\,max}`
+then `\argmax_x f(x)`.
 
 ```latex
 \newcommand{\abs}[1]{\left|#1\right|} \abs{x} + \abs{y} \ge \abs{x + y}
 \newcommand{\R}{\mathbb{R}}\newcommand{\inner}[2]{\langle #1, #2 \rangle} \inner{u}{v} \in \R
+\DeclareMathOperator{\argmax}{arg\,max} \argmax_{x} f(x)
 ```
 
 `MathMacros.collectDefinitions(from:)` scans a whole document's math segments so
@@ -438,7 +442,6 @@ a definition in one block applies everywhere; later definitions win (matching
 Honest list of what degrades to a source fallback (or is only partially
 honored):
 
-- `\mathchoice`, `\DeclareMathOperator` (needs a macro-table branch) — ❌.
 - `\begin{CD}` (commutative diagrams — a diagram problem, out of scope).
 - **Out of scope by design:** `\href`, `\includegraphics`, mhchem `\ce`,
   siunitx, `\verb`.

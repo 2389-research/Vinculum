@@ -247,6 +247,8 @@ Each maps one following atom's letters/digits to the styled codepoint.
 | `\text{…}` | `\text{if } x>0` | Upright text; embedded `$…$` renders as math |
 | `\operatorname{…}` | `\operatorname{lcm}` | Roman operator name |
 | `\operatorname*{…}` | `\operatorname*{argmax}` | Operator with stacked limits |
+| `\DeclareMathOperator{\c}{…}` | `\DeclareMathOperator{\argmax}{arg\,max}` | Defines `\argmax` as `\operatorname{…}` (`*` → limits); document-scoped |
+| `\mathchoice{D}{T}{S}{SS}` | `\mathchoice{\sum}{\textstyle\sum}{…}{…}` | Picks one branch by the current math style |
 
 Alphabet holes (letters encoded outside the contiguous math block, e.g. `\mathbb{R}`→ℝ,
 `\mathcal{H}`→ℋ) are mapped correctly.

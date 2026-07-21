@@ -540,6 +540,14 @@ public enum MathParser {
             let align: ArraySpec.Align = spec.contains("r") ? .right : spec.contains("l") ? .left : .center
             return .spanned(columns: n, alignment: align, content: content)
 
+        case "mathchoice":
+            // \mathchoice{D}{T}{S}{SS} — branch chosen by the current math style.
+            let d = parseAtom(&tokens) ?? .row([])
+            let t = parseAtom(&tokens) ?? .row([])
+            let s = parseAtom(&tokens) ?? .row([])
+            let ss = parseAtom(&tokens) ?? .row([])
+            return .mathChoice(display: d, text: t, script: s, scriptScript: ss)
+
         case "overrightarrow", "overleftarrow", "overleftrightarrow",
              "underrightarrow", "underleftarrow", "underleftrightarrow":
             let kind: MathOverUnder
@@ -937,7 +945,8 @@ public enum MathParser {
     /// Splits a `\text{…}` body on `$` so embedded math renders as math:
     /// `\text{$n$ terms}` → the italic variable `n` followed by upright " terms".
     private static func textWithEmbeddedMath(_ s: String) -> MathNode {
-        guard s.contains("$") else { return .functionName(s) }
+        // Fast path: literal text, no embedded math and no commands.
+        guard s.contains("$") || s.contains("\\") else { return .functionName(s) }
         var parts: [MathNode] = []
         var inMath = false
         var buf = ""
@@ -946,11 +955,55 @@ public enum MathParser {
             parts.append(inMath ? parse(buf) : .functionName(buf))
             buf = ""
         }
-        for ch in s {
-            if ch == "$" { flush(); inMath.toggle() } else { buf.append(ch) }
+        let chars = Array(s)
+        var i = 0
+        while i < chars.count {
+            let ch = chars[i]
+            if ch == "$" { flush(); inMath.toggle(); i += 1; continue }
+            // Inside the TEXT run, resolve LaTeX spacing commands (\, \; \: \quad …)
+            // and escaped characters (\& \% \_ …) — otherwise \operatorname{arg\,max}
+            // printed the literal "\,". Substituted as Unicode spaces so the text
+            // stays ONE glyph run (and one atom, keeping the operator's spacing).
+            if !inMath, ch == "\\" {
+                var j = i + 1
+                var cmd = ""
+                if j < chars.count, chars[j].isLetter {
+                    while j < chars.count, chars[j].isLetter { cmd.append(chars[j]); j += 1 }
+                } else if j < chars.count {
+                    cmd = String(chars[j]); j += 1        // single non-letter: \, \; \! \  \& …
+                }
+                if let rep = Self.textCommandReplacement(cmd) { buf += rep }
+                else { buf += "\\" + cmd }                 // unknown → keep literal (rare)
+                i = j
+                continue
+            }
+            buf.append(ch); i += 1
         }
         flush()
         return parts.count == 1 ? parts[0] : .row(parts)
+    }
+
+    /// Maps the LaTeX spacing and escaped-character commands that may appear inside
+    /// `\text`/`\mathrm`/`\operatorname` to their literal rendering. Spaces become
+    /// Unicode space characters so the surrounding text remains a single run.
+    private static func textCommandReplacement(_ cmd: String) -> String? {
+        switch cmd {
+        case ",", "thinspace":  return "\u{2009}"          // thin space
+        case ":", "medspace":   return "\u{2005}"          // four-per-em (medium)
+        case ";", "thickspace": return "\u{2004}"          // three-per-em (thick)
+        case " ", "space":      return " "                 // normal inter-word space
+        case "quad":            return "\u{2003}"          // em space
+        case "qquad":           return "\u{2003}\u{2003}"  // two em spaces
+        case "!", "negthinspace", "negmedspace", "negthickspace": return ""  // no negative space in text
+        case "&": return "&"
+        case "%": return "%"
+        case "_": return "_"
+        case "#": return "#"
+        case "$": return "$"
+        case "{": return "{"
+        case "}": return "}"
+        default:  return nil
+        }
     }
 
     /// Parses an `array` column spec like `l|c|r` into per-column alignment and

@@ -67,6 +67,9 @@ extension MathNode {
             let a = alignment == .left ? "l" : alignment == .right ? "r" : "c"
             return "\\multicolumn{\(columns)}{\(a)}{\(content.toLaTeX())}"
 
+        case .mathChoice(let d, let t, let s, let ss):
+            return "\\mathchoice{\(d.toLaTeX())}{\(t.toLaTeX())}{\(s.toLaTeX())}{\(ss.toLaTeX())}"
+
         case .delimited(let left, let body, let right):
             return "\\left\(Self.fence(left)) \(body.toLaTeX()) \\right\(Self.fence(right))"
 

@@ -64,6 +64,10 @@ final class AlgorithmGalleryGenerator: XCTestCase {
             ("The \\lim family stacks; \\operatorname* forces it", [
                 #"\lim_{x \to 0} \frac{\sin x}{x} \qquad \max_{i \le n} a_i \qquad \operatorname*{argmin}_{\theta} L(\theta)"#,
             ]),
+            ("Custom operators (\\DeclareMathOperator → \\operatorname) and \\mathchoice picks by style", [
+                #"\operatorname{arg\,max}_{x} f(x) \qquad \operatorname{Ric}(g) \qquad \operatorname{Hom}(A, B)"#,
+                #"\mathchoice{D}{T}{S}{Z} \quad x^{\mathchoice{D}{T}{S}{Z}} \quad \tfrac{a}{\mathchoice{D}{T}{S}{Z}}"#,
+            ]),
         ])
 
         // Rule 15 — fractions.
