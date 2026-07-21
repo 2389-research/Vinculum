@@ -830,8 +830,7 @@ Operator & atom-class machinery (Batch 12).
   current group (`{\color{red} a+b} + c`), in addition to the localized
   `\color{name}{body}` / `\textcolor{name}{body}` forms.
 
-`\DeclareMathOperator` is a planned follow-up (needs a macro-table branch).
-+2 tests (117 total).
++2 tests (117 total). (`\DeclareMathOperator` later shipped — see 2.1.0.)
 
 ## 0.18.0 — 2026-07-12
 
