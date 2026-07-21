@@ -224,6 +224,9 @@ public struct MathLayoutEngine: Sendable {
         case .plot(let curves, let xMin, let xMax):
             return plotBox(curves, xMin: xMin, xMax: xMax, size: s)
 
+        case .inferenceRule(let premises, let conclusion, let label):
+            return inferenceRuleBox(premises: premises, conclusion: conclusion, label: label, size: s, style: style)
+
         case .matrix(let rows, let left, let right, let style):
             return matrixBox(rows, left: left, right: right, style: style, size: s)
 
@@ -389,7 +392,7 @@ public struct MathLayoutEngine: Sendable {
             // Inner, exactly as TeX's \left(\vcenter{…}\right). A bare grid
             // (aligned, substack) is a \vcenter box → Ord.
             return (!left.isEmpty || !right.isEmpty) ? .inner : .ordinary
-        case .radical, .row, .ruleBox, .colorbox, .commutativeDiagram, .youngTableau, .plot: return .ordinary
+        case .radical, .row, .ruleBox, .colorbox, .commutativeDiagram, .youngTableau, .plot, .inferenceRule: return .ordinary
         case .scripts(let base, _, _): return atomClass(of: base)
         case .multiScripts(let base, _, _, _, _): return atomClass(of: base)
         case .spanned(_, _, let content): return atomClass(of: content)

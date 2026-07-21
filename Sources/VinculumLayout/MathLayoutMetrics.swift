@@ -59,6 +59,15 @@ package enum MathLayout {
         public static let bottomMargin: CGFloat = 1.4 // room for x-axis tick labels
         public static let labelScale: CGFloat = 0.6 // tick-label size relative to base
     }
+
+    /// Inference rules / proof trees.
+    public enum Proof {
+        public static let premiseGap: CGFloat = 1.2   // horizontal gap between premises
+        public static let ruleGap: CGFloat = 0.28     // gap above/below the rule bar
+        public static let sidePad: CGFloat = 0.35     // the bar overhangs the content by this each side
+        public static let labelScale: CGFloat = 0.7   // rule-label size relative to base
+        public static let labelGap: CGFloat = 0.3     // gap between the bar and its label
+    }
     /// Big operator (∑, ∫) enlargement when it takes stacked limits. TeX
     /// swaps in the display-size glyph from family 3; we scale instead.
     public static let displayOperatorScale: CGFloat = 1.35

@@ -130,6 +130,7 @@ Use `\begin{env} … \end{env}`; cells split on `&`, rows on `\\`.
 | `\ce{…}` (mhchem) | `\ce{2H2 + O2 -> 2H2O}` | Chemistry: auto-subscripts, `^` charges, coefficients, arrows (`->`, `<=>`, `->[cond]`), states `(s)(l)(g)(aq)`, `*` hydrate |
 | `\ydiagram{…}` / `\ytableaushort{…}` | `\ydiagram{3,2,1}`, `\ytableaushort{13,2}` | Young diagram (empty boxes from a partition) / filled tableau |
 | `axis` (pgfplots subset) | `\begin{axis}[domain=-3:3] \addplot{x^2}; \end{axis}` | Function plot: sampled `\addplot{expr}` curves, auto-ranged axes, ticks, gridlines |
+| `\inferrule[…]{…}{…}` (also `\infer`, `\prftree`) | `\inferrule[T\text{-}App]{A \\ B}{C}` | Inference rule / proof tree: premises (`\\`-separated) over a bar over the conclusion, optional label to the right; empty premises = axiom; rules nest |
 
 A bare `\\` **outside** any environment (an inline line break) is a no-op —
 inline math is a single line; multi-line splitting is a host concern.

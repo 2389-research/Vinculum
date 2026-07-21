@@ -7,6 +7,14 @@ each with docs + a specimen figure. Every feature is platform-free (renders
 identically on all targets through the `VDL1` seam).
 
 ### Added
+- **Inference rules / proof trees** — `\inferrule[label]{premises}{conclusion}`
+  (aliases `\infer`, `\prftree`), the mathpartir/natural-deduction notation. Premises
+  (`\\`-separated) are centered over a horizontal bar sitting on the math axis; the
+  conclusion is centered below; the optional bracketed label (accepts `[left=Name]`)
+  sits at the bar's right at script size. Empty premises render an axiom bar; rules
+  nest, so full derivation trees build up. New `MathNode.inferenceRule`; round-trips
+  verbatim, speaks as "from …, and …, infer …", exports to MathML as a zero-numerator
+  `<mfrac>`. (Gap analysis — proof theory / PL.)
 - **Function plots** — a curated pgfplots subset: `\begin{axis}[domain=a:b,
   samples=n] \addplot{expr}; … \end{axis}` (optionally wrapped in `tikzpicture`).
   A new arithmetic evaluator (`MathExpression`: `+ - * / ^`, unary minus, parens,

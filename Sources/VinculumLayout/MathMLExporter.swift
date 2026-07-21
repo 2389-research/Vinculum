@@ -96,6 +96,12 @@ public enum MathMLExporter {
             let fns = curves.map(\.expression).joined(separator: ", ")
             return "<mtext>plot: \(escape(fns))</mtext>"
 
+        case .inferenceRule(let premises, let conclusion, _):
+            // Premises over a fraction-like bar over the conclusion.
+            let prem = premises.count == 1 ? mathml(premises[0])
+                : "<mrow>" + premises.map(mathml).joined(separator: "<mspace width=\"1em\"/>") + "</mrow>"
+            return "<mfrac linethickness=\"0.8pt\">\(prem)\(mathml(conclusion))</mfrac>"
+
         case .youngTableau(let rows):
             return "<mtable frame=\"solid\" rowlines=\"solid\" columnlines=\"solid\">" + rows.map { row in
                 "<mtr>" + row.map { "<mtd>\($0.map(mathml) ?? "")</mtd>" }.joined() + "</mtr>"
