@@ -50,6 +50,15 @@ package enum MathLayout {
         public static let minCell: CGFloat = 1.4   // minimum square cell side
         public static let pad: CGFloat = 0.4       // padding a filled cell adds around its content
     }
+
+    /// Function plots (pgfplots subset). Fractions of the base size.
+    public enum Plot {
+        public static let width: CGFloat = 12       // plot area width
+        public static let height: CGFloat = 8       // plot area height
+        public static let leftMargin: CGFloat = 1.8 // room for y-axis tick labels
+        public static let bottomMargin: CGFloat = 1.4 // room for x-axis tick labels
+        public static let labelScale: CGFloat = 0.6 // tick-label size relative to base
+    }
     /// Big operator (∑, ∫) enlargement when it takes stacked limits. TeX
     /// swaps in the display-size glyph from family 3; we scale instead.
     public static let displayOperatorScale: CGFloat = 1.35

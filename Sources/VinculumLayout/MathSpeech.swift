@@ -80,6 +80,10 @@ public enum MathSpeech {
             let shape = rows.map { "\($0.count)" }.joined(separator: ", ")
             return "Young diagram with rows \(shape)"
 
+        case .plot(let curves, _, _):
+            let fns = curves.map(\.expression).joined(separator: ", ")
+            return curves.count == 1 ? "plot of \(fns)" : "plot of \(curves.count) curves: \(fns)"
+
         case .commutativeDiagram(let grid):
             let objects = grid.flatMap { $0 }.compactMap { cell -> String? in
                 if case .object(let n) = cell { return speak(n) }; return nil

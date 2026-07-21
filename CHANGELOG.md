@@ -7,6 +7,15 @@ each with docs + a specimen figure. Every feature is platform-free (renders
 identically on all targets through the `VDL1` seam).
 
 ### Added
+- **Function plots** — a curated pgfplots subset: `\begin{axis}[domain=a:b,
+  samples=n] \addplot{expr}; … \end{axis}` (optionally wrapped in `tikzpicture`).
+  A new arithmetic evaluator (`MathExpression`: `+ - * / ^`, unary minus, parens,
+  `x`, `pi`/`e`, `sin cos tan exp ln sqrt abs …`) samples each curve; the layout
+  auto-ranges y and draws framed axes with nice-numbered ticks, gridlines, and the
+  curves as stroked polylines (broken across discontinuities). New `MathNode.plot`;
+  everything is stroked paths + glyph runs, so it renders on all five platforms via
+  `VDL1`. Full TikZ/pgfplots remains out of scope. (Gap analysis Tier 3 — the
+  flagship plotting feature.)
 - **Young tableaux** — `\ydiagram{4,2,1}` (empty Young diagram from a partition) and
   `\ytableaushort{134,25,6}` / `\young(…)` (filled tableau). A grid of bordered square
   cells (stroked paths), left-aligned and stacked top-down, usable inline in an

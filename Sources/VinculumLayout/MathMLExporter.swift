@@ -91,6 +91,11 @@ public enum MathMLExporter {
             }
             return "<mrow>\(inner)</mrow>"
 
+        case .plot(let curves, _, _):
+            // No plot element in Presentation MathML; describe it as text.
+            let fns = curves.map(\.expression).joined(separator: ", ")
+            return "<mtext>plot: \(escape(fns))</mtext>"
+
         case .youngTableau(let rows):
             return "<mtable frame=\"solid\" rowlines=\"solid\" columnlines=\"solid\">" + rows.map { row in
                 "<mtr>" + row.map { "<mtd>\($0.map(mathml) ?? "")</mtd>" }.joined() + "</mtr>"
