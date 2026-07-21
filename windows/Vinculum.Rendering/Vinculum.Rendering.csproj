@@ -4,8 +4,40 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
+
+    <!-- NuGet metadata -->
+    <PackageId>Vinculum.Rendering</PackageId>
+    <Version>2.0.0-preview.1</Version>
+    <Authors>Clint Ecker</Authors>
+    <Description>Headless LaTeX math renderer for .NET. Decodes the Vinculum VDL1 display-list wire and paints it with SkiaSharp (the same engine as the Android/iOS renderers, so output matches byte-for-byte). On Windows (win-x64) it bundles the native rendering engine + Swift runtime + FreeType, so no toolchain is required on the consuming machine.</Description>
+    <PackageTags>latex;math;rendering;skiasharp;mathjax;equation</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/2389-research/Vinculum</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/2389-research/Vinculum</PackageProjectUrl>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="SkiaSharp" Version="2.88.8" />
+  </ItemGroup>
+
+  <!-- Embed the bundled math .otf fonts so a NuGet-consumed app carries them with no
+       files on disk. VinculumNative extracts them on first render and points the ABI at
+       them (Bundle.module traps outside a SwiftPM bundle). LogicalName "fonts/<file>" is
+       how EnsureFonts recovers the filename. Glob is empty in builds without the Swift
+       sources (e.g. an isolated devbox slice) — then the ABI's default path applies. -->
+  <ItemGroup>
+    <EmbeddedResource Include="../../Sources/VinculumRender/Resources/*.otf">
+      <LogicalName>fonts/%(Filename)%(Extension)</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <!-- Native runtime assets for win-x64: VinculumAndroid.dll + its Swift-runtime and
+       FreeType dependency closure. CI stages them into $(NativeRuntimeDir) after the
+       Swift build, then packs them under runtimes/win-x64/native/ so .NET's native-asset
+       resolver loads them for [DllImport("VinculumAndroid")] with no toolchain present.
+       Off unless NativeRuntimeDir is set, so a plain cross-platform build/pack stays clean. -->
+  <ItemGroup Condition="'$(NativeRuntimeDir)' != ''">
+    <None Include="$(NativeRuntimeDir)\*.dll" Pack="true" PackagePath="runtimes/win-x64/native/" />
   </ItemGroup>
 </Project>

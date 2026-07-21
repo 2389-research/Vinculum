@@ -54,9 +54,48 @@ public static class VinculumNative
     /// <summary>
     /// Points the ABI at a directory of bundled math <c>.otf</c> fonts, replacing the
     /// <c>Bundle.module</c> lookup (which traps outside a SwiftPM bundle — same reason the
-    /// Android host stages fonts and calls this). Pass <c>null</c> to clear.
+    /// Android host stages fonts and calls this). Pass <c>null</c> to clear. Calling this
+    /// suppresses the automatic embedded-font provisioning done on first render.
     /// </summary>
-    public static void SetFontDirectory(string? directory) => vinculum_set_font_dir(directory);
+    public static void SetFontDirectory(string? directory)
+    {
+        lock (FontLock) { vinculum_set_font_dir(directory); _fontDirSet = true; }
+    }
+
+    static bool _fontDirSet;
+    static readonly object FontLock = new();
+
+    /// On first render, extract the math fonts embedded in this assembly to a temp dir and
+    /// point the ABI at them — so a NuGet-consumed app needs no font files on disk and no
+    /// setup call. No-op if the caller already set a font directory, or if no fonts are
+    /// embedded (e.g. a source build that didn't link them — the ABI's default path applies).
+    static void EnsureFonts()
+    {
+        if (_fontDirSet) return;
+        lock (FontLock)
+        {
+            if (_fontDirSet) return;
+            var asm = typeof(VinculumNative).Assembly;
+            var fonts = asm.GetManifestResourceNames()
+                           .Where(n => n.EndsWith(".otf", StringComparison.OrdinalIgnoreCase)).ToArray();
+            if (fonts.Length == 0) { _fontDirSet = true; return; }   // nothing to provision
+            var dir = Path.Combine(Path.GetTempPath(), "vinculum-fonts-" + (asm.GetName().Version?.ToString() ?? "0"));
+            Directory.CreateDirectory(dir);
+            foreach (var res in fonts)
+            {
+                var name = res[(res.LastIndexOf('/') + 1)..];
+                var path = Path.Combine(dir, name);
+                if (!File.Exists(path))
+                {
+                    using var src = asm.GetManifestResourceStream(res)!;
+                    using var dst = File.Create(path);
+                    src.CopyTo(dst);
+                }
+            }
+            vinculum_set_font_dir(dir);
+            _fontDirSet = true;
+        }
+    }
 
     /// <summary>
     /// Renders <paramref name="latex"/> to <c>VDL1</c> wire bytes through the native ABI,
@@ -67,6 +106,7 @@ public static class VinculumNative
     public static byte[]? RenderWire(string latex, bool display, double baseSize)
     {
         ArgumentNullException.ThrowIfNull(latex);
+        EnsureFonts();
         var utf8 = Encoding.UTF8.GetBytes(latex);
         IntPtr ptr = vinculum_render_displaylist(utf8, utf8.Length, display ? 1 : 0, baseSize, out int len);
         if (ptr == IntPtr.Zero || len <= 0) return null;

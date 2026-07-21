@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- A throwaway consumer that references ONLY the packed Vinculum.Rendering NuGet
+       (from a local feed). CI publishes it for win-x64 and runs it with the Swift
+       toolchain scrubbed from PATH, proving the package carries a complete native
+       runtime closure. Not part of any build the other jobs run — it needs the local
+       feed to restore, so it is invoked explicitly by the windows-native job only. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Vinculum.Rendering" Version="2.0.0-preview.1" />
+  </ItemGroup>
+</Project>
