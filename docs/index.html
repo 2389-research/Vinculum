@@ -183,6 +183,7 @@
     </span>
     <nav class="nav-links">
       <a href="#features">Features</a>
+      <a href="#domains">Domains</a>
       <a href="#fidelity">Fidelity</a>
       <a href="#start">Quick start</a>
       <a href="#docs">Docs</a>
@@ -290,6 +291,36 @@
         <figure><img src="https://raw.githubusercontent.com/2389-research/Vinculum/gallery/03-notation.png" alt="Accents, binomials, braces, arrows, alphabets, color" loading="lazy"><figcaption>Accents · braces · arrows · color</figcaption></figure>
         <figure><img src="https://raw.githubusercontent.com/2389-research/Vinculum/gallery/07-fonts.png" alt="The same equation in each of the five bundled fonts" loading="lazy"><figcaption>One engine, five fonts</figcaption></figure>
       </div>
+    </div>
+  </section>
+
+  <section id="domains">
+    <div class="wrap">
+      <h2>Every discipline</h2>
+      <p class="section-sub">
+        One engine, one wire format. The same native rendering that draws a fraction
+        draws chemical equations, physical units, quantum bra-kets, proof trees, and
+        parse trees — 2D diagrams and all — laid out platform-free and shipped over the
+        <code>VDL1</code> display list. Every figure below is regenerated from the live
+        engine on each push.
+      </p>
+      <div class="gallery">
+        <figure><img src="https://raw.githubusercontent.com/2389-research/Vinculum/gallery/cmd-chem.png" alt="Chemical formulas and reaction equations from the mhchem transpiler" loading="lazy"><figcaption>Chemistry · mhchem <code>\ce{…}</code></figcaption></figure>
+        <figure><img src="https://raw.githubusercontent.com/2389-research/Vinculum/gallery/cmd-units.png" alt="Physical quantities and units from the siunitx transpiler" loading="lazy"><figcaption>Units · siunitx <code>\SI \num \ang</code></figcaption></figure>
+        <figure><img src="https://raw.githubusercontent.com/2389-research/Vinculum/gallery/cmd-physics.png" alt="Dirac bra-ket notation, derivatives and bracket operators" loading="lazy"><figcaption>Physics · Dirac notation &amp; derivatives</figcaption></figure>
+        <figure><img src="https://raw.githubusercontent.com/2389-research/Vinculum/gallery/cmd-inference.png" alt="Natural-deduction inference rules and proof trees" loading="lazy"><figcaption>Proof theory · <code>\inferrule</code></figcaption></figure>
+        <figure><img src="https://raw.githubusercontent.com/2389-research/Vinculum/gallery/cmd-tree.png" alt="Linguistic and expression syntax trees from qtree notation" loading="lazy"><figcaption>Syntax trees · <code>\Tree</code> (qtree)</figcaption></figure>
+        <figure><img src="https://raw.githubusercontent.com/2389-research/Vinculum/gallery/cmd-diagrams.png" alt="Commutative diagrams with labelled arrows" loading="lazy"><figcaption>Commutative diagrams · <code>\begin{CD}</code></figcaption></figure>
+        <figure><img src="https://raw.githubusercontent.com/2389-research/Vinculum/gallery/cmd-plot.png" alt="Sampled function plots with axes and gridlines" loading="lazy"><figcaption>Function plots · <code>\addplot</code></figcaption></figure>
+        <figure><img src="https://raw.githubusercontent.com/2389-research/Vinculum/gallery/cmd-young.png" alt="Young diagrams and filled tableaux" loading="lazy"><figcaption>Young tableaux · <code>\ydiagram</code></figcaption></figure>
+      </div>
+      <p style="color:var(--muted);font-size:var(--fs-xs);margin:18px 0 0;max-width:var(--measure)">
+        None of these needs a diagram-specific backend: each is either a transpiler to
+        core LaTeX or a 2D layout emitted as arbitrary paths and glyph runs, so it renders
+        identically on Apple, Linux, Windows, Android, and the web. See the
+        <a href="https://github.com/2389-research/Vinculum/blob/main/docs/COVERAGE.md">coverage matrix</a>
+        for the full command list.
+      </p>
     </div>
   </section>
 
