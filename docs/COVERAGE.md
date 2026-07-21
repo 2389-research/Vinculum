@@ -478,6 +478,28 @@ wider than the budget) is left intact rather than clipped.
 
 ---
 
+## Chemistry (mhchem)
+
+![Chemistry](https://raw.githubusercontent.com/2389-research/Vinculum/gallery/cmd-chem.png)
+
+`\ce{…}` typesets chemical formulas and equations. Implemented as a **transpiler** to
+LaTeX (`MHChem.transpile`), so it reuses the whole engine — no chemistry-specific
+layout. Covers:
+
+- **Auto-subscripts**: `\ce{H2O}` → H₂O, `\ce{H2SO4}` → H₂SO₄.
+- **Groups**: `\ce{Ca(OH)2}` → Ca(OH)₂ (subscript after the group).
+- **Charges**: `\ce{SO4^2-}` → SO₄²⁻, `\ce{Fe^3+}` → Fe³⁺.
+- **Coefficients**: `\ce{2H2 + O2}` → a leading number is stoichiometric, not a subscript.
+- **Reaction arrows**: `->`, `<-`, `<->`, `<=>` (equilibrium ⇌), and conditional
+  `->[\Delta]` (drawn as `\xrightarrow`).
+- **Bonds**: `=` (double), `#` (triple ≡); **states** `(s) (l) (g) (aq)`; **hydrate** `*` → ·.
+
+```latex
+\ce{N2 + 3H2 <=> 2NH3} \qquad \ce{CaCO3 ->[\Delta] CaO + CO2}
+```
+
+---
+
 ## Commutative diagrams
 
 ![Commutative diagrams](https://raw.githubusercontent.com/2389-research/Vinculum/gallery/cmd-diagrams.png)
@@ -535,8 +557,7 @@ The numbering/label logic lives in `MathNumbering` (platform-free, headless-test
 Honest list of what degrades to a source fallback (or is only partially
 honored):
 
-- **Out of scope by design:** `\href`, `\includegraphics`, mhchem `\ce`,
-  siunitx, `\verb`.
+- **Out of scope by design:** `\href`, `\includegraphics`, siunitx, `\verb`.
 - `\mathcal` / `\mathfrak` / `\mathscr` render **letters only** (no digit
   variants exist in Unicode).
 - Old-style `\rm`/`\it`/`\sl`/`\mit` switches render, but round-trip through

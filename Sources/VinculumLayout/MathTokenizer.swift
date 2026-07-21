@@ -20,7 +20,7 @@ extension MathParser {
     /// Commands whose brace body is upright TEXT, not math — their interior
     /// spaces must survive the whitespace-stripping tokenizer, so the group is
     /// captured verbatim here rather than re-tokenized.
-    static let rawTextCommands: Set<String> = ["text", "mathrm", "operatorname", "textrm"]
+    static let rawTextCommands: Set<String> = ["text", "mathrm", "operatorname", "textrm", "ce"]
 
     struct Tokenizer {
         let input: [Character]

@@ -7,6 +7,12 @@ each with docs + a specimen figure. Every feature is platform-free (renders
 identically on all targets through the `VDL1` seam).
 
 ### Added
+- **Chemistry — mhchem `\ce{…}`** — chemical formulas and equations. Implemented as
+  a transpiler to LaTeX (`MHChem.transpile`), reusing the whole engine (no chemistry-
+  specific layout): auto-subscripts (`H2O` → H₂O), groups (`Ca(OH)2`), `^` charges
+  (`SO4^2-` → SO₄²⁻), stoichiometric coefficients (`2H2`), reaction arrows (`->`,
+  `<-`, `<->`, `<=>` equilibrium, and conditional `->[\Delta]`), bonds (`=`, `#`),
+  states (`(s) (l) (g) (aq)`), and hydrate dots (`*`). (Gap analysis Tier 2.)
 - **Commutative diagrams** — `\begin{CD} … \end{CD}` (amscd): objects on a grid
   joined by labelled arrows (`@>a>b>`, `@<`, `@VaVbV`, `@A`, `@=`/`@\|` equality
   edges, `@.`). A real 2D-diagram layout — objects in a grid, arrows drawn as stroked

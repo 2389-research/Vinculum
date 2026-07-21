@@ -445,6 +445,12 @@ public enum MathParser {
             }
             return .fenced(fences: [leftDelim] + middles + [rightDelim], segments: segments)
 
+        case "ce":
+            // mhchem: transpile the verbatim body to LaTeX, then parse that.
+            guard case .rawText(let body)? = tokens.first else { return .row([]) }
+            tokens.removeFirst()
+            return parse(MHChem.transpile(body))
+
         case "text", "mathrm", "operatorname", "textrm":
             // \operatorname* takes stacked limits — capture the star and wrap.
             var starred = false
